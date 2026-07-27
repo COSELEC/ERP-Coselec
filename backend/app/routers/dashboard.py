@@ -5,7 +5,7 @@ from app.core.database import get_db
 
 from app.models.project.project import Project, ProjectStatus
 from app.modules.users.models.employee import Employee
-from app.modules.requests.models.fuel_request import FuelRequest, FuelRequestStatus
+
 from app.models.stock.stock import Stock
 from app.models.stock.stockmovement import StockMovement
 
@@ -17,8 +17,10 @@ def get_dashboard_kpis(db: Session = Depends(get_db)):
     total_employees = db.query(Employee).count()
     
     # Calculate total pending requests
-    pending_fuel_logistics = db.query(FuelRequest).filter(FuelRequest.status == FuelRequestStatus.PENDING_LOGISTICS).count()
-    pending_fuel_finance = db.query(FuelRequest).filter(FuelRequest.status == FuelRequestStatus.PENDING_FINANCE).count()
+    # pending_fuel_logistics = db.query(FuelRequest).filter(FuelRequest.status == FuelRequestStatus.PENDING_LOGISTICS).count()
+    # pending_fuel_finance = db.query(FuelRequest).filter(FuelRequest.status == FuelRequestStatus.PENDING_FINANCE).count()
+    pending_fuel_logistics = 0
+    pending_fuel_finance = 0
     total_pending_requests = pending_fuel_logistics + pending_fuel_finance
     # Stock alerts (quantity <= 10)
     stock_alerts = db.query(Stock).filter(Stock.quantity <= 10).count()

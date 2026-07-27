@@ -213,12 +213,27 @@ def update_request_status(
     request_id: int,
     payload: RequestUpdateStatus,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(check_permission("requests.validate_hr")),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     request = db.get(GenericRequest, request_id)
     if not request:
         raise HTTPException(status_code=404, detail="Request not found")
+
+    role_names = [r.name.upper() for r in current_user.roles]
+    is_admin = "ADMIN" in role_names
+    
+    if not is_admin:
+        if payload.status in {RequestStatus.APPROVED, RequestStatus.REJECTED}:
+            if request.type in {RequestType.LEAVE, RequestType.DOCUMENT}:
+                if "RH" not in role_names:
+                    raise HTTPException(status_code=403, detail="HR approval required")
+            elif request.type in {RequestType.IT_EQUIPMENT, RequestType.IT_ACCESS, RequestType.IT_INCIDENT}:
+                if "IT" not in role_names:
+                    raise HTTPException(status_code=403, detail="IT approval required")
+            elif request.type in {RequestType.FACILITY_MAINTENANCE, RequestType.FACILITY_SUPPLIES, RequestType.FACILITY_BADGE, RequestType.FUEL}:
+                if "FINANCE" not in role_names and "ACHAT" not in role_names:
+                    raise HTTPException(status_code=403, detail="Finance/Achat approval required")
 
     # Enforce state machine
     if not validate_transition(request.status, payload.status):
@@ -251,6 +266,21 @@ def update_request_status(
     db.refresh(request)
 
     # --- Post-approval workflows (run asynchronously) ---
+    if request.status == RequestStatus.APPROVED and request.type == RequestType.FUEL:
+        def _generate_fuel_pdf():
+            with SessionLocal() as bg_db:
+                try:
+                    from app.services.pdf_generator import generate_fuel_request_pdf
+                    bg_request = bg_db.get(GenericRequest, request.id)
+                    pdf_url = generate_fuel_request_pdf(bg_request, bg_db)
+                    bg_request.attachment_url = pdf_url
+                    bg_db.commit()
+                except Exception:
+                    bg_db.rollback()
+                    logger.exception("Failed to generate PDF for fuel request %s", request_id)
+
+        background_tasks.add_task(_generate_fuel_pdf)
+
     if request.status == RequestStatus.APPROVED and request.type == RequestType.LEAVE:
         start_date = request.payload.get("start_date")
         end_date = request.payload.get("end_date")
@@ -274,6 +304,39 @@ def update_request_status(
                         logger.exception("Failed to process approved leave for request %s", request_id)
 
             background_tasks.add_task(_process_leave)
+
+    if request.status == RequestStatus.APPROVED and request.type in (RequestType.IT_EQUIPMENT, RequestType.FACILITY_SUPPLIES):
+        is_return = request.payload.get("is_return", False)
+        if not is_return:
+            def _generate_po():
+                with SessionLocal() as bg_db:
+                    try:
+                        from app.models.procurement.purchase import PurchaseOrder, PurchaseOrderLine
+                        import uuid
+                        po = PurchaseOrder(
+                            reference=f"PO-{request_id}-{uuid.uuid4().hex[:6]}".upper(),
+                            generic_request_id=request_id,
+                            project_id=request.project_id
+                        )
+                        bg_db.add(po)
+                        bg_db.flush()
+                        
+                        items = request.payload.get("items", [])
+                        for item in items:
+                            line = PurchaseOrderLine(
+                                purchase_order_id=po.id,
+                                product_id=item.get("product_id"),
+                                designation=item.get("designation", "Article inconnu"),
+                                quantity=item.get("quantity", 1),
+                                unit_price=0.0
+                            )
+                            bg_db.add(line)
+                        bg_db.commit()
+                    except Exception:
+                        bg_db.rollback()
+                        logger.exception("Failed to process PO for request %s", request_id)
+            
+            background_tasks.add_task(_generate_po)
 
     return request
 
@@ -334,3 +397,29 @@ def get_request_history(
         }
         for h in request.history
     ]
+
+# ---------------------------------------------------------------------------
+# GET /requests/{request_id}/download-pdf
+# ---------------------------------------------------------------------------
+
+@router.get("/{request_id}/download-pdf")
+def download_request_pdf(
+    request_id: int,
+    db: Session = Depends(get_db)
+):
+    request = db.get(GenericRequest, request_id)
+    if not request or not request.attachment_url:
+        raise HTTPException(status_code=404, detail="PDF not found")
+        
+    from fastapi.responses import FileResponse
+    import os
+    
+    file_path = request.attachment_url
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="PDF file missing on disk")
+        
+    return FileResponse(
+        path=file_path,
+        media_type="application/pdf",
+        filename=f"Request_{request_id}.pdf"
+    )

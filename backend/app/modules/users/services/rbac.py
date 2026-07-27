@@ -86,6 +86,14 @@ RBAC_ROLES: dict[str, dict[str, Iterable[str]]] = {
             "notifications.update",
         },
     },
+    "IT": {
+        "description": "Support Informatique et Administration",
+        "permissions": {
+            "requests.validate_it",
+            "notifications.read",
+            "notifications.update",
+        },
+    },
     "Commercial": {
         "description": "Role commercial (base)",
         "permissions": {
@@ -185,6 +193,15 @@ RBAC_ROLES: dict[str, dict[str, Iterable[str]]] = {
             "notifications.read",
             "notifications.update",
             "dashboard.read",
+        },
+    },
+    "Achat": {
+        "description": "Gestion des achats et fournisseurs",
+        "permissions": {
+            "stock.read",
+            "requests.validate_finance",
+            "notifications.read",
+            "notifications.update",
         },
     },
 }

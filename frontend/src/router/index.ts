@@ -59,6 +59,20 @@ const routes = [
       requiredRoles: ["Admin", "Stock / Logistique", "Direction", "Finance"],
     },
   },
+  {
+    path: "/stock/matrix",
+    component: () => import("../views/Stock/StockMatrixView.vue"),
+    meta: {
+      requiredRoles: ["Admin", "Stock / Logistique", "Direction", "Finance"],
+    },
+  },
+  {
+    path: "/stock/reception",
+    component: () => import("../views/Stock/ReceptionControlForm.vue"),
+    meta: {
+      requiredRoles: ["Admin", "Stock / Logistique", "Direction"],
+    },
+  },
   // requests boards
 
   {

@@ -359,7 +359,7 @@ const downloadOrderPdf = async (orderId: number) => {
             <label class="block text-sm font-medium text-gray-700 mb-1">Demande d'Achat Liée</label>
             <select v-model="orderForm.purchase_request_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500">
               <option value="">Aucune (Direct)</option>
-              <option v-for="req in purchaseRequests" :key="req.id" :value="req.id">DA-{{ req.id }} (Projet #{{ req.project_id }})</option>
+              <option v-for="req in purchaseRequests" :key="req.id" :value="req.id">{{ req.reference || 'DEM-' + req.id }} (Projet #{{ req.project_id }})</option>
             </select>
           </div>
 

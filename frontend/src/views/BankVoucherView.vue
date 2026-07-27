@@ -14,7 +14,6 @@
       
       <form @submit.prevent="submitVoucher" class="space-y-8">
         
-        <!-- Informations Générales Card -->
         <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
           <div class="flex items-center gap-2 mb-6 pb-4 border-b border-gray-100">
             <span class="material-symbols-outlined text-[#d10f2f]">info</span>
@@ -22,7 +21,6 @@
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- ID (Visuel) renommé en Numéro d'ordre -->
             <div>
               <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Numéro d'ordre</label>
               <input :value="form.id || 'Chargement...'" type="text" disabled class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 rounded-xl cursor-not-allowed font-bold" />

@@ -26,7 +26,8 @@ class PurchaseRequestResponse(PurchaseRequestCreate):
     model_config = ConfigDict(from_attributes=True)
 
 class PurchaseOrderLineCreate(BaseModel):
-    product_id: int
+    product_id: int | None = None
+    designation: str | None = None
     quantity: int = Field(..., gt=0)
     unit_price: float = Field(..., ge=0)
 
@@ -37,6 +38,10 @@ class PurchaseOrderCreate(BaseModel):
 
 class PurchaseOrderResponse(PurchaseOrderCreate):
     id: int
+    reference: str | None = None
+    generic_request_id: int | None = None
+    project_id: int | None = None
+    pdf_url: str | None = None
     status: str
     total_amount: float
     created_at: datetime

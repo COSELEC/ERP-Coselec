@@ -15,7 +15,13 @@
             </p>
           </div>
 
-          <div class="grid gap-8 px-6 py-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-10 lg:py-10">
+          <div v-if="props.section === 'it'" class="px-6 py-8 lg:px-10 lg:py-10">
+            <ITRequestForm />
+          </div>
+          <div v-else-if="props.section === 'facilities'" class="px-6 py-8 lg:px-10 lg:py-10">
+            <FacilityRequestForm />
+          </div>
+          <div v-else class="grid gap-8 px-6 py-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-10 lg:py-10">
             <form class="space-y-5" @submit.prevent="submitRequest">
               <div>
                 <label class="mb-2 block text-sm font-semibold text-gray-700">Sujet / Raison</label>
@@ -124,6 +130,8 @@
 import { computed, reactive, ref, onMounted } from 'vue';
 import { RouterLink } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
+import ITRequestForm from '@/components/requests/ITRequestForm.vue';
+import FacilityRequestForm from '@/components/requests/FacilityRequestForm.vue';
 import { employeeService } from '@/services/employees';
 import { useToast } from '@/composables/useToast';
 
@@ -229,18 +237,6 @@ const submitRequest = async () => {
           affected_system: form.subject,
           error_message: form.description,
           impact_level: 'medium'
-        }
-      });
-    } else if (props.section === 'facilities') {
-      await api.post('/requests/', {
-        type: 'FACILITY_MAINTENANCE',
-        priority: form.priority === 'Normal' ? 'NORMAL' : 'HIGH',
-        description: form.description,
-        payload: {
-          type: 'FACILITY_MAINTENANCE',
-          location: form.subject,
-          urgency: 'routine',
-          description: form.description
         }
       });
     } else if (props.section === 'hr') {

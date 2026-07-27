@@ -30,7 +30,7 @@ from app.routers.stock.products import router as products_router
 from app.routers.stock.warehouses import router as warehouses_router
 from app.routers.stock.partners import router as partners_router
 from app.routers.stock.categories import router as categories_router
-from app.modules.requests.routes.fuel_requests import router as fuel_requests_router
+
 #notifications router
 from app.routers.notifications import router as notifications_router
 #projects routers
@@ -65,7 +65,8 @@ from app.models.notification import NotificationType, Notification
 from app.models.hr.contract import Contract
 from app.modules.requests_unified.models.request import GenericRequest, RequestHistory
 from app.models.hr.document import EmployeeDocument
-from app.modules.requests.models.fuel_request import FuelRequest
+from app.models.stock.reception import ReceptionControl, ReceptionControlLine
+
 from app.models.project.project import Project
 from app.models.project.client import Client
 from app.models.project.phase import ProjectPhase
@@ -110,6 +111,8 @@ from app.routers.departments import router as departments_router
 from app.routers.bank_vouchers import router as bank_vouchers_router
 
 from app.routers.dashboard import router as app_dashboard_router
+from app.routers.stock.matrix import router as stock_matrix_router
+from app.routers.stock.reception import router as stock_reception_router
 
 app.include_router(employees_router)
 app.include_router(stocks_router)
@@ -117,6 +120,8 @@ app.include_router(stock_operations_router)
 app.include_router(app_dashboard_router)
 app.include_router(dashboard_router)
 app.include_router(stock_movements_router)
+app.include_router(stock_matrix_router)
+app.include_router(stock_reception_router)
 app.include_router(products_router)
 app.include_router(warehouses_router)
 app.include_router(partners_router)
@@ -133,7 +138,7 @@ app.include_router(procurement_router)
 app.include_router(stock_reservations_router)
 app.include_router(portfolio_router)
 app.include_router(auth_router)
-app.include_router(fuel_requests_router)
+
 app.include_router(caisse_router)
 app.include_router(departments_router)
 app.include_router(users_router)

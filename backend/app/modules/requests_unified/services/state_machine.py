@@ -15,9 +15,7 @@ from app.modules.requests_unified.models.request import RequestStatus, RequestTy
 # ---------------------------------------------------------------------------
 VALID_TRANSITIONS: dict[RequestStatus, set[RequestStatus]] = {
     RequestStatus.DRAFT:            {RequestStatus.PENDING},
-    RequestStatus.PENDING:          {RequestStatus.PENDING_MANAGER, RequestStatus.APPROVED, RequestStatus.REJECTED},
-    RequestStatus.PENDING_MANAGER:  {RequestStatus.PENDING_FINANCE, RequestStatus.APPROVED, RequestStatus.REJECTED},
-    RequestStatus.PENDING_FINANCE:  {RequestStatus.APPROVED, RequestStatus.REJECTED},
+    RequestStatus.PENDING:          {RequestStatus.APPROVED, RequestStatus.REJECTED},
     RequestStatus.APPROVED:         {RequestStatus.IN_PROGRESS, RequestStatus.COMPLETED},
     RequestStatus.IN_PROGRESS:      {RequestStatus.ON_HOLD, RequestStatus.COMPLETED},
     RequestStatus.ON_HOLD:          {RequestStatus.IN_PROGRESS, RequestStatus.REJECTED},
@@ -49,13 +47,8 @@ REQUIRES_FINANCE_APPROVAL: set[RequestType] = {
 
 def initial_status_for(request_type: RequestType) -> RequestStatus:
     """
-    Determine the initial status a newly created request should land on,
-    based on its type and the approval chain it requires.
+    Determine the initial status a newly created request should land on.
     """
-    if request_type in REQUIRES_MANAGER_APPROVAL:
-        return RequestStatus.PENDING_MANAGER
-    if request_type in REQUIRES_FINANCE_APPROVAL:
-        return RequestStatus.PENDING_FINANCE
     return RequestStatus.PENDING
 
 

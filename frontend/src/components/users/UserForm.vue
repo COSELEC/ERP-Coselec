@@ -110,7 +110,10 @@ const availableRoles = [
   'Stock / Logistique',
   'Maintenance',
   'Qualite',
-  'Finance'
+  'Finance',
+  'IT Admin',
+  'Achat',
+  'Facility Manager'
 ];
 
 const formData = ref({

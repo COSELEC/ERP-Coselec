@@ -8,7 +8,7 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
-from app.modules.requests.models.fuel_request import FuelRequest
+from typing import Any
 from app.services.storage import upload_buffer_to_minio
 
 class CoselecPdfBuilder:
@@ -140,7 +140,7 @@ class CoselecPdfBuilder:
 # DMCAR (FUEL REQUEST) PDF GENERATOR
 # -----------------------------------------
 
-def _build_dmcar_table_data(request: FuelRequest) -> Table:
+def _build_dmcar_table_data(request: Any) -> Table:
     styles = getSampleStyleSheet()
     title_p = Paragraph("DEMANDE DE CARBURANT", ParagraphStyle('TitleStyle', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=14, alignment=1))
     
@@ -180,7 +180,7 @@ def _build_dmcar_table_data(request: FuelRequest) -> Table:
     ]))
     return t_main
 
-def _build_dmcar_sig_table(request: FuelRequest) -> Table:
+def _build_dmcar_sig_table(request: Any) -> Table:
     employee_name = f"{request.employee.first_name} {request.employee.last_name}" if getattr(request, 'employee', None) else ""
     manager_name = request.manager.name if getattr(request, 'manager', None) else ""
     finance_name = request.finance_validator.name if getattr(request, 'finance_validator', None) else "En attente"
@@ -203,7 +203,7 @@ def _build_dmcar_sig_table(request: FuelRequest) -> Table:
     ]))
     return t_sig
 
-def generate_dmcar_pdf(request: FuelRequest) -> str:
+def generate_dmcar_pdf(request: Any) -> str:
     filename = f"fuel_requests/DMCAR_{request.id:04d}_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
     builder = CoselecPdfBuilder(filename, topMargin=30, bottomMargin=30)
     
@@ -300,10 +300,10 @@ def generate_leave_certificate(leave_request, employee) -> str:
 
 def generate_purchase_order_pdf(order) -> str:
     filename = f"purchase_orders/BC_{order.id:04d}_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
-    builder = CoselecPdfBuilder(filename, title=f"Bon de Commande BC-{order.id}")
+    builder = CoselecPdfBuilder(filename, title=f"Bon de Commande BC-{order.id:04d}")
     
     builder.add_logo(space_after=20)
-    builder.add_title(f"BON DE COMMANDE N° BC-{order.id}", space_after=10)
+    builder.add_title(f"BON DE COMMANDE N° BC-{order.id:04d}", space_after=10)
     
     info_data = [
         [Paragraph("<b>Date:</b>", builder.styles['Normal']), Paragraph(order.created_at.strftime('%d/%m/%Y'), builder.styles['Normal'])],
@@ -325,7 +325,10 @@ def generate_purchase_order_pdf(order) -> str:
     line_data = [["Désignation", "Quantité", "Prix Unitaire", "Total"]]
     if getattr(order, 'lines', []) and len(order.lines) > 0:
         for line in order.lines:
-            product_name = line.product.designation if getattr(line, 'product', None) else f"Produit #{line.product_id}"
+            if line.designation:
+                product_name = line.designation
+            else:
+                product_name = line.product.designation if getattr(line, 'product', None) else f"Produit #{line.product_id}"
             line_data.append([
                 product_name,
                 str(line.quantity),
@@ -536,4 +539,171 @@ def generate_bank_voucher_pdf(voucher, allocations) -> str:
         "Visa DG"
     ])
 
+    return builder.build_and_upload()
+
+# -----------------------------------------
+# GESTION MATERIEL / INVENTAIRE PDF
+# -----------------------------------------
+from typing import Any
+
+def _build_inventory_header(title: str, doc_ref: str, form_number: str) -> Table:
+    """Standard header: Left=Logo, Center=Title, Right=Doc Ref & Form Number in red"""
+    styles = getSampleStyleSheet()
+    
+    # Left: Logo
+    logo_style = ParagraphStyle('LogoStyle', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=14, textColor=colors.red)
+    left_p = Paragraph("GROUPE<br/><b>Y</b><br/>COSELEC", logo_style)
+    
+    # Center: Title
+    title_p = Paragraph(f"<b>{title}</b>", ParagraphStyle('TitleStyle', parent=styles['Normal'], alignment=1, fontSize=14))
+    
+    # Right: Ref
+    ref_style = ParagraphStyle('RefStyle', parent=styles['Normal'], alignment=2, textColor=colors.red, fontSize=10, fontName='Helvetica-Bold')
+    right_p = Paragraph(f"{doc_ref}<br/>{form_number}", ref_style)
+    
+    t = Table([[left_p, title_p, right_p]], colWidths=[100, 310, 100])
+    t.setStyle(TableStyle([
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('BOX', (0,0), (-1,-1), 1, colors.black),
+        ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 10),
+        ('TOPPADDING', (0,0), (-1,-1), 10),
+    ]))
+    return t
+
+def _build_excel_table(headers: List[str], data: List[List[Any]], col_widths: List[int]) -> Table:
+    table_data = [headers] + data
+    t = Table(table_data, colWidths=col_widths)
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
+        ('BOX', (0,0), (-1,-1), 0.25, colors.black),
+        ('TOPPADDING', (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+    ]))
+    return t
+
+def generate_stock_release_pdf(movement_id: int, movement_data: Any) -> str:
+    filename = f"inventory/FICHE_SORTIE_{movement_id:04d}_{datetime.now().strftime('%Y%m%d%H%M')}.pdf"
+    builder = CoselecPdfBuilder(filename, topMargin=30, bottomMargin=30)
+    
+    # Header
+    header = _build_inventory_header("FICHE DE SORTIE MATÉRIEL", "COS-AA-FO-005-V00", f"N° FS-{movement_id:04d}")
+    builder.add_custom_element(header)
+    builder.add_custom_element(Spacer(1, 20))
+    
+    # Table: Références | Désignations | Qtés demandées | Qtés livrées | Observations
+    headers = ["Références", "Désignations", "Qtés demandées", "Qtés livrées", "Observations"]
+    data = []
+    # Using generic movement_data mapping
+    items = getattr(movement_data, 'items', [])
+    for item in items:
+        data.append([
+            item.get('ref', ''),
+            item.get('designation', ''),
+            str(item.get('qty_req', 0)),
+            str(item.get('qty_del', 0)),
+            item.get('obs', '')
+        ])
+    if not data:
+        data.append(["-", "-", "-", "-", "-"])
+        
+    t_data = _build_excel_table(headers, data, [80, 190, 80, 80, 80])
+    builder.add_custom_element(t_data)
+    builder.add_custom_element(Spacer(1, 30))
+    
+    # Signatures: Visa du Magasinier (à gauche) | Visa du Chef de Projet (à droite)
+    builder.add_signatures(["Visa du Magasinier", "Visa du Chef de Projet"], height=60)
+    
+    return builder.build_and_upload()
+
+def generate_reception_control_pdf(reception_id: int, reception_data: Any) -> str:
+    filename = f"inventory/CONTROLE_RECEPTION_{reception_id:04d}_{datetime.now().strftime('%Y%m%d%H%M')}.pdf"
+    builder = CoselecPdfBuilder(filename, topMargin=30, bottomMargin=30)
+    
+    header = _build_inventory_header("FORMULAIRE DE CONTRÔLE DE RÉCEPTION", "COS-AA-FO-006-V00", f"N° CR-{reception_id:04d}")
+    builder.add_custom_element(header)
+    builder.add_custom_element(Spacer(1, 15))
+    
+    # Meta infos
+    styles = getSampleStyleSheet()
+    meta_text = (
+        f"<b>Date de livraison :</b> {getattr(reception_data, 'date', '')} &nbsp;&nbsp;&nbsp; <b>Heure :</b> {getattr(reception_data, 'time', '')}<br/>"
+        f"<b>Fournisseur :</b> {getattr(reception_data, 'supplier', '')}<br/>"
+        f"<b>Réf Commande (PO) :</b> {getattr(reception_data, 'po_ref', '')} &nbsp;&nbsp;&nbsp; <b>N° BL/Facture :</b> {getattr(reception_data, 'bl_ref', '')}"
+    )
+    meta_p = Paragraph(meta_text, styles['Normal'])
+    builder.add_custom_element(meta_p)
+    builder.add_custom_element(Spacer(1, 15))
+    
+    # Table: Références | Désignations | Qtés commandées | Qtés livrées | Conforme | Remarques
+    headers = ["Références", "Désignations", "Qtés CMD", "Qtés Livrées", "Conforme", "Remarques"]
+    data = []
+    lines = getattr(reception_data, 'lines', [])
+    for line in lines:
+        data.append([
+            line.get('ref', ''),
+            line.get('designation', ''),
+            str(line.get('qty_ord', 0)),
+            str(line.get('qty_del', 0)),
+            "OUI" if line.get('compliant') else "NON",
+            line.get('notes', '')
+        ])
+    if not data:
+        data.append(["-", "-", "-", "-", "-", "-"])
+        
+    t_data = _build_excel_table(headers, data, [70, 160, 60, 60, 60, 100])
+    builder.add_custom_element(t_data)
+    builder.add_custom_element(Spacer(1, 30))
+    
+    # Signatures
+    builder.add_signatures(["Visa du Magasinier", "Visa du Chef de Projet"], height=60)
+    
+    return builder.build_and_upload()
+
+def generate_material_request_pdf(request_id: int, request_data: Any) -> str:
+    filename = f"inventory/DEMANDE_MATERIEL_{request_id:04d}_{datetime.now().strftime('%Y%m%d%H%M')}.pdf"
+    builder = CoselecPdfBuilder(filename, topMargin=30, bottomMargin=30)
+    
+    header = _build_inventory_header("FICHE DE DEMANDE / RETOUR MATÉRIEL", "COS-AA-FO-007-V00", f"N° DM-{request_id:04d}")
+    builder.add_custom_element(header)
+    builder.add_custom_element(Spacer(1, 15))
+    
+    # Meta infos
+    styles = getSampleStyleSheet()
+    meta_text = (
+        f"<b>Date :</b> {getattr(request_data, 'date', '')}<br/>"
+        f"<b>Demandée par :</b> {getattr(request_data, 'requester', '')} &nbsp;&nbsp;&nbsp; <b>Retournée par :</b> {getattr(request_data, 'returner', '')}<br/>"
+        f"<b>Projet / Processus :</b> {getattr(request_data, 'project', '')}"
+    )
+    meta_p = Paragraph(meta_text, styles['Normal'])
+    builder.add_custom_element(meta_p)
+    builder.add_custom_element(Spacer(1, 15))
+    
+    # Table
+    headers = ["Références", "Désignations", "Qtés demandées", "Qtés livrées", "Observations"]
+    data = []
+    items = getattr(request_data, 'items', [])
+    for item in items:
+        data.append([
+            item.get('ref', ''),
+            item.get('designation', ''),
+            str(item.get('qty_req', 0)),
+            str(item.get('qty_del', 0)),
+            item.get('obs', '')
+        ])
+    if not data:
+        data.append(["-", "-", "-", "-", "-"])
+        
+    t_data = _build_excel_table(headers, data, [80, 190, 80, 80, 80])
+    builder.add_custom_element(t_data)
+    builder.add_custom_element(Spacer(1, 30))
+    
+    # Signatures
+    builder.add_signatures(["Magasinier", "Demandeur", "Chef de Projet"], height=60)
+    
     return builder.build_and_upload()

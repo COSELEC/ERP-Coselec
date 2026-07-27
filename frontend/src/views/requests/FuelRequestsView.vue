@@ -63,7 +63,7 @@
             </thead>
             <tbody>
               <tr v-for="req in sortedRequests" :key="req.id" class="border-t border-red-100/80 hover:bg-red-50/70 transition">
-                <td class="px-6 py-4 text-sm font-bold text-gray-900">DA-{{ req.id }}</td>
+                <td class="px-6 py-4 text-sm font-bold text-gray-900">{{ req.reference || 'DEM-' + req.id }}</td>
                 <td class="px-6 py-4 text-gray-600 font-medium whitespace-nowrap">{{ new Date(req.request_date).toLocaleDateString('fr-FR', { month: '2-digit', day: '2-digit' }) }}</td>
                 <td class="px-6 py-4 text-sm font-bold text-gray-700">{{ new Date(req.request_date).getFullYear() }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
@@ -85,7 +85,7 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <button 
-                    v-if="req.status === 'PENDING_FINANCE'" 
+                    v-if="req.status === 'PENDING'" 
                     @click="validateFinance(req.id)"
                     class="text-emerald-600 hover:text-emerald-900"
                   >
@@ -250,7 +250,7 @@ const sortedRequests = computed(() => {
 
 const getPdfUrl = (req: any) => {
   const baseUrl = api.defaults.baseURL || `http://${window.location.hostname}:8000`;
-  return `${baseUrl}/fuel-requests/${req.id}/download-pdf`;
+  return `${baseUrl}/requests/${req.id}/download-pdf`;
 };
 
 const form = ref({
@@ -269,9 +269,15 @@ const form = ref({
 async function fetchRequests() {
   loading.value = true;
   try {
-    const searchParam = searchQuery.value ? `?search=${encodeURIComponent(searchQuery.value)}` : '';
-    const res = await api.get(`/fuel-requests/${searchParam}`);
-    requests.value = res.data;
+    const searchParam = searchQuery.value ? `&search=${encodeURIComponent(searchQuery.value)}` : '';
+    const res = await api.get(`/requests/?type=FUEL${searchParam}`);
+    requests.value = res.data.map(req => ({
+      ...req.payload,
+      id: req.id,
+      status: req.status,
+      pdf_url: req.attachment_url,
+      employee_name: employees.value.find(e => e.id === req.payload.employee_id)?.name || 'N/A'
+    }));
   } catch (e) {
     console.error("Error fetching requests", e);
   } finally {
@@ -290,7 +296,12 @@ async function fetchEmployees() {
 
 async function submitRequest() {
   try {
-    await api.post('/fuel-requests/', form.value);
+    await api.post('/requests/', {
+      type: 'FUEL',
+      priority: 'NORMAL',
+      description: form.value.objet_deplacement,
+      payload: { ...form.value }
+    });
     showCreateModal.value = false;
     // Reset form
     form.value.employee_id = '';
@@ -311,8 +322,8 @@ async function submitRequest() {
 
 async function validateFinance(id: number) {
   try {
-    await api.post(`/fuel-requests/${id}/validate/finance/`, {
-      action: 'APPROVE'
+    await api.patch(`/requests/${id}/status`, {
+      status: 'APPROVED'
     });
     await fetchRequests();
     toast.success("Demande validée ! Le PDF a été généré dans MinIO.");
@@ -325,7 +336,7 @@ async function validateFinance(id: number) {
 async function deleteRequest(id: number) {
   if (!confirm("Voulez-vous vraiment supprimer cette demande ?")) return;
   try {
-    await api.delete(`/fuel-requests/${id}`);
+    await api.delete(`/requests/${id}`);
     await fetchRequests();
   } catch (e) {
     console.error("Error deleting request", e);

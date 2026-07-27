@@ -35,7 +35,10 @@ class PurchaseOrder(Base):
     __tablename__ = "purchase_orders"
 
     id = Column(Integer, primary_key=True, index=True)
+    reference = Column(String(100), unique=True, index=True, nullable=True)
     purchase_request_id = Column(Integer, ForeignKey("purchase_requests.id", ondelete="SET NULL"), nullable=True)
+    generic_request_id = Column(Integer, ForeignKey("requests.id", ondelete="SET NULL"), nullable=True)
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="SET NULL"), nullable=True)
     supplier_id = Column(Integer, ForeignKey("partners.id", ondelete="SET NULL"), nullable=True)
     
     status = Column(SQLEnum(PurchaseOrderStatus), default=PurchaseOrderStatus.DRAFT)
@@ -53,6 +56,7 @@ class PurchaseOrderLine(Base):
     id = Column(Integer, primary_key=True, index=True)
     purchase_order_id = Column(Integer, ForeignKey("purchase_orders.id", ondelete="CASCADE"), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id", ondelete="SET NULL"), nullable=True)
+    designation = Column(String(255), nullable=True)
     
     quantity = Column(Integer, nullable=False, default=1)
     unit_price = Column(Numeric(14, 2), nullable=False, default=0.0)

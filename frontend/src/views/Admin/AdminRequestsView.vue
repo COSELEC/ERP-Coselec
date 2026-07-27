@@ -25,7 +25,7 @@
             </thead>
             <tbody>
               <tr v-for="req in requests" :key="req.id" class="border-t border-red-100/80 hover:bg-red-50/70 transition">
-                <td class="px-6 py-4 text-gray-600 font-medium">#{{ req.id }}</td>
+                <td class="px-6 py-4 text-gray-600 font-medium">{{ req.reference || 'DEM-' + req.id }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span class="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                     {{ req.type }}
