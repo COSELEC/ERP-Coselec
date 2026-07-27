@@ -31,6 +31,7 @@ from app.models.project.expense import ProjectExpense
 from app.models.caisse_voucher import CaisseVoucher
 from app.models.procurement.purchase import PurchaseRequest, PurchaseOrder, PurchaseOrderLine
 from app.models.stock.reservation import ProjectStockReservation
+from app.models.norm import NormCategory, Norm, NormVersion
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,

@@ -165,6 +165,23 @@ onMounted(async () => {
         />
       </div>
 
+      <!-- Documents / GED -->
+      <div v-if="canViewDocuments">
+        <h2
+          v-if="!collapsed"
+          class="text-xs uppercase text-red-200 mb-2"
+        >
+          Documents
+        </h2>
+
+        <SidebarItem
+          to="/norms"
+          icon="folder_special"
+          label="Bibliothèque de Normes"
+          :collapsed="collapsed"
+        />
+      </div>
+
       <!-- Trésorerie -->
       <div v-if="canViewTreasury">
         <h2

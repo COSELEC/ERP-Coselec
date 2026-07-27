@@ -94,4 +94,30 @@ def delete_file_from_minio(file_name: str):
     try:
         minio_client.remove_object(BUCKET_NAME, file_name)
     except Exception as e:
-        print(f"Error deleting file {file_name} from MinIO: {e}")
+        print(f"Error deleting file {file_name} from MinIO: {e}")
+
+from abc import ABC, abstractmethod
+import shutil
+import uuid
+from fastapi import UploadFile
+
+class StorageStrategy(ABC):
+    @abstractmethod
+    def save_file(self, file: UploadFile, path: str = "norms") -> str:
+        pass
+
+class LocalStorageStrategy(StorageStrategy):
+    def save_file(self, file: UploadFile, path: str = "norms") -> str:
+        os.makedirs(f"uploads/{path}", exist_ok=True)
+        unique_filename = f"{uuid.uuid4()}_{file.filename}"
+        file_path = f"uploads/{path}/{unique_filename}"
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        return file_path
+
+class StorageService:
+    def __init__(self, strategy: StorageStrategy):
+        self._strategy = strategy
+
+    def save_file(self, file: UploadFile, path: str = "norms") -> str:
+        return self._strategy.save_file(file, path)

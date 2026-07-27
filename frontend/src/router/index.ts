@@ -88,6 +88,12 @@ const routes = [
     component: () => import("../views/RequestsView.vue")
   },
   {
+    path: "/norms",
+    name: "norms",
+    component: () => import("../views/NormLibraryView.vue"),
+    meta: { requiredRoles: ["Admin", "Direction", "Finance"] }
+  },
+  {
     path: "/caisse",
     name: "caisse",
     component: () => import("../views/CaisseView.vue"),

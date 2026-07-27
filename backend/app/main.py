@@ -109,6 +109,7 @@ app = FastAPI(lifespan=lifespan)
 from app.routers.caisse import router as caisse_router
 from app.routers.departments import router as departments_router
 from app.routers.bank_vouchers import router as bank_vouchers_router
+from app.routers.norms import router as norms_router
 
 from app.routers.dashboard import router as app_dashboard_router
 from app.routers.stock.matrix import router as stock_matrix_router
@@ -144,6 +145,7 @@ app.include_router(departments_router)
 app.include_router(users_router)
 app.include_router(generic_requests_router)
 app.include_router(bank_vouchers_router)
+app.include_router(norms_router)
 
 
 raw_origins = os.getenv("CORS_ALLOW_ORIGINS", "")
