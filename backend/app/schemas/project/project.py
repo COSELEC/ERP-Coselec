@@ -11,6 +11,8 @@ class ProjectBase(BaseModel):
     date_fin_estimee: date
     date_fin_prevue: date
     budget_estime: Optional[float] = Field(default=0.0, ge=0)
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 class ProjectCreate(ProjectBase):
     status: Optional[ProjectStatus] = ProjectStatus.STUDY
@@ -60,3 +62,5 @@ class ProjectUpdate(BaseModel):
     date_fin_reelle: Optional[date] = None
 
     budget_engage: Optional[float] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None

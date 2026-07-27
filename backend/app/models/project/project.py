@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, Table, Numeric, ForeignKey, Boolean, Text, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Date, Table, Numeric, ForeignKey, Boolean, Text, Enum as SQLEnum, Float
 import enum
 from sqlalchemy.orm import relationship
 from app.models.relations import project_partners
@@ -43,6 +43,10 @@ class Project(Base):
     #champs de coûts
     budget_estime = Column(Numeric(14, 2), default=0.0, nullable=True)
     budget_engage = Column(Numeric(14, 2), default=0.0, nullable=True)
+
+    #géolocalisation
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
 
     #relationships
     partners = relationship(

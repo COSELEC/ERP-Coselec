@@ -17,7 +17,15 @@
             @click="openTaskCreateModal"
             >
               <span class="material-symbols-outlined">add</span>
-              <span class="ml-2">Nouvelle tâche</span></button>
+              <span class="ml-2">Nouvelle tâche</span>
+            </button>
+            <button class ="ml-3 bg-white border-2 border-[#b30c27] text-[#b30c27] rounded-lg px-4 h-10 flex items-center justify-center hover:bg-red-50 transition"
+              v-if="selectedProject"
+              @click="openProjectEditModal"
+            >
+              <span class="material-symbols-outlined">edit</span>
+              <span class="ml-2 font-medium">Modifier le projet</span>
+            </button>
           </div>
 
           <div class="flex border border-red-500 rounded-lg overflow-hidden">
@@ -97,6 +105,33 @@
       @close="closeTaskCreateModal"
       @create="handleTaskCreate"
     />
+    
+    <!-- Project Edit Modal -->
+    <div v-if="isProjectEditModalOpen" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+      <div class="bg-white p-6 rounded-xl w-96 shadow-xl max-h-[90vh] overflow-y-auto">
+        <h2 class="text-xl font-bold mb-4 text-gray-900">Modifier le projet</h2>
+        <form @submit.prevent="updateProjectInfo" class="space-y-3">
+          <input v-model="projectEditForm.code" placeholder="Code (ex: PRJ-01)" required class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500" />
+          <input v-model="projectEditForm.nom" placeholder="Nom du projet" required class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500" />
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Date début estimée</label>
+            <input type="date" v-model="projectEditForm.date_debut_estimee" required class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Date fin estimée</label>
+            <input type="date" v-model="projectEditForm.date_fin_estimee" required class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Emplacement (Géolocalisation)</label>
+            <MapLocationPicker v-model="projectEditForm.location" />
+          </div>
+          <div class="flex justify-end gap-2 mt-4">
+            <button type="button" @click="isProjectEditModalOpen = false" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Annuler</button>
+            <button type="submit" class="bg-[#d10f2f] hover:bg-[#97091f] text-white px-4 py-2 rounded-lg">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
       </div>
     </AppLayout>
   </div>
@@ -108,10 +143,13 @@ import AppLayout from "@/layouts/AppLayout.vue";
 import GanttView from '@/components/project/GanttView.vue';
 import KanbanView from '@/components/project/KanbanView.vue';
 import ProjectResources from '@/components/project/ProjectResources.vue';
+import MapLocationPicker from '@/components/project/MapLocationPicker.vue';
 import { shallowRef, ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import { useToast } from '@/composables/useToast';
 import TaskCreateModal from "@/components/project/TaskCreateModal.vue";
 const route = useRoute();
+const toast = useToast();
 
 interface Project {
     id: number;
@@ -126,6 +164,46 @@ const currentView = shallowRef('Kanban');
 const selectedProject = ref<string | null>(null);
 const selectedMilestone = ref<number | null>(null);
 const isTaskCreateModalOpen = ref(false);
+
+const isProjectEditModalOpen = ref(false);
+const projectEditForm = ref({ code: '', nom: '', date_debut_estimee: '', date_fin_estimee: '', location: { lat: null as number|null, lng: null as number|null } });
+
+const openProjectEditModal = () => {
+  const p: any = projects.value.find((p: any) => p.nom === selectedProject.value);
+  if (p) {
+    projectEditForm.value = {
+      code: p.code,
+      nom: p.nom,
+      date_debut_estimee: p.date_debut_estimee ? new Date(p.date_debut_estimee).toISOString().split('T')[0] : '',
+      date_fin_estimee: p.date_fin_estimee ? new Date(p.date_fin_estimee).toISOString().split('T')[0] : '',
+      location: { lat: p.latitude || null, lng: p.longitude || null }
+    };
+    isProjectEditModalOpen.value = true;
+  }
+};
+
+const updateProjectInfo = async () => {
+  const p: any = projects.value.find((p: any) => p.nom === selectedProject.value);
+  if (!p) return;
+  try {
+    const payload: any = { ...projectEditForm.value };
+    if (payload.location) {
+      payload.latitude = payload.location.lat;
+      payload.longitude = payload.location.lng;
+    }
+    delete payload.location;
+    await projectService.updateProject(p.id, payload);
+    toast.success("Projet mis à jour avec succès");
+    
+    // Update local data
+    Object.assign(p, payload);
+    selectedProject.value = p.nom;
+    isProjectEditModalOpen.value = false;
+  } catch (error) {
+    console.error(error);
+    toast.error("Erreur lors de la mise à jour");
+  }
+};
 
 
 const openTaskCreateModal = () => {

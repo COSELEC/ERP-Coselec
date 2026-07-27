@@ -5,6 +5,7 @@ export const projectService = {
   getAllProjects: () => api.get('/projects/'),
   getProjectById: (projectId: number) => api.get(`/projects/${projectId}`),
   createProject: (data: any) => api.post('/projects/', data),
+  updateProject: (projectId: number, data: any) => api.patch(`/projects/${projectId}`, data),
   getProjectMilestones: (projectId: number) => api.get(`/projects/${projectId}/milestones`),
 };
 

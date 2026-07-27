@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import AppLayout from "@/layouts/AppLayout.vue";
+import MapLocationPicker from "@/components/project/MapLocationPicker.vue";
 import api from '../services/api';
 import { getStoredProfile } from '@/services/session';
 import { useToast } from '@/composables/useToast';
@@ -20,7 +21,7 @@ const recentActivity = ref<any[]>([
 
 const activeModal = ref<'project' | 'hr' | 'fuel' | null>(null);
 
-const projectForm = ref({ code: '', nom: '', date_debut_estimee: '', date_fin_estimee: '' });
+const projectForm = ref({ code: '', nom: '', date_debut_estimee: '', date_fin_estimee: '', location: { lat: null, lng: null } });
 const hrForm = ref({ employee_id: '', subject: '', leave_type: 'Congé', start_date: new Date().toISOString().split('T')[0], end_date: new Date().toISOString().split('T')[0], description: '' });
 const fuelForm = ref({
   employee_id: '',
@@ -55,13 +56,19 @@ const refreshDashboard = async () => {
 
 const createProject = async () => {
   try {
-    await api.post('/projects/', projectForm.value);
+    const payload = { ...projectForm.value };
+    if (payload.location && payload.location.lat != null) {
+      payload.latitude = payload.location.lat;
+      payload.longitude = payload.location.lng;
+    }
+    delete payload.location;
+    await api.post('/projects/', payload);
+    toast.success("Projet créé avec succès");
+    projectForm.value = { code: '', nom: '', date_debut_estimee: '', date_fin_estimee: '', location: { lat: null, lng: null } };
     activeModal.value = null;
-    toast.success('Projet créé avec succès !');
-    projectForm.value = { code: '', nom: '', date_debut_estimee: '', date_fin_estimee: '' };
-    await refreshDashboard();
-  } catch {
-    toast.error('Erreur lors de la création du projet.');
+    refreshDashboard();
+  } catch (error) {
+    toast.error("Erreur lors de la création du projet");
   }
 };
 
@@ -206,6 +213,10 @@ onMounted(async () => {
           <div>
             <label class="block text-xs text-gray-500 mb-1">Date fin estimée</label>
             <input type="date" v-model="projectForm.date_fin_estimee" required class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Emplacement (Géolocalisation)</label>
+            <MapLocationPicker v-model="projectForm.location" />
           </div>
           <div class="flex justify-end gap-2 mt-4">
             <button type="button" @click="activeModal = null" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Annuler</button>

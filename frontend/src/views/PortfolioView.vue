@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import AppLayout from "@/layouts/AppLayout.vue";
+import PortfolioMap from "@/components/project/PortfolioMap.vue";
 import api from "@/services/api";
 
 const kpis = ref({
@@ -103,6 +104,9 @@ const getConsumptionRate = (project: any) => {
             </div>
           </div>
         </div>
+
+        <!-- Global Interactive Map -->
+        <PortfolioMap :projects="projects" />
 
         <!-- Project Cards Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
