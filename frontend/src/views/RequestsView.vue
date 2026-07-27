@@ -116,9 +116,9 @@ onMounted(async () => {
     const it = allRequests.filter((r: any) => r.type && r.type.startsWith('IT_'));
     const facilities = allRequests.filter((r: any) => r.type && r.type.startsWith('FACILITY_'));
     
-    requestSections.value[0].requests = hr;
-    requestSections.value[1].requests = it;
-    requestSections.value[2].requests = facilities;
+    requestSections.value[0]!.requests = hr;
+    requestSections.value[1]!.requests = it;
+    requestSections.value[2]!.requests = facilities;
   } catch (error) {
     console.error("Error fetching requests:", error);
   }

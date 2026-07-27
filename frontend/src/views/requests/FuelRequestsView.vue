@@ -271,7 +271,7 @@ async function fetchRequests() {
   try {
     const searchParam = searchQuery.value ? `&search=${encodeURIComponent(searchQuery.value)}` : '';
     const res = await api.get(`/requests/?type=FUEL${searchParam}`);
-    requests.value = res.data.map(req => ({
+    requests.value = res.data.map((req: any) => ({
       ...req.payload,
       id: req.id,
       status: req.status,

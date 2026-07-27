@@ -284,7 +284,7 @@ const openHRAssignmentModal = (assign: any = null) => {
       employee_id: '',
       role: '',
       allocation: 100,
-      start_date: new Date().toISOString().split('T')[0],
+      start_date: new Date().toISOString().split('T')[0] as string,
       end_date: '',
       notes: ''
     };
@@ -296,7 +296,7 @@ const saveHRAssignment = async () => {
   if (!props.projectId) return;
   savingHR.value = true;
   
-  const payload = { ...hrForm.value };
+  const payload: any = { ...hrForm.value };
   if (!payload.end_date) delete payload.end_date;
   if (!payload.notes) delete payload.notes;
 

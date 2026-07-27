@@ -162,7 +162,7 @@
           <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
             <div class="flex items-center justify-between mb-4">
               <label class="block text-sm font-semibold text-gray-700">Articles / Fournitures</label>
-              <button type="button" @click="requestPayload.supplies.items.push({ designation: '', quantity: 1 })" class="text-red-600 hover:text-red-700 text-sm font-bold flex items-center gap-1">
+              <button type="button" @click="requestPayload.supplies.items.push({ category_id: null as any, product_id: null as any, designation: '', quantity: 1 })" class="text-red-600 hover:text-red-700 text-sm font-bold flex items-center gap-1">
                 <span class="material-symbols-outlined text-[16px]">add</span> Ajouter
               </button>
             </div>
@@ -345,7 +345,7 @@ const submitFacilityRequest = async () => {
     // Note: To submit 'on behalf of' employee_id, we'd add requester_id to the request wrapper, but API might derive it from token. 
     // If backend accepts it:
     if (requestPayload.employee_id) {
-      finalPayload.payload.target_employee_id = requestPayload.employee_id; // Store in payload
+      (finalPayload.payload as any).target_employee_id = requestPayload.employee_id; // Store in payload
     }
 
     await api.post('/requests/', finalPayload);

@@ -174,8 +174,8 @@ const openProjectEditModal = () => {
     projectEditForm.value = {
       code: p.code,
       nom: p.nom,
-      date_debut_estimee: p.date_debut_estimee ? new Date(p.date_debut_estimee).toISOString().split('T')[0] : '',
-      date_fin_estimee: p.date_fin_estimee ? new Date(p.date_fin_estimee).toISOString().split('T')[0] : '',
+      date_debut_estimee: p.date_debut_estimee ? (new Date(p.date_debut_estimee).toISOString().split('T')[0] as string) : '',
+      date_fin_estimee: p.date_fin_estimee ? (new Date(p.date_fin_estimee).toISOString().split('T')[0] as string) : '',
       location: { lat: p.latitude || null, lng: p.longitude || null }
     };
     isProjectEditModalOpen.value = true;

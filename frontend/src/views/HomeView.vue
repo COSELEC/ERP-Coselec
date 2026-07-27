@@ -56,7 +56,7 @@ const refreshDashboard = async () => {
 
 const createProject = async () => {
   try {
-    const payload = { ...projectForm.value };
+    const payload: any = { ...projectForm.value };
     if (payload.location && payload.location.lat != null) {
       payload.latitude = payload.location.lat;
       payload.longitude = payload.location.lng;

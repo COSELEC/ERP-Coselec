@@ -113,7 +113,7 @@
           <div>
             <div class="flex items-center justify-between mb-2">
               <label class="block text-sm font-semibold text-gray-700">Articles</label>
-              <button type="button" @click="requestPayload.hardware.items.push({ designation: '', quantity: 1 })" class="text-red-600 hover:text-red-700 text-sm font-bold flex items-center gap-1">
+              <button type="button" @click="requestPayload.hardware.items.push({ category_id: null as any, product_id: null as any, designation: '', quantity: 1 })" class="text-red-600 hover:text-red-700 text-sm font-bold flex items-center gap-1">
                 <span class="material-symbols-outlined text-[16px]">add</span> Ajouter
               </button>
             </div>
