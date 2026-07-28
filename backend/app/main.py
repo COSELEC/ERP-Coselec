@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
+from alembic.config import Config
+from alembic import command
 from app.tasks.hr_alerts import check_document_expirations
 
 #schemas
@@ -87,6 +89,16 @@ from app.modules.users.services.rbac import (
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # 1. Migrations automatiques de la base de données (Alembic)
+    try:
+        print("Lancement des migrations Alembic...")
+        alembic_cfg = Config("alembic.ini")
+        command.upgrade(alembic_cfg, "head")
+        print("Base de données mise à jour avec succès !")
+    except Exception as e:
+        print(f"Erreur lors des migrations Alembic : {e}")
+
+    # 2. Initialisation des rôles et de l'admin
     db = SessionLocal()
     try:
         ensure_rbac_setup(db)
@@ -94,10 +106,14 @@ async def lifespan(app: FastAPI):
     finally:
         db.close()
 
+    # 3. Démarrage du planificateur de tâches
     scheduler = BackgroundScheduler()
     scheduler.add_job(check_document_expirations, 'cron', hour=8, minute=0) 
     scheduler.start()
+
     yield
+
+    # Arrêt du planificateur à l'extinction
     scheduler.shutdown()
 
 

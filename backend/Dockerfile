@@ -24,17 +24,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code
 COPY . .
 
-# Expose port
-EXPOSE 8000
 
-# ... (tes commandes précédentes)
-EXPOSE 8000
+EXPOSE 10000
 
-# Création du script directement dans l'environnement Linux (zéro bug de formatage)
-RUN echo '#!/bin/sh' > /app/start.sh && \
-    echo 'alembic upgrade head' >> /app/start.sh && \
-    echo 'exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}' >> /app/start.sh && \
-    chmod +x /app/start.sh
-
-# Commande finale simple et propre
-CMD ["/app/start.sh"]
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}
