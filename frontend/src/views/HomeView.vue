@@ -96,7 +96,24 @@ const createHRRequest = async () => {
 
 const createFuelRequest = async () => {
   try {
-    await api.post('/fuel-requests/', fuelForm.value);
+    const payload = {
+      type: 'FUEL',
+      priority: 'NORMAL',
+      category: 'Logistique',
+      payload: {
+        type: 'FUEL',
+        employee_id: fuelForm.value.employee_id,
+        vehicle_plate: fuelForm.value.vehicule_matricule,
+        destination: fuelForm.value.destination,
+        fuel_quantity: fuelForm.value.quantite_carburant,
+        trip_days: fuelForm.value.nombre_jours,
+        odometer_reading: fuelForm.value.releve_kilometrique,
+        trip_purpose: fuelForm.value.objet_deplacement,
+        affaire_no: fuelForm.value.affaire_no,
+        dossier_no: fuelForm.value.dossier_no
+      }
+    };
+    await api.post('/requests/', payload);
     activeModal.value = null;
     toast.success('Demande Carburant créée !');
     fuelForm.value = {
