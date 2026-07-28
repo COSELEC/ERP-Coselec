@@ -27,5 +27,14 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
-# Alembic upgrade + run app
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}"]
+# ... (tes commandes précédentes)
+EXPOSE 8000
+
+# Création du script directement dans l'environnement Linux (zéro bug de formatage)
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'alembic upgrade head' >> /app/start.sh && \
+    echo 'exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}' >> /app/start.sh && \
+    chmod +x /app/start.sh
+
+# Commande finale simple et propre
+CMD ["/app/start.sh"]
