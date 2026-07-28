@@ -122,6 +122,22 @@
             <input type="date" v-model="projectEditForm.date_fin_estimee" required class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500" />
           </div>
           <div>
+            <label class="block text-xs text-gray-500 mb-1">Statut</label>
+            <select v-model="projectEditForm.status" required class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500 bg-white">
+              <option value="En etude">En etude</option>
+              <option value="Planifié">Planifié</option>
+              <option value="Approuvé">Approuvé</option>
+              <option value="En cours">En cours</option>
+              <option value="Suspendu">Suspendu</option>
+              <option value="Retardé">Retardé</option>
+              <option value="Bloqué">Bloqué</option>
+              <option value="En validation">En validation</option>
+              <option value="Terminé">Terminé</option>
+              <option value="Clôturé">Clôturé</option>
+              <option value="Annulé">Annulé</option>
+            </select>
+          </div>
+          <div>
             <label class="block text-xs text-gray-500 mb-1">Emplacement (Géolocalisation)</label>
             <MapLocationPicker v-model="projectEditForm.location" />
           </div>
@@ -166,7 +182,7 @@ const selectedMilestone = ref<number | null>(null);
 const isTaskCreateModalOpen = ref(false);
 
 const isProjectEditModalOpen = ref(false);
-const projectEditForm = ref({ code: '', nom: '', date_debut_estimee: '', date_fin_estimee: '', location: { lat: null as number|null, lng: null as number|null } });
+const projectEditForm = ref({ code: '', nom: '', date_debut_estimee: '', date_fin_estimee: '', status: '', location: { lat: null as number|null, lng: null as number|null } });
 
 const openProjectEditModal = () => {
   const p: any = projects.value.find((p: any) => p.nom === selectedProject.value);
@@ -176,6 +192,7 @@ const openProjectEditModal = () => {
       nom: p.nom,
       date_debut_estimee: p.date_debut_estimee ? (new Date(p.date_debut_estimee).toISOString().split('T')[0] as string) : '',
       date_fin_estimee: p.date_fin_estimee ? (new Date(p.date_fin_estimee).toISOString().split('T')[0] as string) : '',
+      status: p.status || '',
       location: { lat: p.latitude || null, lng: p.longitude || null }
     };
     isProjectEditModalOpen.value = true;

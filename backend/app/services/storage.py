@@ -120,4 +120,4 @@ class StorageService:
         self._strategy = strategy
 
     def save_file(self, file: UploadFile, path: str = "norms") -> str:
-        return self._strategy.save_file(file, path)
+        return self._strategy.save_file(file, path)

@@ -39,7 +39,7 @@ class BankVoucherCreate(BaseModel):
     reservation_id: Optional[int] = None
     linked_caisse_voucher_ids: List[int] = []
 
-@router.get("/", status_code=status.HTTP_200_OK)
+@router.get("", status_code=status.HTTP_200_OK)
 def get_bank_vouchers(
     search: Optional[str] = None, 
     skip: int = Query(0, ge=0), 
@@ -69,7 +69,7 @@ def get_next_bank_voucher_id(db: Session = Depends(get_db)):
     next_id = last_voucher.id + 1 if last_voucher else 1
     return {"next_id": next_id}
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 def create_bank_voucher(voucher_in: BankVoucherCreate, db: Session = Depends(get_db)):
     if not voucher_in.allocations:
         raise HTTPException(

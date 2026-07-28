@@ -14,7 +14,7 @@ router = APIRouter(
     dependencies=[Depends(require_admin_role)]
 )
 
-@router.get("/", response_model=UserListResponse)
+@router.get("", response_model=UserListResponse)
 def read_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
@@ -25,7 +25,7 @@ def read_users(
     total, users = user_service.get_users(db, skip=skip, limit=limit, search=search, include_inactive=include_inactive)
     return UserListResponse(total=total, page=skip // limit + 1, size=limit, items=users)
 
-@router.post("/", response_model=dict)
+@router.post("", response_model=dict)
 def create_user(
     user_data: UserCreate,
     db: Session = Depends(get_db),

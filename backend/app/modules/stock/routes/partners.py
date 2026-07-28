@@ -25,7 +25,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[PartnerResponse])
+@router.get("", response_model=list[PartnerResponse])
 def get_partners(
     _: None = Depends(check_permission("stock.read")),
     db: Session = Depends(get_db)
@@ -56,7 +56,7 @@ def get_partner(
 
 
 @router.post(
-    "/",
+    "",
     response_model=PartnerResponse,
     status_code=201
 )

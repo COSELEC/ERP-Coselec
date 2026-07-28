@@ -20,7 +20,7 @@ router = APIRouter(
 
 
 @router.post(
-    "/",
+    "",
     response_model=WarehouseResponse
 )
 def create_warehouse(
@@ -54,7 +54,7 @@ def create_warehouse(
 
 
 @router.get(
-    "/",
+    "",
     response_model=list[WarehouseResponse]
 )
 def get_warehouses(

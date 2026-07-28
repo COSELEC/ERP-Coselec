@@ -24,7 +24,7 @@ router = APIRouter(
 
 
 @router.get(
-    "/",
+    "",
     response_model=list[StockMovementResponse]
 )
 def get_movements(

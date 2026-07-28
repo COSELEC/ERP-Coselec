@@ -13,7 +13,7 @@ from typing import List
 router = APIRouter(prefix="/projects", tags=["projects"])
 
 # POST
-@router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 def create_project(project_data : ProjectCreate, db: Session= Depends(get_db), user_permissions= Depends(check_permission("projects.create"))):
     existing_project = db.query(Project).filter(Project.code == project_data.code).first()
     if existing_project:
@@ -83,7 +83,7 @@ def add_partner_to_project(
 
 
 # GET
-@router.get("/", response_model=List[ProjectResponse], status_code=status.HTTP_200_OK)
+@router.get("", response_model=List[ProjectResponse], status_code=status.HTTP_200_OK)
 def get_projects(
     db:Session = Depends(get_db),
     user_permissions = Depends(check_permission("projects.read"))

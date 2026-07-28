@@ -15,7 +15,7 @@ from app.services.storage import upload_file_to_minio, get_file_url_from_minio, 
 router = APIRouter(prefix="/projects/{project_id}/tasks", tags=["tasks"])
 
 #GET
-@router.get("/", response_model=list[TaskResponse], status_code=status.HTTP_200_OK)
+@router.get("", response_model=list[TaskResponse], status_code=status.HTTP_200_OK)
 def get_tasks_by_project(project_id:int, milestone_id: int | None = None, db : Session=Depends(get_db), user_permissions=Depends(check_permission("tasks.read"))):
     query = db.query(Task).filter(Task.project_id==project_id)
     if milestone_id is not None:
@@ -35,7 +35,7 @@ def get_task(task_id: int, db: Session=Depends(get_db), user_permissions=Depends
 
 
 # POST
-@router.post("/", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 def create_task_for_project( task_data : TaskCreate, project_id: int, db: Session=Depends(get_db), user_permissions=Depends(check_permission("tasks.create")), current_user=Depends(get_current_user)):
     existing_task = db.query(Task).filter(Task.project_id==project_id,Task.title == task_data.title).count()
     if existing_task>0:

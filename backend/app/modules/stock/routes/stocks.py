@@ -21,7 +21,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[StockResponse])
+@router.get("", response_model=list[StockResponse])
 def get_stocks(
     product_id: int | None = Query(None),
     warehouse_id: int | None = Query(None),

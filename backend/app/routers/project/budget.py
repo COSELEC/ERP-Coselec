@@ -39,7 +39,7 @@ class ExpenseResponse(ExpenseCreate):
 class ExpenseUpdate(BaseModel):
     status: ExpenseStatus
 
-@router.get("/", response_model=List[BudgetResponse])
+@router.get("", response_model=List[BudgetResponse])
 def get_budgets(
     project_id: int, 
     skip: int = Query(0, ge=0), 
@@ -48,7 +48,7 @@ def get_budgets(
 ):
     return db.query(ProjectBudget).options(joinedload(ProjectBudget.expenses)).filter(ProjectBudget.project_id == project_id).offset(skip).limit(limit).all()
 
-@router.post("/", response_model=BudgetResponse)
+@router.post("", response_model=BudgetResponse)
 def create_budget(project_id: int, budget: BudgetCreate, db: Session = Depends(get_db)):
     db_budget = ProjectBudget(
         project_id=project_id,

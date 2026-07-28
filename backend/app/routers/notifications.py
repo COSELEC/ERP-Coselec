@@ -16,7 +16,7 @@ router = APIRouter(
     tags=["Notifications"]
 )
 
-@router.get("/", response_model=List[NotificationResponse])
+@router.get("", response_model=List[NotificationResponse])
 def read_user_notifications(
     unread_only: bool = False,
     _: None = Depends(check_permission("notifications.read")),

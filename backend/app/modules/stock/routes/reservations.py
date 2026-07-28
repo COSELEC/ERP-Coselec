@@ -30,7 +30,7 @@ class ReservationResponse(ReservationCreate):
 
     model_config = ConfigDict(from_attributes=True)
 
-@router.get("/", response_model=List[ReservationResponse])
+@router.get("", response_model=List[ReservationResponse])
 def get_reservations(
     search: Optional[str] = None, 
     skip: int = Query(0, ge=0), 
@@ -56,7 +56,7 @@ def get_reservations(
             )
     return query.offset(skip).limit(limit).all()
 
-@router.post("/", response_model=ReservationResponse)
+@router.post("", response_model=ReservationResponse)
 def create_reservation(res: ReservationCreate, db: Session = Depends(get_db)):
     stock = db.query(Stock).with_for_update().filter(Stock.product_id == res.product_id).first()
     

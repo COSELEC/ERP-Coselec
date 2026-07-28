@@ -55,7 +55,7 @@ class CaisseVoucherResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-@router.get("/", response_model=List[CaisseVoucherResponse])
+@router.get("", response_model=List[CaisseVoucherResponse])
 def get_caisse_vouchers(
     search: Optional[str] = None, 
     skip: int = Query(0, ge=0), 

@@ -25,7 +25,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[ProductResponse])
+@router.get("", response_model=list[ProductResponse])
 def get_products(
     q: str | None = Query(default=None),
     skip: int = 0,
@@ -72,7 +72,7 @@ def get_product(
 
 
 @router.post(
-    "/",
+    "",
     response_model=ProductResponse,
     status_code=201
 )

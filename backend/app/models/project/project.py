@@ -61,4 +61,4 @@ class Project(Base):
     budgets = relationship("ProjectBudget", back_populates="project", cascade="all, delete-orphan")
     expenses = relationship("ProjectExpense", back_populates="project", cascade="all, delete-orphan")
     assignments = relationship("ProjectAssignment", back_populates="project", cascade="all, delete-orphan")
-    attendances = relationship("Attendance", overlaps="project")
+    attendances = relationship("Attendance", overlaps="project")

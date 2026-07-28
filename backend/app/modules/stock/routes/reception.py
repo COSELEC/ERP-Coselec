@@ -26,7 +26,7 @@ class ReceptionPayload(BaseModel):
     created_by: Optional[int]
     lines: List[ReceptionLinePayload]
 
-@router.post("/")
+@router.post("")
 def create_reception(payload: ReceptionPayload, db: Session = Depends(get_db)):
     # 1. Create Reception
     reception = ReceptionControl(

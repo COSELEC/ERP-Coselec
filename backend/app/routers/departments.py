@@ -6,7 +6,7 @@ from app.core.security.auth import get_current_user
 
 router = APIRouter(prefix="/departments", tags=["Departments"])
 
-@router.get("/")
+@router.get("")
 def get_departments(db: Session = Depends(get_db)):
     departments = db.query(Department).all()
     return [{"id": d.id, "name": d.name, "code": d.code} for d in departments]

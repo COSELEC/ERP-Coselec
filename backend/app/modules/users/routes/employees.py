@@ -32,7 +32,7 @@ def _employee_label(employee: Employee) -> str:
 
 
 @router.get(
-    "/",
+    "",
     response_model=list[EmployeeResponse]
 )
 def get_employees(
@@ -67,7 +67,7 @@ def get_employee(
     return employee
 
 @router.post(
-    "/",
+    "",
     response_model=EmployeeResponse
 )
 def create_employee(

@@ -72,6 +72,19 @@ async def lifespan(app: FastAPI):
 # Inactivation des redirections strictes de slashes pour corriger les erreurs CORS/307
 app = FastAPI(lifespan=lifespan, redirect_slashes=False)
 
+class StripTrailingSlashASGIMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            path = scope.get("path", "")
+            if path != "/" and path.endswith("/"):
+                scope["path"] = path.rstrip("/")
+        await self.app(scope, receive, send)
+
+app.add_middleware(StripTrailingSlashASGIMiddleware)
+
 # Configuration CORS
 raw_origins = os.getenv("CORS_ALLOW_ORIGINS", "")
 default_origins = [

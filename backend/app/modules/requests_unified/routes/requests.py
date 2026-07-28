@@ -120,7 +120,7 @@ def _apply_row_level_filter(query, current_user: User):
 # GET /requests/
 # ---------------------------------------------------------------------------
 
-@router.get("/", response_model=list[RequestResponse])
+@router.get("", response_model=list[RequestResponse])
 def get_requests(
     type: Optional[RequestType] = None,
     status_filter: Optional[RequestStatus] = Query(None, alias="status"),
@@ -174,7 +174,7 @@ def get_request(
 # POST /requests/
 # ---------------------------------------------------------------------------
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=RequestResponse)
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=RequestResponse)
 def create_request(
     request_data: RequestCreate,
     current_user: User = Depends(get_current_user),

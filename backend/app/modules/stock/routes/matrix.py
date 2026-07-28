@@ -11,7 +11,7 @@ from app.modules.stock.enums.movement_type import MovementType
 
 router = APIRouter(prefix="/matrix", tags=["stock-matrix"])
 
-@router.get("/", response_model=Dict[str, Any])
+@router.get("", response_model=Dict[str, Any])
 def get_stock_matrix(db: Session = Depends(get_db)):
     """
     Returns a matrix of product quantities distributed across projects.

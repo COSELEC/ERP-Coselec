@@ -24,7 +24,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[CategoryResponse])
+@router.get("", response_model=list[CategoryResponse])
 def get_categories(
     _: None = Depends(check_permission("stock.read")),
     current_user: User = Depends(get_current_user),
@@ -56,7 +56,7 @@ def get_category(
 
 
 @router.post(
-    "/",
+    "",
     response_model=CategoryResponse,
     status_code=201
 )

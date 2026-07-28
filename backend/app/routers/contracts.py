@@ -14,7 +14,7 @@ router = APIRouter(
     tags=["Contracts"]
 )
 
-@router.get("/", response_model=list[ContractResponse])
+@router.get("", response_model=list[ContractResponse])
 def get_contracts(
     _: None = Depends(check_permission("contracts.read")),
     current_user: User = Depends(get_current_user),
@@ -22,7 +22,7 @@ def get_contracts(
 ):
     return db.query(Contract).all()
 
-@router.post("/", response_model=ContractResponse)
+@router.post("", response_model=ContractResponse)
 def create_contract(
     contract_data: ContractCreate,
     _: None = Depends(check_permission("contracts.create")),
