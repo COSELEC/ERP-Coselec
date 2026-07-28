@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.core.database import get_db
 from app.models.project.project import Project, ProjectStatus
-from app.models.stock.partner import Partner
+from app.modules.stock.models.partner import Partner
 from app.schemas.project.project import ProjectCreate, ProjectResponse, ProjectUpdate
 from app.core.security.auth import check_permission
 from app.services.pdf_generator import generate_project_report_pdf
@@ -37,7 +37,7 @@ def create_project(project_data : ProjectCreate, db: Session= Depends(get_db), u
     db.refresh(db_project)
     return db_project
 
-@router.get("/{project_id}/download-report/")
+@router.get("/{project_id}/download-report")
 def download_project_report(project_id: int, db: Session = Depends(get_db)):
     db_project = db.query(Project).filter(Project.id == project_id).first()
     if not db_project:

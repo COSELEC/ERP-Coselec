@@ -122,7 +122,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     )
     return response
 
-@router.get("/me/")
+@router.get("/me")
 def me(current_user: User = Depends(get_current_user)):
     return {
         "id": current_user.id,
@@ -131,7 +131,7 @@ def me(current_user: User = Depends(get_current_user)):
         "roles": [role.name for role in current_user.roles]
     }
 
-@router.post("/logout/")
+@router.post("/logout")
 def logout():
     response = JSONResponse(content={"message": "Logout successful"})
     response.delete_cookie(key="access_token", samesite=COOKIE_SAMESITE, secure=COOKIE_SECURE)

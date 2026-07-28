@@ -129,7 +129,7 @@ def create_purchase_order(
         db.rollback()
         raise HTTPException(status_code=400, detail="Invalid request_id, supplier_id or product_id")
 
-@router.get("/orders/{order_id}/download-pdf/")
+@router.get("/orders/{order_id}/download-pdf")
 def download_order_pdf(
     order_id: int,
     db: Session = Depends(get_db),

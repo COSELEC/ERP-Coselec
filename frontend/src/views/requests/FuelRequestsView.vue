@@ -300,7 +300,18 @@ async function submitRequest() {
       type: 'FUEL',
       priority: 'NORMAL',
       description: form.value.objet_deplacement,
-      payload: { ...form.value }
+      payload: { 
+        type: 'FUEL',
+        employee_id: form.value.employee_id ? parseInt(form.value.employee_id) : null,
+        vehicle_plate: form.value.vehicule_matricule,
+        destination: form.value.destination,
+        fuel_quantity: parseFloat(form.value.quantite_carburant) || 1,
+        trip_days: 1, 
+        odometer_reading: parseInt(form.value.releve_kilometrique) || 1,
+        trip_purpose: form.value.objet_deplacement,
+        affaire_no: form.value.affaire_no,
+        dossier_no: form.value.dossier_no
+      }
     });
     showCreateModal.value = false;
     // Reset form

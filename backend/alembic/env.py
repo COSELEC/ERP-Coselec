@@ -22,7 +22,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 load_dotenv()
 config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL", "sqlite:///./erp.db"))
 
-from app.main import Base
+from app.core.database import Base
+import app.main
 from app.models.project.client import Client
 from app.models.project.phase import ProjectPhase
 from app.models.project.milestone import ProjectMilestone
@@ -30,7 +31,7 @@ from app.models.project.budget import ProjectBudget
 from app.models.project.expense import ProjectExpense
 from app.models.caisse_voucher import CaisseVoucher
 from app.models.procurement.purchase import PurchaseRequest, PurchaseOrder, PurchaseOrderLine
-from app.models.stock.reservation import ProjectStockReservation
+from app.modules.stock.models.reservation import ProjectStockReservation
 from app.models.norm import NormCategory, Norm, NormVersion
 target_metadata = Base.metadata
 

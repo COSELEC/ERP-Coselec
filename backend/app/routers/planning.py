@@ -42,7 +42,7 @@ def _status_to_frontend_token(value: str) -> str:
         return "SITE"
 
 # --- Endpoint 1: Fetch the Dynamic Schedule Matrix Grid ---
-@router.get("/schedule-matrix/")
+@router.get("/schedule-matrix")
 @router.get("/schedule-matrix", include_in_schema=False)
 def get_schedule_matrix(
     start_date: str = Query(..., description="Date de début au format YYYY-MM-DD"),
@@ -102,7 +102,7 @@ def get_schedule_matrix(
 
 
 # --- Endpoint 2: HR Save / Override a Specific Slot ---
-@router.post("/assignment/")
+@router.post("/assignment")
 @router.post("/assignment", include_in_schema=False)
 def update_attendance_slot(
     payload: AttendanceUpdate,

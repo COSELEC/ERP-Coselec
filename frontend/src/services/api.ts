@@ -38,15 +38,7 @@ function normalizeApiUrl(url?: string): string | undefined {
     return url;
   }
 
-  const [rawPath = "", query = ""] = url.split("?");
-  const path = rawPath || "/";
-
-  if (path.endsWith("/")) {
-    return url;
-  }
-
-  const normalized = `${path}/`;
-  return query ? `${normalized}?${query}` : normalized;
+  return url;
 }
 
 function getAuthToken(): string | null {

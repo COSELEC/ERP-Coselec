@@ -6,8 +6,8 @@ from app.core.database import get_db
 from app.models.project.project import Project, ProjectStatus
 from app.modules.users.models.employee import Employee
 
-from app.models.stock.stock import Stock
-from app.models.stock.stockmovement import StockMovement
+from app.modules.stock.models.stock import Stock
+from app.modules.stock.models.stockmovement import StockMovement
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
