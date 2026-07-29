@@ -15,11 +15,13 @@ router = APIRouter(prefix="/stock-reservations", tags=["Stock Reservations"])
 class ReservationCreate(BaseModel):
     project_id: int
     product_id: int
+    task_id: int | None = None
     reserved_by_id: int | None = None
     quantity: int = Field(..., gt=0)
 
 class ReservationResponse(ReservationCreate):
     id: int
+    task_id: int | None = None
     status: str
     created_at: datetime
     consumed_at: datetime | None = None
@@ -66,6 +68,7 @@ def create_reservation(res: ReservationCreate, db: Session = Depends(get_db)):
     db_res = ProjectStockReservation(
         project_id=res.project_id,
         product_id=res.product_id,
+        task_id=res.task_id,
         reserved_by_id=res.reserved_by_id,
         quantity=res.quantity
     )

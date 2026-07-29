@@ -32,7 +32,7 @@ def check_document_expirations():
                         db=db,
                         user_id=rh_user.id, 
                         message=message,
-                        type=NotificationType.INFO,
+                        type=NotificationType.WARNING,
                         reference_id=doc.id #
                     )
     finally:

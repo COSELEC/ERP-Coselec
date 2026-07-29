@@ -1,5 +1,6 @@
 import axios, { AxiosHeaders } from "axios";
 import { clearStoredProfile } from "./session";
+import { useToast } from "@/composables/useToast";
 
 function resolveApiBaseUrl(): string {
   const configuredBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
@@ -83,6 +84,11 @@ api.interceptors.response.use(
       if (window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
+    } else {
+      // Display global error toast
+      const { error: showErrorToast } = useToast();
+      const errorMessage = error?.response?.data?.detail || "Une erreur est survenue";
+      showErrorToast(typeof errorMessage === 'string' ? errorMessage : "Erreur inattendue");
     }
 
     return Promise.reject(error);

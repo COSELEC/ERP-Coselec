@@ -38,6 +38,11 @@ const orderForm = ref({
   lines: [] as Array<{ product_id: string, quantity: number, unit_price: number }>
 });
 
+const showApproveModal = ref(false);
+const orderToApprove = ref<any>(null);
+const approveLines = ref<any[]>([]);
+const availableBudgets = ref<any[]>([]);
+
 const addLine = () => {
   orderForm.value.lines.push({ product_id: '', quantity: 1, unit_price: 0 });
 };
@@ -158,6 +163,60 @@ const createPurchaseOrder = async () => {
 onMounted(() => {
   fetchData();
 });
+
+const openApproveModal = async (order: any) => {
+  orderToApprove.value = order;
+  // Initialize approve lines matching order lines
+  approveLines.value = (order.lines || []).map((l: any) => ({
+    line_id: l.id,
+    budget_id: '',
+    designation: l.designation,
+    quantity: l.quantity,
+    unit_price: l.unit_price,
+    product_id: l.product_id
+  }));
+  
+  // Find project id
+  let projId = order.project_id;
+  if (!projId && order.purchase_request_id) {
+     const req = purchaseRequests.value.find(r => r.id === order.purchase_request_id);
+     if (req) projId = req.project_id;
+  }
+  
+  if (projId) {
+    try {
+      const res = await api.get(`/projects/${projId}/budgets`);
+      availableBudgets.value = res.data;
+    } catch (e) {
+      console.error("Failed to load budgets");
+      availableBudgets.value = [];
+    }
+  } else {
+    availableBudgets.value = [];
+  }
+  
+  showApproveModal.value = true;
+};
+
+const submitApproval = async () => {
+  isSubmitting.value = true;
+  try {
+    const payload = {
+      lines: approveLines.value.map(l => ({
+        line_id: l.line_id,
+        budget_id: l.budget_id ? Number(l.budget_id) : null
+      }))
+    };
+    await api.put(`/procurement/orders/${orderToApprove.value.id}/approve`, payload);
+    toast.success("Bon de commande approuvé !");
+    showApproveModal.value = false;
+    await fetchData();
+  } catch (err: any) {
+    toast.error(err.response?.data?.detail || "Erreur lors de l'approbation.");
+  } finally {
+    isSubmitting.value = false;
+  }
+};
 
 const downloadOrderPdf = async (orderId: number) => {
   try {
@@ -294,10 +353,16 @@ const downloadOrderPdf = async (orderId: number) => {
                     </span>
                   </td>
                   <td class="px-6 py-4">
-                    <button @click="downloadOrderPdf(order.id)" class="text-indigo-600 hover:text-indigo-900 font-medium flex items-center gap-1">
-                      <span class="material-symbols-outlined text-sm">download</span>
-                      PDF
-                    </button>
+                    <div class="flex items-center gap-3">
+                      <button v-if="order.status !== 'Approved' && order.status !== 'Cancelled'" @click="openApproveModal(order)" class="text-green-600 hover:text-green-900 font-medium flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">check_circle</span>
+                        Approuver
+                      </button>
+                      <button @click="downloadOrderPdf(order.id)" class="text-indigo-600 hover:text-indigo-900 font-medium flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">download</span>
+                        PDF
+                      </button>
+                    </div>
                   </td>
                 </tr>
                 <tr v-if="sortedOrders.length === 0">
@@ -408,6 +473,50 @@ const downloadOrderPdf = async (orderId: number) => {
             <button type="submit" :disabled="isSubmitting" class="px-4 py-2 bg-[#d10f2f] hover:bg-[#97091f] text-white rounded-lg font-medium transition-colors disabled:opacity-70 flex items-center justify-center min-w-[120px]">
               <div v-if="isSubmitting" class="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white"></div>
               <span v-else>Créer</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Approbation & Imputation Budgétaire -->
+    <div v-if="showApproveModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div class="bg-white p-6 rounded-xl w-full max-w-2xl shadow-xl">
+        <h2 class="text-xl font-bold mb-4 text-gray-900">Approuver & Imputer (BC-{{ orderToApprove?.id }})</h2>
+        <form @submit.prevent="submitApproval" class="space-y-4">
+          
+          <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 class="text-sm font-bold text-gray-700 mb-2">Lignes de la commande</h3>
+            <div class="space-y-3 max-h-[300px] overflow-y-auto">
+              <div v-for="(line, idx) in approveLines" :key="idx" class="flex gap-4 items-center bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                <div class="flex-1">
+                  <p class="text-sm font-medium text-gray-900">
+                    {{ line.designation || (products.find(p => p.id === line.product_id)?.designation) || 'Produit inconnu' }}
+                  </p>
+                  <p class="text-xs text-gray-500">Qté: {{ line.quantity }} | Prix: {{ line.unit_price }}</p>
+                </div>
+                <div class="w-1/2">
+                  <select v-model="line.budget_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500">
+                    <option value="">-- Sans budget --</option>
+                    <option v-for="b in availableBudgets" :key="b.id" :value="b.id">
+                      {{ b.category }} (Reste: {{ b.allocated_amount - b.consumed }} {{ b.currency }})
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div v-if="approveLines.length === 0" class="text-sm text-gray-500 text-center py-4">
+                Aucune ligne trouvée sur ce BC.
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-3 mt-6">
+            <button type="button" @click="showApproveModal = false" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors">
+              Annuler
+            </button>
+            <button type="submit" :disabled="isSubmitting" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-70 flex items-center justify-center min-w-[120px]">
+              <div v-if="isSubmitting" class="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white"></div>
+              <span v-else>Approuver</span>
             </button>
           </div>
         </form>

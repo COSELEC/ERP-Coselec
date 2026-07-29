@@ -133,6 +133,7 @@ def create_bank_voucher(voucher_in: BankVoucherCreate, db: Session = Depends(get
 @router.post("/{voucher_id}/finalize")
 def finalize_bank_voucher(voucher_id: int, db: Session = Depends(get_db)):
     from app.models.caisse_voucher import VoucherStatus
+    from app.models.project.expense import ProjectExpense, ExpenseStatus
     from datetime import datetime
     voucher = db.query(BankVoucher).filter(BankVoucher.id == voucher_id).first()
     if not voucher:
@@ -143,6 +144,14 @@ def finalize_bank_voucher(voucher_id: int, db: Session = Depends(get_db)):
         
     voucher.status = VoucherStatus.FINALIZED
     voucher.finalized_at = datetime.utcnow()
+
+    # Update linked ProjectExpense to deduct from Budget
+    if voucher.expense_id:
+        expense = db.query(ProjectExpense).filter(ProjectExpense.id == voucher.expense_id).first()
+        if expense:
+            expense.status = ExpenseStatus.APPROVED
+            expense.amount = voucher.amount_in_numbers
+
     db.commit()
     db.refresh(voucher)
     return {"status": voucher.status, "finalized_at": voucher.finalized_at}

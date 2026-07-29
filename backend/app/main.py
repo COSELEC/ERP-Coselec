@@ -41,7 +41,7 @@ from app.tasks.hr_alerts import check_document_expirations
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 1. Migrations automatiques de la base de données (Alembic)
+    # Migrations automatiques de la base de données (Alembic)
     try:
         print("Lancement des migrations Alembic...")
         alembic_cfg = Config("alembic.ini")
@@ -50,7 +50,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"Erreur lors des migrations Alembic : {e}")
 
-    # 2. Initialisation des rôles et de l'admin
+    #  Initialisation des rôles et de l'admin
     db = SessionLocal()
     try:
         ensure_rbac_setup(db)
@@ -58,7 +58,7 @@ async def lifespan(app: FastAPI):
     finally:
         db.close()
 
-    # 3. Démarrage du planificateur de tâches
+    # Démarrage du planificateur de tâches
     scheduler = BackgroundScheduler()
     scheduler.add_job(check_document_expirations, "cron", hour=8, minute=0)
     scheduler.start()
@@ -91,7 +91,7 @@ default_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://0.0.0.0:5173",
-    "https://erp-coselec-gold.vercel.app",  # <--- Ajouté explicitement
+    "https://erp-coselec-gold.vercel.app",
 ]
 allow_origins = [
     origin.strip().rstrip("/")

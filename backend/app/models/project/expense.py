@@ -15,6 +15,7 @@ class ProjectExpense(Base):
     id = Column(Integer, primary_key=True, index=True)
     project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     budget_id = Column(Integer, ForeignKey("project_budgets.id", ondelete="SET NULL"), nullable=True)
+    purchase_order_line_id = Column(Integer, ForeignKey("purchase_order_lines.id", ondelete="SET NULL"), nullable=True)
     
     amount = Column(Numeric(14, 2), nullable=False)
     date_incurred = Column(Date, nullable=False)
@@ -24,3 +25,4 @@ class ProjectExpense(Base):
 
     project = relationship("Project", back_populates="expenses")
     budget = relationship("ProjectBudget", back_populates="expenses")
+    purchase_order_line = relationship("PurchaseOrderLine")

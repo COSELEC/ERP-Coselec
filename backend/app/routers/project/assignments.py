@@ -5,8 +5,13 @@ from app.models.project.assignment import ProjectAssignment
 from app.models.project.project import Project
 from app.modules.users.models.employee import Employee
 from app.schemas.project.assignment import AssignmentCreate, AssignmentUpdate, AssignmentResponse
+from fastapi import BackgroundTasks
+from app.modules.users.models.user import User
+from app.services.event_notifier import notify_user
+from app.models.notification import NotificationType
 from typing import List
 from datetime import date
+from app.services.availability import is_employee_on_leave
 
 router = APIRouter(tags=["Project Assignments"])
 
@@ -33,7 +38,7 @@ def get_project_assignments(project_id: int, db: Session = Depends(get_db)):
     return assignments
 
 @router.post("/projects/{project_id}/assignments", response_model=AssignmentResponse, status_code=status.HTTP_201_CREATED)
-def create_project_assignment(project_id: int, assignment: AssignmentCreate, db: Session = Depends(get_db)):
+def create_project_assignment(project_id: int, assignment: AssignmentCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     # Check if project exists
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
@@ -43,6 +48,10 @@ def create_project_assignment(project_id: int, assignment: AssignmentCreate, db:
     employee = db.query(Employee).filter(Employee.id == assignment.employee_id).first()
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
+
+    # Check leave status
+    if is_employee_on_leave(db, assignment.employee_id, assignment.start_date, assignment.end_date):
+        raise HTTPException(status_code=400, detail="Employé en congé sur cette période")
 
     # Check duplicate
     existing = db.query(ProjectAssignment).filter(
@@ -76,6 +85,17 @@ def create_project_assignment(project_id: int, assignment: AssignmentCreate, db:
         joinedload(ProjectAssignment.employee)
     ).filter(ProjectAssignment.id == db_assignment.id).first()
     
+    if employee.email:
+        user = db.query(User).filter(User.email == employee.email).first()
+        if user:
+            background_tasks.add_task(
+                notify_user,
+                user.id,
+                f"Vous avez été assigné au projet: {project.name}",
+                NotificationType.INFO,
+                db_assignment.id
+            )
+
     return db_assignment
 
 @router.patch("/projects/assignments/{assignment_id}", response_model=AssignmentResponse)
@@ -91,6 +111,10 @@ def update_project_assignment(assignment_id: int, assignment_update: AssignmentU
         new_alloc = update_data.get("allocation", db_assignment.allocation)
         new_start = update_data.get("start_date", db_assignment.start_date)
         new_end = update_data.get("end_date", db_assignment.end_date)
+        
+        # Check leave status
+        if is_employee_on_leave(db, db_assignment.employee_id, new_start, new_end):
+            raise HTTPException(status_code=400, detail="Employé en congé sur cette période")
         
         today = date.today()
         is_active = new_start <= today and (new_end is None or new_end >= today)

@@ -11,6 +11,7 @@ const toast = useToast();
 const reservations = ref<any[]>([]);
 const projects = ref<any[]>([]);
 const products = ref<any[]>([]);
+const tasks = ref<any[]>([]);
 
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -26,6 +27,7 @@ const sortOrder = ref<'asc' | 'desc'>('desc');
 
 const form = ref({
   project_id: '',
+  task_id: '',
   product_id: '',
   quantity: 1
 });
@@ -50,6 +52,22 @@ const fetchData = async () => {
     loading.value = false;
   }
 };
+
+import { watch } from 'vue';
+
+watch(() => form.value.project_id, async (newVal) => {
+  if (newVal) {
+    try {
+      const res = await api.get(`/projects/${newVal}/tasks`);
+      tasks.value = res.data || [];
+    } catch {
+      tasks.value = [];
+    }
+  } else {
+    tasks.value = [];
+  }
+  form.value.task_id = '';
+});
 
 const debouncedSearch = () => {
   if (debounceTimer) clearTimeout(debounceTimer);
@@ -95,13 +113,14 @@ const createReservation = async () => {
     await api.post('/stock-reservations/', {
       project_id: Number(form.value.project_id),
       product_id: Number(form.value.product_id),
+      task_id: form.value.task_id ? Number(form.value.task_id) : null,
       quantity: form.value.quantity,
       reserved_by_id: null
     });
     
     toast.success("Réservation créée avec succès !");
     showModal.value = false;
-    form.value = { project_id: '', product_id: '', quantity: 1 };
+    form.value = { project_id: '', task_id: '', product_id: '', quantity: 1 };
     await fetchData();
   } catch (err: any) {
     const msg = err.response?.data?.detail || "Erreur lors de la création de la réservation.";
@@ -228,7 +247,12 @@ onMounted(() => {
                 <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ res.product_name || `Produit #${res.product_id}` }}</td>
                 <td class="px-6 py-4 text-sm font-bold text-gray-900">{{ res.quantity }}</td>
                 <td class="px-6 py-4 text-sm text-gray-500">{{ new Date(res.created_at).toLocaleDateString('fr-FR', { month: '2-digit', day: '2-digit' }) }}</td>
-                <td class="px-6 py-4 text-sm font-bold text-gray-700">{{ new Date(res.created_at).getFullYear() }}</td>
+                <td class="px-6 py-4 text-sm font-bold text-gray-700">
+                  <div class="flex flex-col">
+                    <span>{{ new Date(res.created_at).getFullYear() }}</span>
+                    <span v-if="res.task_id" class="text-xs text-blue-600">Tâche #{{ res.task_id }}</span>
+                  </div>
+                </td>
                 <td class="px-6 py-4">
                   <span 
                     :class="{
@@ -290,6 +314,14 @@ onMounted(() => {
             <select v-model="form.project_id" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500">
               <option value="" disabled>Sélectionner un projet</option>
               <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.code }} - {{ p.nom }}</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tâche (Optionnel)</label>
+            <select v-model="form.task_id" :disabled="!form.project_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500 disabled:bg-gray-100">
+              <option value="">-- Sans tâche --</option>
+              <option v-for="t in tasks" :key="t.id" :value="t.id">{{ t.title }}</option>
             </select>
           </div>
 

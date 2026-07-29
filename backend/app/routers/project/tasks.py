@@ -47,6 +47,12 @@ def create_task_for_project( task_data : TaskCreate, project_id: int, db: Sessio
         employee= (db.query(Employee).filter(Employee.id == task_data.assignee_id)).first()
         if employee is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employé assigné à la tâche non trouvé")
+        
+        from app.services.availability import is_employee_on_leave
+        start = task_data.start_date if task_data.start_date else task_data.due_date
+        if is_employee_on_leave(db, task_data.assignee_id, start, task_data.due_date):
+            raise HTTPException(status_code=400, detail="Employé en congé sur cette période")
+
     task_count = db.query(Task).filter(Task.project_id == project_id).count()
     if task_count>100:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Le nombre maximal de tâches par projet a été atteint")
@@ -69,6 +75,18 @@ def update_task(project_id: int, task_id: int, task_data: TaskUpdate, db: Sessio
         raise HTTPException(status_code=404, detail="Tâche non trouvée dans ce projet")
     
     update_data = task_data.model_dump(exclude_unset=True)
+    
+    if "assignee_id" in update_data or "start_date" in update_data or "due_date" in update_data:
+        new_assignee_id = update_data.get("assignee_id", task.assignee_id)
+        if new_assignee_id is not None:
+            new_start = update_data.get("start_date", task.start_date)
+            new_end = update_data.get("due_date", task.due_date)
+            start = new_start if new_start else new_end
+            if start and new_end:
+                from app.services.availability import is_employee_on_leave
+                if is_employee_on_leave(db, new_assignee_id, start, new_end):
+                    raise HTTPException(status_code=400, detail="Employé en congé sur cette période")
+
     for field, value in update_data.items():
         setattr(task, field, value)
         

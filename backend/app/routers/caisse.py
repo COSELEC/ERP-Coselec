@@ -125,6 +125,7 @@ def generate_caisse(payload: CaisseRequest, db: Session = Depends(get_db)):
 @router.post("/{voucher_id}/finalize")
 def finalize_caisse(voucher_id: int, db: Session = Depends(get_db)):
     from app.models.caisse_voucher import VoucherStatus
+    from app.models.project.expense import ProjectExpense, ExpenseStatus
     voucher = db.query(CaisseVoucher).filter(CaisseVoucher.id == voucher_id).first()
     if not voucher:
         return {"error": "Voucher not found"}
@@ -134,6 +135,15 @@ def finalize_caisse(voucher_id: int, db: Session = Depends(get_db)):
         
     voucher.status = VoucherStatus.FINALIZED
     voucher.finalized_at = datetime.utcnow()
+    
+    # Update linked ProjectExpense to deduct from Budget
+    if voucher.expense_id:
+        expense = db.query(ProjectExpense).filter(ProjectExpense.id == voucher.expense_id).first()
+        if expense:
+            expense.status = ExpenseStatus.APPROVED
+            total_expense = sum(float(l.amount) for l in voucher.lines if l.line_type.value == "EXPENSE")
+            expense.amount = total_expense
+            
     db.commit()
     db.refresh(voucher)
     return {"status": voucher.status, "finalized_at": voucher.finalized_at}

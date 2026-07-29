@@ -3,6 +3,9 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
+from fastapi import BackgroundTasks
+from app.services.event_notifier import notify_users_by_role
+from app.models.notification import NotificationType
 
 from app.core.database import get_db
 from app.modules.stock.models.reception import ReceptionControl, ReceptionControlLine
@@ -27,7 +30,7 @@ class ReceptionPayload(BaseModel):
     lines: List[ReceptionLinePayload]
 
 @router.post("")
-def create_reception(payload: ReceptionPayload, db: Session = Depends(get_db)):
+def create_reception(payload: ReceptionPayload, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     # 1. Create Reception
     reception = ReceptionControl(
         po_id=payload.po_id,
@@ -89,5 +92,13 @@ def create_reception(payload: ReceptionPayload, db: Session = Depends(get_db)):
     # pdf_url = generate_reception_control_pdf(reception.id, db)
     # reception.pdf_url = pdf_url
     # db.commit()
+    
+    background_tasks.add_task(
+        notify_users_by_role,
+        ["Admin", "Achat", "Stock"],
+        f"Nouvelle réception enregistrée (BC: {payload.po_id or 'N/A'}).",
+        NotificationType.INFO,
+        reception.id
+    )
     
     return {"message": "Réception enregistrée avec succès", "reception_id": reception.id}

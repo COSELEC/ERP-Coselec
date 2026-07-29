@@ -19,6 +19,7 @@ const notifications = ref<NotificationItem[]>([]);
 const isOpen = ref(false);
 const isLoading = ref(false);
 const profile = ref<CurrentUserProfile | null>(getStoredProfile());
+let pollingTimer: ReturnType<typeof setInterval> | null = null;
 
 const unreadCount = computed(() => {
     return notifications.value.filter((item) => !item.is_read).length;
@@ -99,11 +100,18 @@ onMounted(() => {
         .catch(() => {
             profile.value = getStoredProfile();
         });
+        
+    pollingTimer = setInterval(() => {
+        loadNotifications();
+    }, 30000);
 });
 
 onBeforeUnmount(() => {
     document.removeEventListener("click", handleDocumentClick);
     window.removeEventListener("notifications:refresh", handleNotificationsRefresh);
+    if (pollingTimer) {
+        clearInterval(pollingTimer);
+    }
 });
 
 async function logout() {

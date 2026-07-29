@@ -17,6 +17,7 @@ class ProjectStockReservation(Base):
     project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
     reserved_by_id = Column(Integer, ForeignKey("employees.id", ondelete="SET NULL"), nullable=True)
+    task_id = Column(Integer, ForeignKey("tasks.id", ondelete="CASCADE"), nullable=True)
     
     quantity = Column(Integer, nullable=False, default=1)
     status = Column(SQLEnum(ReservationStatus), default=ReservationStatus.PENDING)
@@ -26,3 +27,4 @@ class ProjectStockReservation(Base):
     project = relationship("Project")
     product = relationship("Product")
     reserved_by = relationship("Employee")
+    task = relationship("Task", back_populates="reservations")

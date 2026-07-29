@@ -4,13 +4,17 @@ from sqlalchemy.exc import IntegrityError
 from app.core.database import get_db
 from app.core.security.auth import check_permission
 from app.modules.users.models.user import User
-from app.models.procurement.purchase import PurchaseRequest, PurchaseOrder, PurchaseOrderLine
+from app.models.procurement.purchase import PurchaseRequest, PurchaseOrder, PurchaseOrderLine, PurchaseOrderStatus
+from app.models.project.expense import ProjectExpense, ExpenseStatus
 from app.services.pdf_generator import generate_purchase_order_pdf
 from app.services.storage import get_file_url_from_minio
 from pydantic import BaseModel, ConfigDict, Field
 from datetime import date, datetime
 from typing import List, Optional
 from sqlalchemy import or_, cast, String
+from fastapi import BackgroundTasks
+from app.services.event_notifier import notify_users_by_role
+from app.models.notification import NotificationType
 
 router = APIRouter(prefix="/procurement", tags=["Procurement"])
 
@@ -36,6 +40,11 @@ class PurchaseOrderCreate(BaseModel):
     supplier_id: int | None = None
     lines: List[PurchaseOrderLineCreate] = []
 
+class PurchaseOrderLineResponse(PurchaseOrderLineCreate):
+    id: int
+    budget_id: int | None = None
+    model_config = ConfigDict(from_attributes=True)
+
 class PurchaseOrderResponse(PurchaseOrderCreate):
     id: int
     reference: str | None = None
@@ -45,7 +54,15 @@ class PurchaseOrderResponse(PurchaseOrderCreate):
     status: str
     total_amount: float
     created_at: datetime
+    lines: List[PurchaseOrderLineResponse] = []
     model_config = ConfigDict(from_attributes=True)
+
+class PurchaseOrderLineApprove(BaseModel):
+    line_id: int
+    budget_id: int | None = None
+
+class PurchaseOrderApproveRequest(BaseModel):
+    lines: List[PurchaseOrderLineApprove]
 
 @router.get("/requests", response_model=List[PurchaseRequestResponse])
 def get_purchase_requests(
@@ -97,6 +114,7 @@ def get_purchase_orders(
 @router.post("/orders", response_model=PurchaseOrderResponse)
 def create_purchase_order(
     order: PurchaseOrderCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(check_permission("stock.create")),
 ):
@@ -124,6 +142,15 @@ def create_purchase_order(
         db_order.total_amount = total
         db.commit()
         db.refresh(db_order)
+        
+        background_tasks.add_task(
+            notify_users_by_role,
+            ["Admin", "Finance", "Achat"],
+            f"Nouveau bon de commande #{db_order.id} créé et en attente de validation.",
+            NotificationType.INFO,
+            db_order.id
+        )
+
         return db_order
     except IntegrityError as e:
         db.rollback()
@@ -149,3 +176,65 @@ def download_order_pdf(
             
     url = get_file_url_from_minio(db_order.pdf_url)
     return {"pdf_url": url}
+
+@router.put("/orders/{order_id}/approve", response_model=PurchaseOrderResponse)
+def approve_purchase_order(
+    order_id: int,
+    approve_req: PurchaseOrderApproveRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(check_permission("stock.create")),
+):
+    db_order = db.query(PurchaseOrder).filter(PurchaseOrder.id == order_id).first()
+    if not db_order:
+        raise HTTPException(status_code=404, detail="Order not found")
+        
+    if getattr(db_order.status, "name", db_order.status) == "APPROVED":
+        raise HTTPException(status_code=400, detail="Order is already approved")
+        
+    line_map = {line.id: line for line in db_order.lines}
+    
+    # Identify project_id
+    proj_id = db_order.project_id
+    if not proj_id and db_order.purchase_request:
+        proj_id = db_order.purchase_request.project_id
+        
+    if not proj_id:
+        raise HTTPException(status_code=400, detail="Order is not linked to any project")
+    
+    for approve_line in approve_req.lines:
+        db_line = line_map.get(approve_line.line_id)
+        if db_line:
+            db_line.budget_id = approve_line.budget_id
+            
+            # Create ProjectExpense for this line
+            expense = ProjectExpense(
+                project_id=proj_id,
+                budget_id=approve_line.budget_id,
+                purchase_order_line_id=db_line.id,
+                amount=db_line.quantity * db_line.unit_price,
+                date_incurred=datetime.utcnow().date(),
+                description=f"Achat: {db_line.designation} (BC {db_order.reference or db_order.id})",
+                status=ExpenseStatus.APPROVED
+            )
+            db.add(expense)
+            
+    db_order.status = PurchaseOrderStatus.APPROVED
+    
+    try:
+        db.commit()
+        db.refresh(db_order)
+        
+        background_tasks.add_task(
+            notify_users_by_role,
+            ["Admin", "Achat"],
+            f"Le bon de commande #{db_order.id} a été approuvé.",
+            NotificationType.INFO,
+            db_order.id
+        )
+
+        return db_order
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+

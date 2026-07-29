@@ -45,4 +45,5 @@ class Task(Base):
     #relationships
     documents = relationship("TaskDocument", back_populates="task", cascade="all, delete-orphan")
     milestone = relationship("ProjectMilestone", back_populates="tasks")
+    reservations = relationship("ProjectStockReservation", back_populates="task")
     

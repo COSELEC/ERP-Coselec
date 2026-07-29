@@ -12,6 +12,7 @@ class PurchaseRequestStatus(str, enum.Enum):
 class PurchaseOrderStatus(str, enum.Enum):
     DRAFT = "Draft"
     ISSUED = "Issued"
+    APPROVED = "Approved"
     DELIVERED = "Delivered"
     CANCELLED = "Cancelled"
 
@@ -56,6 +57,7 @@ class PurchaseOrderLine(Base):
     id = Column(Integer, primary_key=True, index=True)
     purchase_order_id = Column(Integer, ForeignKey("purchase_orders.id", ondelete="CASCADE"), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id", ondelete="SET NULL"), nullable=True)
+    budget_id = Column(Integer, ForeignKey("project_budgets.id", ondelete="SET NULL"), nullable=True)
     designation = Column(String(255), nullable=True)
     
     quantity = Column(Integer, nullable=False, default=1)
@@ -63,3 +65,4 @@ class PurchaseOrderLine(Base):
 
     order = relationship("PurchaseOrder", back_populates="lines")
     product = relationship("Product")
+    budget = relationship("ProjectBudget")
