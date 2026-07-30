@@ -1,9 +1,6 @@
 <template>
-  <div class="flex h-screen overflow-hidden">
-    <Sidebar />
-    <div class="flex-1 flex flex-col relative">
-      <Navbar />
-      <main class="flex-1 p-6 bg-gradient-to-br from-red-50 via-white to-red-100/50 overflow-y-auto">
+  <AppLayout>
+    <div class="w-full flex flex-col">
         <div class="flex justify-between items-center mb-6">
           <h1 class="text-2xl font-bold mb-4 text-[#b30c27] flex items-center gap-2">
             <span class="material-symbols-outlined">local_gas_station</span>
@@ -107,8 +104,7 @@
           </table>
           </div>
         </div>
-      </main>
-    </div>
+
 
     <!-- Modal Nouvelle Demande -->
     <div v-if="showCreateModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
@@ -191,13 +187,13 @@
         </form>
       </div>
     </div>
-  </div>
+    </div>
+  </AppLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import Sidebar from '@/components/Sidebar.vue';
-import Navbar from '@/components/Navbar.vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 import { api } from '@/services/api';
 import { employeeService } from '@/services/employees';
 import { useToast } from '@/composables/useToast';

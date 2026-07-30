@@ -3,9 +3,10 @@ from contextlib import asynccontextmanager
 from alembic import command
 from alembic.config import Config
 from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from typing import List, Dict
 
 from app.core.database import SessionLocal
 from app.core.security.middleware import SlidingSessionMiddleware
@@ -38,6 +39,43 @@ from app.modules.stock.routes import stock_router
 
 from app.tasks.hr_alerts import check_document_expirations
 
+from app.modules.chat.routes.chat import router as chat_router
+
+class ConnectionManager:
+    def __init__(self):
+        # Use a dictionary to map a specific chat_id to a list of WebSockets
+        self.active_rooms: Dict[str, List[WebSocket]] = {}
+
+    async def connect(self, websocket: WebSocket, chat_id: str):
+        # 1. CRITICAL: You must accept the connection first
+        await websocket.accept()
+        
+        # 2. Create the room if it doesn't exist, then add the user
+        if chat_id not in self.active_rooms:
+            self.active_rooms[chat_id] = []
+        self.active_rooms[chat_id].append(websocket)
+        
+        print(f"Client connected to chat {chat_id}. Total in room: {len(self.active_rooms[chat_id])}")
+
+    def disconnect(self, websocket: WebSocket, chat_id: str):
+        # Remove the user from the specific room
+        if chat_id in self.active_rooms:
+            if websocket in self.active_rooms[chat_id]:
+                self.active_rooms[chat_id].remove(websocket)
+            
+            # Clean up empty rooms to save memory
+            if len(self.active_rooms[chat_id]) == 0:
+                del self.active_rooms[chat_id]
+                
+        print(f"Client disconnected from chat {chat_id}")
+
+    async def broadcast(self, message: str, chat_id: str):
+        # Send message ONLY to users in this specific chat_id
+        if chat_id in self.active_rooms:
+            for connection in self.active_rooms[chat_id]:
+                await connection.send_text(message)
+        
+manager = ConnectionManager()   
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -132,6 +170,7 @@ app.include_router(users_router)
 app.include_router(generic_requests_router)
 app.include_router(bank_vouchers_router)
 app.include_router(norms_router)
+app.include_router(chat_router)
 
 # Gestion du dossier des uploads
 os.makedirs("uploads", exist_ok=True)
@@ -141,3 +180,18 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 @app.get("/")
 def root():
     return {"message": "Welcome to the ERP API!"}
+
+@app.websocket("/ws/chat/{chat_id}")
+async def websocket_endpoint(websocket: WebSocket, chat_id: str):
+    await manager.connect(websocket, chat_id)
+    try:
+        while True:
+            # Wait for messages from the frontend
+            data = await websocket.receive_text()
+            
+            # Broadcast to everyone in this specific chat room
+            await manager.broadcast(f"User says: {data}", chat_id)
+            
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, chat_id)
+        await manager.broadcast("A user left the chat.", chat_id)

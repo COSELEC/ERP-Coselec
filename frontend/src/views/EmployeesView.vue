@@ -1,16 +1,13 @@
 <template>
-  <div class="flex h-screen overflow-hidden">
-    <Sidebar />
-    <div class="flex-1 flex flex-col relative">
-      <Navbar />
-      <main class="flex-1 p-6 bg-gradient-to-br from-red-50 via-white to-red-100/50 overflow-y-auto">
+  <AppLayout>
+    <div class="w-full flex flex-col relative h-full">
         <h1 class="text-2xl font-bold mb-4 text-[#b30c27] flex items-center gap-2">
           <span class="material-symbols-outlined">badge</span>
           <span>Gestion des employés</span>
         </h1>
         <button
           @click="showCreateModal = true"
-          class="bg-[#d10f2f] text-white px-4 py-2 rounded-xl hover:bg-[#97091f] shadow-[0_10px_30px_rgba(209,15,47,0.28)] transition flex items-center gap-2 mb-6"
+          class="bg-[#d10f2f] w-max text-white px-4 py-2 rounded-xl hover:bg-[#97091f] shadow-[0_10px_30px_rgba(209,15,47,0.28)] transition flex items-center gap-2 mb-6"
         >
           <span class="material-symbols-outlined">person_add</span>
           <span>Ajouter un employé</span>
@@ -93,8 +90,6 @@
             </tbody>
           </table>
         </div>
-      </main>
-
       <!-- Modal Nouvel Employé -->
       <div v-if="showCreateModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
         <div class="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
@@ -290,14 +285,13 @@
             </section>
           </div>
       </div>
-      </div>
-  </div>
+    </div>
+  </AppLayout>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref, computed } from "vue";
-import Sidebar from "../components/Sidebar.vue";
-import Navbar from "../components/Navbar.vue";
+import AppLayout from "@/layouts/AppLayout.vue";
 import { employeeService } from "@/services/employees";
 import { api } from "@/services/api";
 import { useToast } from '@/composables/useToast';

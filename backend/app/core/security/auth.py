@@ -3,6 +3,8 @@ import os
 from pathlib import Path
 from fastapi import Depends, HTTPException, status, Cookie
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import WebSocket, status
+from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -143,3 +145,35 @@ def require_admin_role(current_user: User = Depends(get_current_user)):
             detail="Accès réservé aux administrateurs"
         )
     return current_user
+
+async def get_current_user_ws(token: str, db: Session) -> User | None:
+    """
+    Validates a JWT token string (passed via WebSocket query parameter)
+    and returns the authenticated User object, or None if invalid.
+    """
+    if not token:
+        return None
+
+    try:
+        # Uses your existing SECRET_KEY and ALGORITHM settings
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        
+        if user_id is None:
+            return None
+            
+    except JWTError:
+        return None
+
+    # Eagerly load roles if your permission system relies on them
+    user = (
+        db.query(User)
+        .options(joinedload(User.roles))
+        .filter(User.id == int(user_id))
+        .first()
+    )
+
+    if not user or not user.is_active:
+        return None
+
+    return user

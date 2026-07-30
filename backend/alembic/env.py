@@ -24,6 +24,7 @@ config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL", "sqlite:///./
 
 from app.core.database import Base
 import app.main
+from app.modules.users.models.user import User
 from app.models.project.client import Client
 from app.models.project.phase import ProjectPhase
 from app.models.project.milestone import ProjectMilestone
@@ -34,7 +35,7 @@ from app.models.procurement.purchase import PurchaseRequest, PurchaseOrder, Purc
 from app.modules.stock.models.reservation import ProjectStockReservation
 from app.models.norm import NormCategory, Norm, NormVersion
 target_metadata = Base.metadata
-
+from app.modules.chat.models.chat import Message, ChatRoom
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
