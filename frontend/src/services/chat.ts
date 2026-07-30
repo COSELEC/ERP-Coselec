@@ -66,11 +66,11 @@ export const ChatService = {
   /**
    * Upload an image/file attachment via HTTP POST
    */
-  async uploadFile(file: File): Promise<UploadResponse> {
+  async uploadFile(roomId: string, file: File): Promise<UploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await api.post<UploadResponse>('/chat/upload', formData, {
+    const response = await api.post<UploadResponse>(`/chat/${roomId}/upload`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

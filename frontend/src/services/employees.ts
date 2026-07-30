@@ -9,5 +9,14 @@ export const employeeService = {
       console.error('Error fetching employees:', error);
       throw error;
     }
+  },
+  deleteEmployee: async (id: number) => {
+    try {
+      const response = await api.delete(`/employees/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Error deleting employee:', error);
+      throw error;
+    }
   }
 };

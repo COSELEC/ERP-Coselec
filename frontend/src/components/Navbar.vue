@@ -2,32 +2,27 @@
 import { computed, onMounted, onBeforeUnmount, ref } from "vue";
 import { useRouter } from "vue-router";
 import {
-    getNotifications,
-    markNotificationAsRead,
-    type NotificationItem,
-} from "@/services/notifications";
-import {
     clearStoredProfile,
     getStoredProfile,
     refreshCurrentUserProfile,
     type CurrentUserProfile,
 } from "@/services/session";
 import { logout as logoutRequest } from "@/services/auth";
+import { useNotificationsWS } from "@/composables/useNotificationsWS";
 
 const router = useRouter();
-const notifications = ref<NotificationItem[]>([]);
 const isOpen = ref(false);
 const isLoading = ref(false);
 const profile = ref<CurrentUserProfile | null>(getStoredProfile());
-let pollingTimer: ReturnType<typeof setInterval> | null = null;
 
-const unreadCount = computed(() => {
-    return notifications.value.filter((item) => !item.is_read).length;
-});
-
-const latestNotifications = computed(() => {
-    return notifications.value.slice(0, 6);
-});
+const {
+    unreadCount,
+    latestNotifications,
+    loadInitialNotifications,
+    markAsRead,
+    connectWS,
+    disconnectWS
+} = useNotificationsWS();
 
 const currentUserName = computed(() => {
     return profile.value?.name || "Utilisateur";
@@ -45,32 +40,12 @@ const currentUserInitial = computed(() => {
 
 async function loadNotifications() {
     isLoading.value = true;
-    try {
-        notifications.value = await getNotifications(false);
-    } catch (error) {
-        console.error("Unable to load notifications", error);
-    } finally {
-        isLoading.value = false;
-    }
+    await loadInitialNotifications();
+    isLoading.value = false;
 }
 
 function togglePanel() {
     isOpen.value = !isOpen.value;
-
-    if (isOpen.value) {
-        loadNotifications();
-    }
-}
-
-async function markAsRead(notificationId: number) {
-    try {
-        await markNotificationAsRead(notificationId);
-        notifications.value = notifications.value.filter(
-            (item) => item.id !== notificationId
-        );
-    } catch (error) {
-        console.error("Unable to mark notification as read", error);
-    }
 }
 
 function handleDocumentClick(event: MouseEvent) {
@@ -90,6 +65,8 @@ function handleNotificationsRefresh() {
 
 onMounted(() => {
     loadNotifications();
+    connectWS();
+    
     document.addEventListener("click", handleDocumentClick);
     window.addEventListener("notifications:refresh", handleNotificationsRefresh);
 
@@ -100,18 +77,12 @@ onMounted(() => {
         .catch(() => {
             profile.value = getStoredProfile();
         });
-        
-    pollingTimer = setInterval(() => {
-        loadNotifications();
-    }, 30000);
 });
 
 onBeforeUnmount(() => {
     document.removeEventListener("click", handleDocumentClick);
     window.removeEventListener("notifications:refresh", handleNotificationsRefresh);
-    if (pollingTimer) {
-        clearInterval(pollingTimer);
-    }
+    disconnectWS();
 });
 
 async function logout() {

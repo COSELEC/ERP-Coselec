@@ -81,13 +81,34 @@
                   <span v-else class="text-gray-400 italic">Non généré</span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button 
-                    v-if="req.status === 'PENDING'" 
-                    @click="validateFinance(req.id)"
-                    class="text-emerald-600 hover:text-emerald-900"
-                  >
-                    Valider Finance
-                  </button>
+                  <div v-if="req.status === 'PENDING_MANAGER_APPROVAL'" class="flex gap-2">
+                    <button 
+                      @click="validateManager(req.id)"
+                      class="text-blue-600 hover:text-blue-900"
+                    >
+                      Valider Supérieur
+                    </button>
+                    <button 
+                      @click="rejectRequest(req.id)"
+                      class="text-red-600 hover:text-red-900"
+                    >
+                      Rejeter
+                    </button>
+                  </div>
+                  <div v-else-if="req.status === 'PENDING_FINANCE_APPROVAL'" class="flex gap-2">
+                    <button 
+                      @click="validateFinance(req.id)"
+                      class="text-emerald-600 hover:text-emerald-900"
+                    >
+                      Valider Finance
+                    </button>
+                    <button 
+                      @click="rejectRequest(req.id)"
+                      class="text-red-600 hover:text-red-900"
+                    >
+                      Rejeter
+                    </button>
+                  </div>
                   <button 
                     @click="deleteRequest(req.id)"
                     class="ml-3 text-red-600 hover:text-red-900"
@@ -121,19 +142,7 @@
         
         <form @submit.prevent="submitRequest" class="p-6 space-y-4">
           <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Employé</label>
-              <select 
-                v-model="form.employee_id" 
-                required
-                class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
-              >
-                <option value="" disabled>Sélectionner un employé</option>
-                <option v-for="emp in employees" :key="emp.id" :value="emp.id">
-                  {{ emp.first_name }} {{ emp.last_name }}
-                </option>
-              </select>
-            </div>
+
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
               <input 
@@ -201,7 +210,6 @@ import { useToast } from '@/composables/useToast';
 const toast = useToast();
 
 const requests = ref<any[]>([]);
-const employees = ref<any[]>([]);
 const showCreateModal = ref(false);
 const loading = ref(false);
 
@@ -250,7 +258,6 @@ const getPdfUrl = (req: any) => {
 };
 
 const form = ref({
-  employee_id: '',
   request_date: new Date().toISOString().split('T')[0],
   affaire_no: '',
   dossier_no: '',
@@ -271,8 +278,9 @@ async function fetchRequests() {
       ...req.payload,
       id: req.id,
       status: req.status,
+      request_date: req.created_at,
       pdf_url: req.attachment_url,
-      employee_name: employees.value.find(e => e.id === req.payload.employee_id)?.name || 'N/A'
+      employee_name: req.requester_name || 'N/A'
     }));
   } catch (e) {
     console.error("Error fetching requests", e);
@@ -281,14 +289,6 @@ async function fetchRequests() {
   }
 }
 
-async function fetchEmployees() {
-  try {
-    const res = await employeeService.getAllEmployees();
-    employees.value = res.data;
-  } catch (e) {
-    console.error("Error fetching employees", e);
-  }
-}
 
 async function submitRequest() {
   try {
@@ -298,7 +298,7 @@ async function submitRequest() {
       description: form.value.objet_deplacement,
       payload: { 
         type: 'FUEL',
-        employee_id: form.value.employee_id ? parseInt(form.value.employee_id) : null,
+        request_date: form.value.request_date,
         vehicle_plate: form.value.vehicule_matricule,
         destination: form.value.destination,
         fuel_quantity: parseFloat(form.value.quantite_carburant) || 1,
@@ -311,7 +311,6 @@ async function submitRequest() {
     });
     showCreateModal.value = false;
     // Reset form
-    form.value.employee_id = '';
     form.value.affaire_no = '';
     form.value.dossier_no = '';
     form.value.vehicule_matricule = '';
@@ -327,16 +326,45 @@ async function submitRequest() {
   }
 }
 
+async function validateManager(id: number) {
+  try {
+    await api.patch(`/requests/${id}/status`, {
+      status: 'PENDING_FINANCE_APPROVAL'
+    });
+    await fetchRequests();
+    toast.success("Demande validée par le supérieur !");
+  } catch (e) {
+    console.error("Error validating manager", e);
+    toast.error("Erreur lors de la validation. Êtes-vous le supérieur direct ou un membre de la direction ?");
+  }
+}
+
 async function validateFinance(id: number) {
   try {
     await api.patch(`/requests/${id}/status`, {
       status: 'APPROVED'
     });
     await fetchRequests();
-    toast.success("Demande validée ! Le PDF a été généré dans MinIO.");
+    toast.success("Demande validée par la finance ! Le PDF a été généré dans MinIO.");
   } catch (e) {
-    console.error("Error validating", e);
+    console.error("Error validating finance", e);
     toast.error("Erreur lors de la validation. Vérifiez vos permissions.");
+  }
+}
+
+async function rejectRequest(id: number) {
+  const reason = prompt("Raison du rejet :");
+  if (reason === null) return;
+  try {
+    await api.patch(`/requests/${id}/status`, {
+      status: 'REJECTED',
+      rejection_comment: reason
+    });
+    await fetchRequests();
+    toast.success("Demande rejetée.");
+  } catch (e) {
+    console.error("Error rejecting", e);
+    toast.error("Erreur lors du rejet.");
   }
 }
 
@@ -351,8 +379,7 @@ async function deleteRequest(id: number) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   fetchRequests();
-  fetchEmployees();
 });
 </script>

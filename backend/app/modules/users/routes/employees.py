@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app.core.security.auth import get_current_user, check_permission
 from app.core.database import get_db
@@ -152,9 +153,15 @@ def delete_employee(
             detail="Employee not found"
         )
 
-    db.delete(employee)
-
-    db.commit()
+    try:
+        db.delete(employee)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Impossible de supprimer l'employé : il est toujours assigné à des projets, tâches, ou possède des documents liés. Veuillez les réassigner ou les supprimer d'abord."
+        )
 
     deleted_label = _employee_label(employee)
 

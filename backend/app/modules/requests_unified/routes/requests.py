@@ -36,6 +36,8 @@ from app.modules.requests_unified.services.state_machine import (
     initial_status_for,
     SLA_HOURS,
 )
+from app.models.notification import Notification, NotificationType
+from app.core.websockets.manager import broadcast_notification_sync
 
 logger = logging.getLogger(__name__)
 
@@ -224,7 +226,18 @@ def update_request_status(
     is_admin = "ADMIN" in role_names
     
     if not is_admin:
-        if payload.status in {RequestStatus.APPROVED, RequestStatus.REJECTED}:
+        if payload.status == RequestStatus.PENDING_FINANCE_APPROVAL or (payload.status == RequestStatus.REJECTED and request.status == RequestStatus.PENDING_MANAGER_APPROVAL):
+            if "DIRECTION" not in role_names:
+                from app.modules.users.models.employee import Employee
+                current_employee = db.query(Employee).filter(Employee.email == current_user.email).first()
+                requester = db.get(User, request.requester_id)
+                requester_employee = db.query(Employee).filter(Employee.email == requester.email).first() if requester else None
+                
+                is_direct_manager = current_employee and requester_employee and requester_employee.manager_id == current_employee.id
+                if not is_direct_manager:
+                    raise HTTPException(status_code=403, detail="Manager or Direction approval required")
+                    
+        elif payload.status in {RequestStatus.APPROVED, RequestStatus.REJECTED}:
             if request.type in {RequestType.LEAVE, RequestType.DOCUMENT}:
                 if "RH" not in role_names:
                     raise HTTPException(status_code=403, detail="HR approval required")
@@ -232,7 +245,7 @@ def update_request_status(
                 if "IT" not in role_names:
                     raise HTTPException(status_code=403, detail="IT approval required")
             elif request.type in {RequestType.FACILITY_MAINTENANCE, RequestType.FACILITY_SUPPLIES, RequestType.FACILITY_BADGE, RequestType.FUEL}:
-                if "FINANCE" not in role_names and "ACHAT" not in role_names:
+                if "FINANCE" not in role_names and "ACHAT" not in role_names and "FINANCE / BUDGET" not in role_names:
                     raise HTTPException(status_code=403, detail="Finance/Achat approval required")
 
     # Enforce state machine
@@ -248,6 +261,13 @@ def update_request_status(
     old_status = request.status.value
     request.status = payload.status
     request.validator_id = current_user.id
+    
+    if payload.status == RequestStatus.PENDING_FINANCE_APPROVAL:
+        request.manager_validator_id = current_user.id
+        request.manager_validated_at = datetime.utcnow()
+    elif payload.status == RequestStatus.APPROVED and old_status == RequestStatus.PENDING_FINANCE_APPROVAL:
+        request.finance_validator_id = current_user.id
+        request.finance_validated_at = datetime.utcnow()
 
     if payload.rejection_comment:
         request.rejection_comment = payload.rejection_comment
@@ -261,6 +281,30 @@ def update_request_status(
         db, request, old_status, payload.status.value,
         current_user.id, payload.rejection_comment,
     )
+    
+    # Notify user on approval or rejection
+    if payload.status in {RequestStatus.APPROVED, RequestStatus.REJECTED}:
+        msg = f"Votre demande {request.reference} a été {'approuvée' if payload.status == RequestStatus.APPROVED else 'rejetée'}."
+        new_notification = Notification(
+            user_id=request.requester_id,
+            message=msg,
+            type=NotificationType.INFO.value,
+            reference_id=request.id
+        )
+        db.add(new_notification)
+        db.flush()
+        
+        # Broadcast via WebSockets
+        try:
+            broadcast_notification_sync(request.requester_id, {
+                "id": new_notification.id,
+                "message": msg,
+                "type": "info",
+                "reference_id": request.id,
+                "created_at": new_notification.created_at.isoformat()
+            })
+        except Exception as e:
+            logger.error(f"Failed to broadcast notification: {e}")
 
     db.commit()
     db.refresh(request)

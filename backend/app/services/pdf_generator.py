@@ -149,17 +149,18 @@ def _build_dmcar_table_data(request: Any) -> Table:
     if os.path.exists(logo_path):
         logo_p = Image(logo_path, width=60, height=60)
         
+    payload = request.payload or {}
     data = [
         [logo_p, title_p, "", "", ""],
-        ["DATE:", str(request.request_date), "", "", ""],
-        ["AFFAIRE:", request.affaire_no or "", "", "", ""],
-        ["DOSSIER:", request.dossier_no or "", "", "", ""],
-        [f"OBJET DEPLACEMENT .......................... {request.objet_deplacement}", "", "", "", ""],
-        [f"VEHICULE .............................................. {request.vehicule_matricule}", "", "", "", ""],
-        [f"DESTINATION ........................................ {request.destination}", "", "", "", ""],
-        [f"RELEVE KILOMETRIQUE .................... {request.releve_kilometrique}", "", "", "", ""],
-        [f"NOMBRE DE JOURS ............................ {request.nombre_jours}", "", "", "", ""],
-        [f"QUANTITE DE CARBURANT ............... {request.quantite_carburant} L", "", "", "", ""],
+        ["DATE:", str(payload.get('request_date', request.created_at.strftime('%Y-%m-%d'))), "", "", ""],
+        ["AFFAIRE:", payload.get('affaire_no', ''), "", "", ""],
+        ["DOSSIER:", payload.get('dossier_no', ''), "", "", ""],
+        [f"OBJET DEPLACEMENT .......................... {payload.get('trip_purpose', '')}", "", "", "", ""],
+        [f"VEHICULE .............................................. {payload.get('vehicle_plate', '')}", "", "", "", ""],
+        [f"DESTINATION ........................................ {payload.get('destination', '')}", "", "", "", ""],
+        [f"RELEVE KILOMETRIQUE .................... {payload.get('odometer_reading', '')}", "", "", "", ""],
+        [f"NOMBRE DE JOURS ............................ {payload.get('trip_days', '')}", "", "", "", ""],
+        [f"QUANTITE DE CARBURANT ............... {payload.get('fuel_quantity', '')} L", "", "", "", ""],
     ]
     
     t_main = Table(data, colWidths=[130, 95, 95, 95, 95], rowHeights=[40, 20, 20, 20, 25, 25, 25, 25, 25, 25])
@@ -181,8 +182,8 @@ def _build_dmcar_table_data(request: Any) -> Table:
     return t_main
 
 def _build_dmcar_sig_table(request: Any) -> Table:
-    employee_name = f"{request.employee.first_name} {request.employee.last_name}" if getattr(request, 'employee', None) else ""
-    manager_name = request.manager.name if getattr(request, 'manager', None) else ""
+    employee_name = request.requester.name if getattr(request, 'requester', None) else ""
+    manager_name = request.manager_validator.name if getattr(request, 'manager_validator', None) else ""
     finance_name = request.finance_validator.name if getattr(request, 'finance_validator', None) else "En attente"
     
     sig_data = [

@@ -56,6 +56,7 @@ class RequestResponse(RequestBase):
     priority: RequestPriority
     category: Optional[str] = None
     requester_id: int
+    requester_name: Optional[str] = None
     validator_id: Optional[int] = None
     department_id: Optional[int] = None
     rejection_comment: Optional[str] = None

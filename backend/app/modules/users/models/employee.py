@@ -31,6 +31,17 @@ class Employee(Base):
         Integer,
         ForeignKey("departments.id")
     )
+    
+    manager_id = Column(
+        Integer,
+        ForeignKey("employees.id"),
+        nullable=True
+    )
+    
+    # Self-referential relationship for manager -> subordinates
+    manager = relationship("Employee", remote_side=[id], back_populates="subordinates")
+    subordinates = relationship("Employee", back_populates="manager")
+
     attendances = relationship("Attendance", back_populates="employee", cascade="all, delete-orphan")
     documents = relationship("EmployeeDocument", back_populates="employee", cascade="all, delete-orphan")
     contracts = relationship("Contract", back_populates="employee", cascade="all, delete-orphan")

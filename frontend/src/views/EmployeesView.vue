@@ -228,9 +228,14 @@
               </div>
             </div>
           </div>
-          <button @click="closeSlideOver" class="p-2 text-[#b94a5d] hover:text-[#7f071c] hover:bg-red-100 rounded-full transition">
-            <span class="material-symbols-outlined">close</span>
-          </button>
+          <div class="flex items-center gap-2">
+            <button @click="confirmDeleteEmployee" class="p-2 text-red-500 hover:text-white hover:bg-red-500 rounded-lg transition flex items-center justify-center" title="Supprimer cet employé">
+              <span class="material-symbols-outlined">delete</span>
+            </button>
+            <button @click="closeSlideOver" class="p-2 text-[#b94a5d] hover:text-[#7f071c] hover:bg-red-100 rounded-full transition">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
         </div>
 
         <div v-if="selectedEmployee" class="flex-1 overflow-y-auto p-6 space-y-8">
@@ -407,6 +412,29 @@ const closeSlideOver = () => {
   setTimeout(() => {
     selectedEmployee.value = null;
   }, 300);
+};
+
+const confirmDeleteEmployee = async () => {
+  if (!selectedEmployee.value) return;
+  
+  if (!confirm(`Voulez-vous vraiment supprimer l'employé ${selectedEmployee.value.first_name} ${selectedEmployee.value.last_name} ?`)) {
+    return;
+  }
+  
+  try {
+    await employeeService.deleteEmployee(selectedEmployee.value.id);
+    toast.success("Employé supprimé avec succès");
+    
+    // Refresh list
+    const response = await employeeService.getAllEmployees();
+    employees.value = response.data;
+    
+    closeSlideOver();
+  } catch (e: any) {
+    console.error("Error deleting employee", e);
+    const errorMsg = e.response?.data?.detail || "Erreur lors de la suppression de l'employé";
+    toast.error(errorMsg);
+  }
 };
 // ---------------------------------------------
 

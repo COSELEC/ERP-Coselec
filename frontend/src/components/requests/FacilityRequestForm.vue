@@ -133,15 +133,7 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label class="mb-2 block text-sm font-semibold text-gray-700">Demandeur / Responsable</label>
-              <select v-model="requestPayload.employee_id" required class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-red-400 focus:ring-4 focus:ring-red-100">
-                <option value="" disabled>Sélectionner un collaborateur</option>
-                <option v-for="emp in employees" :key="emp.id" :value="emp.id">
-                  {{ emp.first_name }} {{ emp.last_name }}
-                </option>
-              </select>
-            </div>
+
             
             <div>
               <label class="mb-2 block text-sm font-semibold text-gray-700">Destination (Lieu / Projet)</label>
@@ -266,7 +258,6 @@ onMounted(async () => {
 })
 
 const getInitialPayload = () => ({
-  employee_id: '', // Demandeur
   category: '', // 'MAINTENANCE', 'SUPPLIES'
   maintenance: {
     location_type: 'bureau',
@@ -342,11 +333,7 @@ const submitFacilityRequest = async () => {
       payload: payloadDetails
     };
 
-    // Note: To submit 'on behalf of' employee_id, we'd add requester_id to the request wrapper, but API might derive it from token. 
-    // If backend accepts it:
-    if (requestPayload.employee_id) {
-      (finalPayload.payload as any).target_employee_id = requestPayload.employee_id; // Store in payload
-    }
+
 
     await api.post('/requests/', finalPayload);
     

@@ -34,7 +34,13 @@ def create_user(
     # Check if email exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
-        raise HTTPException(status_code=400, detail="L'email est déjà utilisé.")
+        if not existing_user.is_active:
+            # If the user was soft-deleted, we permanently delete the old record
+            # to allow recreating a new user with the same email.
+            db.delete(existing_user)
+            db.commit()
+        else:
+            raise HTTPException(status_code=400, detail="L'email est déjà utilisé.")
         
     user, temp_pwd = user_service.create_user(db, user_data, current_user)
     

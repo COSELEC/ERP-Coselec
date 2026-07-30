@@ -1,16 +1,7 @@
 <template>
   <form @submit.prevent="submitITRequest" class="space-y-6">
     
-    <!-- Collaborateur concerné -->
-    <div>
-      <label class="mb-2 block text-sm font-semibold text-gray-700">Collaborateur concerné</label>
-      <select v-model="requestPayload.employee_id" required class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-red-400 focus:ring-4 focus:ring-red-100">
-        <option value="" disabled>Sélectionner un collaborateur</option>
-        <option v-for="emp in employees" :key="emp.id" :value="emp.id">
-          {{ emp.first_name }} {{ emp.last_name }}
-        </option>
-      </select>
-    </div>
+
 
     <!-- Category Selection -->
     <div>
@@ -256,7 +247,6 @@ onMounted(async () => {
 })
 
 const getInitialPayload = () => ({
-  employee_id: '',
   category: '', // 'INCIDENT', 'HARDWARE', 'SOFTWARE'
   incident: {
     equipment_id: '',
@@ -340,8 +330,7 @@ const submitITRequest = async () => {
       description: requestPayload.category === 'INCIDENT' ? requestPayload.incident.reproduction_steps : (requestPayload.category === 'HARDWARE' ? requestPayload.hardware.justification : 'Demande d\'accès logiciel'),
       project_id: projectId,
       payload: {
-        ...payloadDetails,
-        employee_id: requestPayload.employee_id || undefined
+        ...payloadDetails
       }
     });
 

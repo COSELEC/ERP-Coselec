@@ -2,6 +2,7 @@ from fastapi import HTTPException
 
 from app.models.notification import Notification
 from app.models.notification import NotificationType
+from app.core.websockets.manager import broadcast_notification_sync
 
 def create_notification(
     db,
@@ -19,8 +20,23 @@ def create_notification(
     db.add(new_notification)
     db.commit()
     db.refresh(new_notification)
-    return new_notification
 
+    # Broadcast real-time event to the connected user
+    payload = {
+        "event_type": "NEW_NOTIFICATION",
+        "data": {
+            "id": new_notification.id,
+            "user_id": new_notification.user_id,
+            "message": new_notification.message,
+            "type": new_notification.type,
+            "is_read": False,
+            "created_at": new_notification.created_at.isoformat() if new_notification.created_at else None,
+            "reference_id": new_notification.reference_id,
+        }
+    }
+    broadcast_notification_sync(user_id, payload)
+
+    return new_notification
 def get_notifications(
     db,
     user_id: int,

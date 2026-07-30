@@ -21,6 +21,8 @@ class RequestType(str, enum.Enum):
 class RequestStatus(str, enum.Enum):
     DRAFT = "DRAFT"
     PENDING = "PENDING"
+    PENDING_MANAGER_APPROVAL = "PENDING_MANAGER_APPROVAL"
+    PENDING_FINANCE_APPROVAL = "PENDING_FINANCE_APPROVAL"
     APPROVED = "APPROVED"
     IN_PROGRESS = "IN_PROGRESS"
     ON_HOLD = "ON_HOLD"
@@ -43,6 +45,10 @@ class GenericRequest(Base):
     @property
     def reference(self) -> str:
         return f"DEM-{self.id:04d}" if self.id else "DEM-XXXX"
+
+    @property
+    def requester_name(self) -> str:
+        return self.requester.name if self.requester else "N/A"
 
     type = Column(SQLEnum(RequestType), nullable=False)
     status = Column(SQLEnum(RequestStatus), default=RequestStatus.PENDING)

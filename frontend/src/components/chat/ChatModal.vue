@@ -136,7 +136,7 @@ const handleSendMessage = async () => {
   let uploadRes = null;
   if (file) {
     try {
-      uploadRes = await ChatService.uploadFile(file);
+      uploadRes = await ChatService.uploadFile(activeRoomId.value, file);
     } catch (err) {
       console.error('File upload failed:', err);
       return;

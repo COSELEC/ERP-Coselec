@@ -196,8 +196,9 @@ def get_room_messages(
 # ==========================================
 # 2. HTTP POST: Handle File & Attachment Uploads
 # ==========================================
-@router.post("/upload")
+@router.post("/{room_id}/upload")
 async def upload_chat_file(
+    room_id: int,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
 ):
@@ -206,7 +207,7 @@ async def upload_chat_file(
     """
     # Generate unique filename to avoid collisions
     ext = Path(file.filename).suffix if file.filename else ""
-    unique_filename = f"chat_{uuid.uuid4().hex}{ext}"
+    unique_filename = f"chat/{room_id}/chat_{uuid.uuid4().hex}{ext}"
     
     try:
         storage_path = upload_file_to_minio(file, unique_filename)
@@ -220,13 +221,13 @@ async def upload_chat_file(
     }
 
 
-@router.get("/files/{file_name}")
-def download_chat_file(file_name: str):
+@router.get("/files/{file_path:path}")
+def download_chat_file(file_path: str):
     """
     Redirects to the presigned URL for the given chat file in R2/MinIO.
     """
     try:
-        url = get_file_url_from_minio(file_name)
+        url = get_file_url_from_minio(file_path)
         return RedirectResponse(url)
     except Exception as e:
         raise HTTPException(status_code=404, detail="Erreur lors de la récupération du fichier")
