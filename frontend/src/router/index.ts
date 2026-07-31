@@ -90,6 +90,24 @@ const routes = [
   },
 
   {
+    path: "/quality",
+    name: "quality",
+    component: () => import("../views/quality/QualityDashboardView.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/quality/kpi",
+    name: "quality-kpi",
+    component: () => import("../views/quality/KpiDashboardView.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/quality/:id",
+    name: "quality-detail",
+    component: () => import("../views/quality/QualityDocumentDetail.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
     path: "/requests",
     name: "requests",
     component: () => import("../views/RequestsView.vue")

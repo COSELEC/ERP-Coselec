@@ -13,7 +13,7 @@
           <span>Ajouter un employé</span>
         </button>
 
-        <div class="bg-white rounded-2xl shadow-[0_15px_40px_rgba(127,7,28,0.10)] border border-red-100 overflow-hidden">
+        <div class="bg-white rounded-2xl shadow-[0_15px_40px_rgba(127,7,28,0.10)] border border-red-100 overflow-auto">
           <table class="w-full">
             <thead>
               <tr class="bg-gradient-to-r from-red-100/90 to-red-50 text-left">

@@ -34,6 +34,8 @@ from app.models.caisse_voucher import CaisseVoucher
 from app.models.procurement.purchase import PurchaseRequest, PurchaseOrder, PurchaseOrderLine
 from app.modules.stock.models.reservation import ProjectStockReservation
 from app.models.norm import NormCategory, Norm, NormVersion
+from app.modules.quality.models.document import QualityDocument, DocumentVersion, DocumentRoleReview
+from app.modules.quality.models.kpi import KPIProcessus, KPIIndicator, KPIYearlyTarget, KPIValue
 target_metadata = Base.metadata
 from app.modules.chat.models.chat import Message, ChatRoom
 # other values from the config, defined by the needs of env.py,

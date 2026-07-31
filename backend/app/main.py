@@ -42,6 +42,8 @@ from app.tasks.daily_reports_alerts import check_missing_daily_reports
 
 from app.modules.chat.routes.chat import router as chat_router
 from app.modules.daily_reports.routes import router as daily_reports_router
+from app.modules.quality.routes.documents import router as quality_router
+from app.modules.quality.routes.kpi import router as kpi_router
 
 class ConnectionManager:
     def __init__(self):
@@ -175,6 +177,8 @@ app.include_router(bank_vouchers_router)
 app.include_router(norms_router)
 app.include_router(chat_router)
 app.include_router(daily_reports_router)
+app.include_router(quality_router)
+app.include_router(kpi_router)
 
 # Gestion du dossier des uploads
 os.makedirs("uploads", exist_ok=True)

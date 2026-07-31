@@ -1,0 +1,199 @@
+from sqlalchemy.orm import Session
+from fastapi import UploadFile, HTTPException
+from app.modules.quality.models.document import (
+    QualityDocument, DocumentVersion, DocumentRoleReview,
+    QualityDocStatus, ReviewStatus
+)
+from app.modules.users.models.user import User
+from app.services.storage import upload_file_to_minio, delete_file_from_minio
+from app.services.notification import create_notification
+from app.models.notification import NotificationType
+import os
+
+def notify_reviewer(db: Session, role_id: int, user_id: int | None, message: str, reference_id: int):
+    if user_id:
+        create_notification(db, user_id, message, NotificationType.INFO, reference_id)
+    else:
+        # Notify all users in this role
+        users = db.query(User).filter(User.roles.any(id=role_id)).all()
+        for u in users:
+            create_notification(db, u.id, message, NotificationType.INFO, reference_id)
+
+def create_document(
+    db: Session,
+    title: str,
+    description: str | None,
+    reviewers: list[dict],
+    file: UploadFile,
+    current_user: User
+) -> QualityDocument:
+    
+    doc = QualityDocument(
+        title=title,
+        description=description,
+        status=QualityDocStatus.IN_REVIEW,
+        created_by_id=current_user.id
+    )
+    db.add(doc)
+    db.flush() # get doc.id
+
+    # Create reviews
+    for rev_data in reviewers:
+        role_id = rev_data.get("role_id")
+        user_id = rev_data.get("user_id")
+        
+        rev = DocumentRoleReview(
+            document_id=doc.id,
+            role_id=role_id,
+            assigned_user_id=user_id,
+            status=ReviewStatus.PENDING
+        )
+        db.add(rev)
+        
+        # Notify
+        notify_reviewer(db, role_id, user_id, f"Nouveau document qualité à valider: {title}", doc.id)
+    
+    # Upload file (v1)
+    ext = os.path.splitext(file.filename)[1] if file.filename else ""
+    r2_key = f"quality_docs/{doc.id}/v1/{title}{ext}"
+    upload_file_to_minio(file, r2_key)
+
+    version = DocumentVersion(
+        document_id=doc.id,
+        version_number=1,
+        r2_file_key=r2_key,
+        original_filename=file.filename or title,
+        uploaded_by_id=current_user.id
+    )
+    db.add(version)
+    
+    db.commit()
+    db.refresh(doc)
+    return doc
+
+def submit_review(
+    db: Session,
+    document_id: int,
+    review_id: int,
+    status: ReviewStatus,
+    comment: str | None,
+    current_user: User
+):
+    doc = db.query(QualityDocument).filter(QualityDocument.id == document_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    review = db.query(DocumentRoleReview).filter(
+        DocumentRoleReview.id == review_id,
+        DocumentRoleReview.document_id == document_id
+    ).first()
+    
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+        
+    # Permission check
+    if review.assigned_user_id:
+        if review.assigned_user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="You are not specifically assigned to validate this step")
+    else:
+        if not any(r.id == review.role_id for r in current_user.roles):
+            raise HTTPException(status_code=403, detail="You do not have the required role to submit this review")
+            
+    if review.status != ReviewStatus.PENDING:
+        raise HTTPException(status_code=400, detail="Already reviewed")
+        
+    review.status = status
+    review.comment = comment
+    review.reviewed_by_id = current_user.id
+    import datetime
+    review.reviewed_at = datetime.datetime.utcnow()
+    
+    if status == ReviewStatus.REJECTED:
+        doc.status = QualityDocStatus.REJECTED
+        create_notification(db, doc.created_by_id, f"Document rejeté: {doc.title}", NotificationType.WARNING, doc.id)
+        
+    elif status == ReviewStatus.APPROVED:
+        # Check if all roles/users approved
+        all_reviews = db.query(DocumentRoleReview).filter(DocumentRoleReview.document_id == document_id).all()
+        all_approved = all(r.status == ReviewStatus.APPROVED or r.id == review.id for r in all_reviews)
+        
+        if all_approved:
+            doc.status = QualityDocStatus.APPROVED
+            create_notification(db, doc.created_by_id, f"Document totalement approuvé: {doc.title}", NotificationType.INFO, doc.id)
+            
+            # Clean up old versions on R2
+            versions = sorted(doc.versions, key=lambda v: v.version_number)
+            if len(versions) > 1:
+                # Keep the last one
+                for v in versions[:-1]:
+                    delete_file_from_minio(v.r2_file_key)
+
+    db.commit()
+    db.refresh(doc)
+    return doc
+
+def upload_new_version(
+    db: Session,
+    document_id: int,
+    file: UploadFile,
+    current_user: User
+):
+    doc = db.query(QualityDocument).filter(QualityDocument.id == document_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    if doc.status != QualityDocStatus.REJECTED:
+        raise HTTPException(status_code=400, detail="Can only upload new version if rejected")
+        
+    # Reset doc
+    doc.status = QualityDocStatus.IN_REVIEW
+    
+    # Reset reviews
+    reviews = db.query(DocumentRoleReview).filter(DocumentRoleReview.document_id == document_id).all()
+    for rev in reviews:
+        rev.status = ReviewStatus.PENDING
+        rev.comment = None
+        rev.reviewed_by_id = None
+        rev.reviewed_at = None
+        notify_reviewer(db, rev.role_id, rev.assigned_user_id, f"Nouvelle version à valider: {doc.title}", doc.id)
+        
+    # New version
+    next_v = max((v.version_number for v in doc.versions), default=0) + 1
+    ext = os.path.splitext(file.filename)[1] if file.filename else ""
+    r2_key = f"quality_docs/{doc.id}/v{next_v}/{doc.title}{ext}"
+    upload_file_to_minio(file, r2_key)
+
+    version = DocumentVersion(
+        document_id=doc.id,
+        version_number=next_v,
+        r2_file_key=r2_key,
+        original_filename=file.filename or doc.title,
+        uploaded_by_id=current_user.id
+    )
+    db.add(version)
+    
+    db.commit()
+    db.refresh(doc)
+    return doc
+
+def delete_document(db: Session, document_id: int, current_user: User):
+    doc = db.query(QualityDocument).filter(QualityDocument.id == document_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    # Permission check: only creator or Admin/Qualité can delete
+    is_admin = any(r.name in ["Admin", "Qualité"] for r in current_user.roles)
+    if doc.created_by_id != current_user.id and not is_admin:
+        raise HTTPException(status_code=403, detail="You don't have permission to delete this document")
+        
+    # Delete files from R2
+    for version in doc.versions:
+        try:
+            delete_file_from_minio(version.r2_file_key)
+        except Exception as e:
+            print(f"Error deleting file from R2: {e}")
+            
+    # Delete from DB (cascade should handle versions and reviews)
+    db.delete(doc)
+    db.commit()
+    return True

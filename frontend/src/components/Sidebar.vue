@@ -130,6 +130,25 @@ onMounted(async () => {
           :collapsed="collapsed"
         />
       </div>
+
+      <!-- Qualité -->
+      <div>
+        <h2 v-if="!collapsed" class="text-xs uppercase text-red-200 mb-2">
+          Qualité
+        </h2>
+        <SidebarItem
+          to="/quality"
+          icon="verified"
+          label="Documents Qualité"
+          :collapsed="collapsed"
+        />
+        <SidebarItem
+          to="/quality/kpi"
+          icon="insights"
+          label="KPI Qualité"
+          :collapsed="collapsed"
+        />
+      </div>
      
       <!-- RH -->
       <div v-if="canViewHr">
