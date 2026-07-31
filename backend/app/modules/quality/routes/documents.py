@@ -1,7 +1,7 @@
 import json
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 
 from app.core.database import get_db
 from app.core.security.auth import get_current_user
