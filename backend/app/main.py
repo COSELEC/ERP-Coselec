@@ -38,8 +38,10 @@ from app.routers.project.tasks import router as tasks_router
 from app.modules.stock.routes import stock_router
 
 from app.tasks.hr_alerts import check_document_expirations
+from app.tasks.daily_reports_alerts import check_missing_daily_reports
 
 from app.modules.chat.routes.chat import router as chat_router
+from app.modules.daily_reports.routes import router as daily_reports_router
 
 class ConnectionManager:
     def __init__(self):
@@ -99,6 +101,7 @@ async def lifespan(app: FastAPI):
     # Démarrage du planificateur de tâches
     scheduler = BackgroundScheduler()
     scheduler.add_job(check_document_expirations, "cron", hour=8, minute=0)
+    scheduler.add_job(check_missing_daily_reports, "cron", day_of_week="mon-fri", hour=16, minute=0)
     scheduler.start()
 
     yield
@@ -171,6 +174,7 @@ app.include_router(generic_requests_router)
 app.include_router(bank_vouchers_router)
 app.include_router(norms_router)
 app.include_router(chat_router)
+app.include_router(daily_reports_router)
 
 # Gestion du dossier des uploads
 os.makedirs("uploads", exist_ok=True)

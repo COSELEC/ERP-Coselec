@@ -23,7 +23,7 @@ const routes = [
     component: HomeView,
   },
   //rh
-{
+  {
     path: "/employees",
     component: EmployeesView,
     meta: {
@@ -35,6 +35,13 @@ const routes = [
     component: () => import("../views/employees/DepartmentView.vue"),
     meta: {
       requiredRoles: ["Admin", "RH", "Direction"],
+    },
+  },
+  {
+    path: "/org-chart",
+    component: () => import("../views/employees/OrganizationView.vue"),
+    meta: {
+      requiredRoles: ["Admin", "RH", "Direction", "Employe"],
     },
   },
   // stock
@@ -116,14 +123,14 @@ const routes = [
     path: "/projects",
     name: "projects",
     component: () => import("@/views/project/ProjectView.vue"),
-    props:true
+    props: true
   },
   // Admin Routes
   {
     path: "/admin/requests",
     name: "admin-requests",
     component: () => import("@/views/Admin/AdminRequestsView.vue"),
-    meta: { requiredRoles: ["Admin", "RH", "Direction"] }
+    meta: { requiredRoles: ["Admin", "RH", "Direction", "IT Admin", "Admin IT", "IT", "Responsable IT", "Facility Manager", "Facility", "Finance", "Stock / Logistique"] }
   },
   {
     path: "/admin/users",

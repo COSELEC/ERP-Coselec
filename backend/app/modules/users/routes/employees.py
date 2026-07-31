@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 
 from app.core.security.auth import get_current_user, check_permission
@@ -12,7 +12,8 @@ from app.services.notification import create_notification
 
 from app.modules.users.schemas.employee import (
     EmployeeCreate,
-    EmployeeResponse
+    EmployeeResponse,
+    OrgChartNode
 )
 
 router = APIRouter(
@@ -42,6 +43,38 @@ def get_employees(
     db: Session = Depends(get_db)
 ):
     return db.query(Employee).all()
+
+@router.get(
+    "/org-chart",
+    response_model=list[OrgChartNode]
+)
+def get_org_chart(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    employees = db.query(Employee).options(joinedload(Employee.department)).all()
+    
+    employee_dict = {}
+    root_nodes = []
+    
+    for emp in employees:
+        employee_dict[emp.id] = OrgChartNode(
+            id=emp.id,
+            name=f"{emp.first_name or ''} {emp.last_name or ''}".strip() or f"Employé #{emp.id}",
+            position=emp.position or "",
+            department=emp.department.name if emp.department else "Sans département",
+            manager_id=emp.manager_id,
+            children=[]
+        )
+        
+    for emp in employees:
+        node = employee_dict[emp.id]
+        if emp.manager_id and emp.manager_id in employee_dict:
+            employee_dict[emp.manager_id].children.append(node)
+        else:
+            root_nodes.append(node)
+            
+    return root_nodes
 
 @router.get(
     "/{employee_id}",

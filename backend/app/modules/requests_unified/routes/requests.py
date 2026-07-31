@@ -71,6 +71,68 @@ def _record_history(
     ))
 
 
+def _notify_creation_targets(db: Session, request: GenericRequest, requester: User) -> None:
+    """Notify admins, managers, and relevant role users when a new request is created."""
+    try:
+        from app.modules.users.models.role import Role
+        from app.modules.users.models.employee import Employee
+
+        target_roles = {"Admin"}
+
+        if request.type in {RequestType.LEAVE, RequestType.DOCUMENT}:
+            target_roles.update({"RH", "Direction"})
+        elif request.type in {RequestType.IT_EQUIPMENT, RequestType.IT_ACCESS, RequestType.IT_INCIDENT}:
+            target_roles.update({"IT Admin", "Admin IT", "IT", "Responsable IT"})
+        elif request.type in {RequestType.FACILITY_MAINTENANCE, RequestType.FACILITY_SUPPLIES, RequestType.FACILITY_BADGE}:
+            target_roles.update({"Facility Manager", "Facility", "Logistique", "Maintenance"})
+        elif request.type == RequestType.FUEL:
+            target_roles.update({"Finance", "Facility Manager", "Facility", "Direction"})
+
+        recipient_user_ids: set[int] = set()
+
+        # Check direct manager
+        requester_emp = db.query(Employee).filter(Employee.email == requester.email).first()
+        if requester_emp and requester_emp.manager:
+            mgr_emp = requester_emp.manager
+            mgr_user = db.query(User).filter(User.email == mgr_emp.email).first()
+            if mgr_user and mgr_user.id != requester.id:
+                recipient_user_ids.add(mgr_user.id)
+
+        # Add users matching target roles
+        role_users = db.query(User).filter(User.roles.any(Role.name.in_(target_roles))).all()
+        for u in role_users:
+            if u.id != requester.id:
+                recipient_user_ids.add(u.id)
+
+        msg = f"Nouvelle demande ({request.type.value}) {request.reference} créée par {requester.name}."
+
+        for uid in recipient_user_ids:
+            notif = Notification(
+                user_id=uid,
+                message=msg,
+                type=NotificationType.INFO.value,
+                reference_id=request.id
+            )
+            db.add(notif)
+            db.flush()
+            try:
+                broadcast_notification_sync(uid, {
+                    "event_type": "NEW_NOTIFICATION",
+                    "data": {
+                        "id": notif.id,
+                        "message": msg,
+                        "type": "info",
+                        "is_read": False,
+                        "reference_id": request.id,
+                        "created_at": notif.created_at.isoformat()
+                    }
+                })
+            except Exception as e:
+                logger.error(f"Failed to broadcast request creation notification to user {uid}: {e}")
+    except Exception as err:
+        logger.error(f"Error in _notify_creation_targets: {err}")
+
+
 def _user_roles(user: User) -> set[str]:
     return {role.name for role in user.roles}
 
@@ -99,15 +161,23 @@ def _apply_row_level_filter(query, current_user: User):
     if roles & {"RH"}:
         conditions.append(GenericRequest.type == RequestType.LEAVE)
 
+    if roles & {"IT Admin", "Admin IT", "IT", "Responsable IT"}:
+        conditions.append(GenericRequest.type.in_([
+            RequestType.IT_EQUIPMENT,
+            RequestType.IT_ACCESS,
+            RequestType.IT_INCIDENT,
+        ]))
+
     if roles & {"Finance"}:
         conditions.append(GenericRequest.type.in_([
             RequestType.FUEL, RequestType.IT_EQUIPMENT, RequestType.FACILITY_SUPPLIES,
         ]))
 
-    if roles & {"Stock / Logistique", "Maintenance"}:
+    if roles & {"Stock / Logistique", "Maintenance", "Facility Manager", "Facility"}:
         conditions.append(GenericRequest.type.in_([
             RequestType.FACILITY_MAINTENANCE,
             RequestType.FACILITY_SUPPLIES,
+            RequestType.FACILITY_BADGE,
             RequestType.FUEL,
         ]))
 
@@ -201,6 +271,9 @@ def create_request(
     # Record creation in audit log
     _record_history(db, new_request, None, initial.value, current_user.id, "Request created")
 
+    # Notify managers and target administrators
+    _notify_creation_targets(db, new_request, current_user)
+
     db.commit()
     db.refresh(new_request)
     return new_request
@@ -222,7 +295,7 @@ def update_request_status(
     if not request:
         raise HTTPException(status_code=404, detail="Request not found")
 
-    role_names = [r.name.upper() for r in current_user.roles]
+    role_names = {r.name.upper() for r in current_user.roles}
     is_admin = "ADMIN" in role_names
     
     if not is_admin:
@@ -239,14 +312,16 @@ def update_request_status(
                     
         elif payload.status in {RequestStatus.APPROVED, RequestStatus.REJECTED}:
             if request.type in {RequestType.LEAVE, RequestType.DOCUMENT}:
-                if "RH" not in role_names:
+                if not (role_names & {"RH", "HR", "DIRECTION"} or any("RH" in r for r in role_names)):
                     raise HTTPException(status_code=403, detail="HR approval required")
             elif request.type in {RequestType.IT_EQUIPMENT, RequestType.IT_ACCESS, RequestType.IT_INCIDENT}:
-                if "IT" not in role_names:
+                it_roles = {"IT", "IT ADMIN", "ADMIN IT", "RESPONSABLE IT"}
+                if not (role_names & it_roles or any("IT" in r for r in role_names)):
                     raise HTTPException(status_code=403, detail="IT approval required")
             elif request.type in {RequestType.FACILITY_MAINTENANCE, RequestType.FACILITY_SUPPLIES, RequestType.FACILITY_BADGE, RequestType.FUEL}:
-                if "FINANCE" not in role_names and "ACHAT" not in role_names and "FINANCE / BUDGET" not in role_names:
-                    raise HTTPException(status_code=403, detail="Finance/Achat approval required")
+                facility_roles = {"FINANCE", "ACHAT", "FINANCE / BUDGET", "FACILITY", "FACILITY MANAGER", "LOGISTIQUE", "STOCK / LOGISTIQUE", "MAINTENANCE"}
+                if not (role_names & facility_roles or any(term in r for r in role_names for term in ["FACILITY", "FINANCE", "ACHAT"])):
+                    raise HTTPException(status_code=403, detail="Finance/Achat/Facility approval required")
 
     # Enforce state machine
     if not validate_transition(request.status, payload.status):
@@ -284,7 +359,12 @@ def update_request_status(
     
     # Notify user on approval or rejection
     if payload.status in {RequestStatus.APPROVED, RequestStatus.REJECTED}:
-        msg = f"Votre demande {request.reference} a été {'approuvée' if payload.status == RequestStatus.APPROVED else 'rejetée'}."
+        if payload.status == RequestStatus.REJECTED:
+            reason_str = f" (Motif : {payload.rejection_comment})" if payload.rejection_comment else ""
+            msg = f"Votre demande {request.reference} a été rejetée.{reason_str}"
+        else:
+            msg = f"Votre demande {request.reference} a été approuvée."
+
         new_notification = Notification(
             user_id=request.requester_id,
             message=msg,
@@ -297,11 +377,15 @@ def update_request_status(
         # Broadcast via WebSockets
         try:
             broadcast_notification_sync(request.requester_id, {
-                "id": new_notification.id,
-                "message": msg,
-                "type": "info",
-                "reference_id": request.id,
-                "created_at": new_notification.created_at.isoformat()
+                "event_type": "NEW_NOTIFICATION",
+                "data": {
+                    "id": new_notification.id,
+                    "message": msg,
+                    "type": "info",
+                    "is_read": False,
+                    "reference_id": request.id,
+                    "created_at": new_notification.created_at.isoformat()
+                }
             })
         except Exception as e:
             logger.error(f"Failed to broadcast notification: {e}")

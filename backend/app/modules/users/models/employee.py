@@ -32,6 +32,8 @@ class Employee(Base):
         ForeignKey("departments.id")
     )
     
+    department = relationship("Department")
+
     manager_id = Column(
         Integer,
         ForeignKey("employees.id"),

@@ -48,6 +48,10 @@ const canViewAdmin = computed(() => {
   return hasAnyRole(roles.value, ["Admin"]);
 });
 
+const canViewValidationRequests = computed(() => {
+  return hasAnyRole(roles.value, ["Admin", "RH", "Direction", "IT Admin", "Admin IT", "IT", "Responsable IT", "Facility Manager", "Facility", "Finance", "Stock / Logistique"]);
+});
+
 
 
 const canViewFuelRequests = computed(() => {
@@ -107,6 +111,25 @@ onMounted(async () => {
     </div>
 
     <nav class="p-4 space-y-6">
+    
+      <!-- Général / Commun -->
+      <div>
+        <h2 v-if="!collapsed" class="text-xs uppercase text-red-200 mb-2">
+          Entreprise
+        </h2>
+        <SidebarItem
+          to="/"
+          icon="dashboard"
+          label="Tableau de bord"
+          :collapsed="collapsed"
+        />
+        <SidebarItem
+          to="/org-chart"
+          icon="account_tree"
+          label="Organigramme"
+          :collapsed="collapsed"
+        />
+      </div>
      
       <!-- RH -->
       <div v-if="canViewHr">
@@ -149,7 +172,7 @@ onMounted(async () => {
         />
 
         <SidebarItem
-          v-if="canViewHr"
+          v-if="canViewValidationRequests"
           to="/admin/requests"
           icon="approval"
           label="Validation Demandes"

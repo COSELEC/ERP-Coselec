@@ -9,7 +9,7 @@ import { useToast } from '@/composables/useToast';
 const toast = useToast();
 
 const kpis = ref([
-  { title: "Projets Actifs", value: "0", icon: "work", color: "text-blue-600", bg: "bg-blue-50" },
+  { title: "Projets Actifs", value: "0", icon: "work", color: "text-red-600", bg: "bg-red-50" },
   { title: "Employés", value: "0", icon: "people", color: "text-green-600", bg: "bg-green-50" },
   { title: "Demandes en attente", value: "0", icon: "assignment_late", color: "text-amber-600", bg: "bg-amber-50" },
   { title: "Alertes Stock", value: "0", icon: "warning", color: "text-red-600", bg: "bg-red-50" },

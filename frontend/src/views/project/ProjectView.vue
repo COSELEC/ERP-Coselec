@@ -12,19 +12,32 @@
                  {{ p.nom }}
                </option>
             </select>
-            <button class ="ml-5 bg-[#d10f2f] border-2 border-[#b30c27] rounded-lg w-40 h-10 text-white flex items-center justify-center"
+            <button class="ml-2 bg-[#d10f2f] border-2 border-[#b30c27] rounded-lg px-3 h-10 text-white flex items-center justify-center hover:bg-[#b30c27] transition"
+              @click="isProjectCreateModalOpen = true"
+            >
+              <span class="material-symbols-outlined">add_box</span>
+              <span class="ml-1 font-medium text-sm">Nouveau projet</span>
+            </button>
+            <button class ="ml-3 bg-[#d10f2f] border-2 border-[#b30c27] rounded-lg px-3 h-10 text-white flex items-center justify-center hover:bg-[#b30c27] transition"
             v-if="selectedProject"
             @click="openTaskCreateModal"
             >
-              <span class="material-symbols-outlined">add</span>
-              <span class="ml-2">Nouvelle tâche</span>
+              <span class="material-symbols-outlined">add_task</span>
+              <span class="ml-1 font-medium text-sm">Nouvelle tâche</span>
             </button>
-            <button class ="ml-3 bg-white border-2 border-[#b30c27] text-[#b30c27] rounded-lg px-4 h-10 flex items-center justify-center hover:bg-red-50 transition"
+            <button class ="ml-2 bg-white border-2 border-[#b30c27] text-[#b30c27] rounded-lg px-3 h-10 flex items-center justify-center hover:bg-red-50 transition"
               v-if="selectedProject"
               @click="openProjectEditModal"
             >
               <span class="material-symbols-outlined">edit</span>
-              <span class="ml-2 font-medium">Modifier le projet</span>
+              <span class="ml-1 font-medium text-sm">Modifier</span>
+            </button>
+            <button class ="ml-2 bg-red-50 border-2 border-red-600 text-red-700 rounded-lg px-3 h-10 flex items-center justify-center hover:bg-red-100 transition"
+              v-if="selectedProject"
+              @click="isDailyReportModalOpen = true"
+            >
+              <span class="material-symbols-outlined">assignment</span>
+              <span class="ml-1 font-medium text-sm">Rapport journalier</span>
             </button>
           </div>
 
@@ -46,6 +59,12 @@
               :class="{'bg-red-500 text-white': currentView === 'Ressources', 'text-red-600': currentView !== 'Ressources'}" 
               class="px-4 py-2 hover:bg-red-50 font-medium transition-colors border-l border-red-500">
               Ressources
+            </button>
+            <button 
+              @click="currentView = 'Rapports'" 
+              :class="{'bg-red-500 text-white': currentView === 'Rapports', 'text-red-600': currentView !== 'Rapports'}" 
+              class="px-4 py-2 hover:bg-red-50 font-medium transition-colors border-l border-red-500">
+              Rapports
             </button>
           </div>
         </div>
@@ -92,10 +111,21 @@
     key="resources-layout"
     :project-id="resolveActiveProjectId()"
   />
+  <ProjectDailyReportsList
+    v-else-if="currentView === 'Rapports'"
+    key="reports-layout"
+    :project-id="resolveActiveProjectId()"
+  />
   <div v-else key="empty-fallback-layout" class="text-gray-400 text-center py-8">
     Sélectionnez une vue pour afficher les données du projet.
   </div>
   </div>
+  
+  <DailyReportForm 
+    :is-open="isDailyReportModalOpen" 
+    @close="isDailyReportModalOpen = false" 
+    @report-submitted="onReportSubmitted" 
+  />
     <TaskCreateModal
       v-if="isTaskCreateModalOpen"
       :open="isTaskCreateModalOpen"
@@ -106,6 +136,34 @@
       @create="handleTaskCreate"
     />
     
+    <!-- Project Create Modal -->
+    <div v-if="isProjectCreateModalOpen" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+      <div class="bg-white p-6 rounded-xl w-96 shadow-xl max-h-[90vh] overflow-y-auto">
+        <h2 class="text-xl font-bold mb-4 text-gray-900">Nouveau projet</h2>
+        <form @submit.prevent="createProject" class="space-y-3">
+          <input v-model="projectCreateForm.code" placeholder="Code (ex: PRJ-01)" required class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500" />
+          <input v-model="projectCreateForm.nom" placeholder="Nom du projet" required class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500" />
+          <input v-model="projectCreateForm.description" placeholder="Description courte" required class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500" />
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Date début estimée</label>
+            <input type="date" v-model="projectCreateForm.date_debut_estimee" required class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Date fin estimée</label>
+            <input type="date" v-model="projectCreateForm.date_fin_estimee" required class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Emplacement (Géolocalisation)</label>
+            <MapLocationPicker v-model="projectCreateForm.location" />
+          </div>
+          <div class="flex justify-end gap-2 mt-4">
+            <button type="button" @click="isProjectCreateModalOpen = false" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Annuler</button>
+            <button type="submit" class="bg-[#d10f2f] hover:bg-[#97091f] text-white px-4 py-2 rounded-lg">Créer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Project Edit Modal -->
     <div v-if="isProjectEditModalOpen" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
       <div class="bg-white p-6 rounded-xl w-96 shadow-xl max-h-[90vh] overflow-y-auto">
@@ -160,6 +218,8 @@ import GanttView from '@/components/project/GanttView.vue';
 import KanbanView from '@/components/project/KanbanView.vue';
 import ProjectResources from '@/components/project/ProjectResources.vue';
 import MapLocationPicker from '@/components/project/MapLocationPicker.vue';
+import ProjectDailyReportsList from '@/components/projects/ProjectDailyReportsList.vue';
+import DailyReportForm from '@/components/projects/DailyReportForm.vue';
 import { shallowRef, ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useToast } from '@/composables/useToast';
@@ -180,9 +240,36 @@ const currentView = shallowRef('Kanban');
 const selectedProject = ref<string | null>(null);
 const selectedMilestone = ref<number | null>(null);
 const isTaskCreateModalOpen = ref(false);
+const isDailyReportModalOpen = ref(false);
 
 const isProjectEditModalOpen = ref(false);
 const projectEditForm = ref({ code: '', nom: '', date_debut_estimee: '', date_fin_estimee: '', status: '', location: { lat: null as number|null, lng: null as number|null } });
+
+const isProjectCreateModalOpen = ref(false);
+const projectCreateForm = ref({ code: '', nom: '', description: '', date_debut_estimee: '', date_fin_estimee: '', status: 'Planifié', client_id: 1, manager_id: 1, type_id: 1, location: { lat: null as number|null, lng: null as number|null } });
+
+const createProject = async () => {
+  try {
+    const payload: any = { ...projectCreateForm.value };
+    if (payload.location) {
+      payload.latitude = payload.location.lat;
+      payload.longitude = payload.location.lng;
+    }
+    delete payload.location;
+    await projectService.createProject(payload);
+    toast.success("Projet créé avec succès");
+    
+    // Refresh list
+    const projectResponse = await projectService.getAllProjects();
+    projects.value = projectResponse.data;
+    selectedProject.value = payload.nom;
+    isProjectCreateModalOpen.value = false;
+    await onProjectChange();
+  } catch (error) {
+    console.error(error);
+    toast.error("Erreur lors de la création du projet");
+  }
+};
 
 const openProjectEditModal = () => {
   const p: any = projects.value.find((p: any) => p.nom === selectedProject.value);
@@ -229,6 +316,12 @@ const openTaskCreateModal = () => {
 
 const closeTaskCreateModal = () => {
   isTaskCreateModalOpen.value = false;
+};
+
+const onReportSubmitted = () => {
+  if (currentView.value === 'Rapports') {
+    // We could potentially trigger a refresh if we wanted to
+  }
 };
 
 const resolveActiveProjectId = (): number | null => {

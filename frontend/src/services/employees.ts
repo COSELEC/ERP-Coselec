@@ -18,5 +18,15 @@ export const employeeService = {
       console.error('Error deleting employee:', error);
       throw error;
     }
+  },
+  getOrgChart: async () => {
+    try {
+      const response = await api.get('/employees/org-chart');
+      return response;
+    } catch (error) {
+      console.error('Error fetching org chart:', error);
+      throw error;
+    }
   }
+
 };
