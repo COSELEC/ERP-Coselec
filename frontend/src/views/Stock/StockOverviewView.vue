@@ -525,14 +525,14 @@ onBeforeUnmount(() => {
         <table ref="tableElementRef" class="w-max min-w-full text-left border-separate border-spacing-0" :style="{ minWidth: `${enforcedTableMinWidth}px` }">
           <thead>
             <!-- Double Layer Table Header Row -->
-            <tr class="bg-white text-gray-700 text-xs tracking-wide font-bold sticky top-0 z-20">
-              <th rowspan="2" class="px-4 py-4 border-r border-b border-red-100 align-bottom w-[230px] min-w-[230px] sticky left-0 z-30 bg-white">
+            <tr class="bg-white text-gray-700 text-xs tracking-wide font-bold sticky top-0 z-30">
+              <th rowspan="2" class="px-4 py-4 border-r border-b border-red-100 align-bottom w-[230px] min-w-[230px] sticky left-0 z-40 bg-white">
                 <button type="button" class="inline-flex items-center gap-1 hover:text-[#d10f2f] transition-colors" @click="toggleSort('name')">
                   <span>Désignation Matériel</span>
                   <span class="material-symbols-outlined text-sm">{{ getSortIcon('name') }}</span>
                 </button>
               </th>
-              <th rowspan="2" class="px-3 py-4 text-center border-r border-b border-red-100 bg-red-50/40 min-w-[110px] w-[110px] sticky left-[230px] z-30">
+              <th rowspan="2" class="px-3 py-4 text-center border-r border-b border-red-100 bg-red-50 min-w-[110px] w-[110px] sticky left-[230px] z-40">
                 <button type="button" class="inline-flex items-center gap-1 hover:text-[#d10f2f] transition-colors" @click="toggleSort('magasin')">
                   <span>Magasin</span>
                   <span class="material-symbols-outlined text-sm">{{ getSortIcon('magasin') }}</span>
@@ -570,7 +570,7 @@ onBeforeUnmount(() => {
               </td>
               
               <!-- Central Unassigned Warehouse (Magasin) Quantity -->
-              <td class="px-3 py-5 text-center border-r border-b border-red-100 sticky left-[230px] z-10 bg-red-50/30">
+              <td class="px-3 py-5 text-center border-r border-b border-red-100 sticky left-[230px] z-10 bg-red-50">
                 <span
                   :class="product.magasinQty > 0 ? 'bg-red-100 text-[#b3232b] border-red-200' : 'bg-white text-gray-300 border-gray-200'"
                   class="inline-flex min-w-[52px] justify-center px-2.5 py-1 rounded-full border text-sm font-semibold"

@@ -31,5 +31,9 @@ class OrgChartNode(BaseModel):
     name: str
     position: str
     department: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    matricule: Optional[str] = None
+    status: Optional[str] = None
     manager_id: Optional[int] = None
     children: list['OrgChartNode'] = []

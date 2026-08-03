@@ -13,6 +13,7 @@ class ProjectBase(BaseModel):
     budget_estime: Optional[float] = Field(default=0.0, ge=0)
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    address: Optional[str] = None
 
 class ProjectCreate(ProjectBase):
     status: Optional[ProjectStatus] = ProjectStatus.STUDY
@@ -64,3 +65,4 @@ class ProjectUpdate(BaseModel):
     budget_engage: Optional[float] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    address: Optional[str] = None

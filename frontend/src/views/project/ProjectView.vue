@@ -243,10 +243,10 @@ const isTaskCreateModalOpen = ref(false);
 const isDailyReportModalOpen = ref(false);
 
 const isProjectEditModalOpen = ref(false);
-const projectEditForm = ref({ code: '', nom: '', date_debut_estimee: '', date_fin_estimee: '', status: '', location: { lat: null as number|null, lng: null as number|null } });
+const projectEditForm = ref({ code: '', nom: '', date_debut_estimee: '', date_fin_estimee: '', status: '', location: { lat: null as number|null, lng: null as number|null, address: null as string|null } });
 
 const isProjectCreateModalOpen = ref(false);
-const projectCreateForm = ref({ code: '', nom: '', description: '', date_debut_estimee: '', date_fin_estimee: '', status: 'Planifié', client_id: 1, manager_id: 1, type_id: 1, location: { lat: null as number|null, lng: null as number|null } });
+const projectCreateForm = ref({ code: '', nom: '', description: '', date_debut_estimee: '', date_fin_estimee: '', status: 'Planifié', client_id: 1, manager_id: 1, type_id: 1, location: { lat: null as number|null, lng: null as number|null, address: null as string|null } });
 
 const createProject = async () => {
   try {
@@ -254,6 +254,7 @@ const createProject = async () => {
     if (payload.location) {
       payload.latitude = payload.location.lat;
       payload.longitude = payload.location.lng;
+      payload.address = payload.location.address;
     }
     delete payload.location;
     await projectService.createProject(payload);
@@ -280,7 +281,7 @@ const openProjectEditModal = () => {
       date_debut_estimee: p.date_debut_estimee ? (new Date(p.date_debut_estimee).toISOString().split('T')[0] as string) : '',
       date_fin_estimee: p.date_fin_estimee ? (new Date(p.date_fin_estimee).toISOString().split('T')[0] as string) : '',
       status: p.status || '',
-      location: { lat: p.latitude || null, lng: p.longitude || null }
+      location: { lat: p.latitude || null, lng: p.longitude || null, address: p.address || null }
     };
     isProjectEditModalOpen.value = true;
   }
@@ -294,6 +295,7 @@ const updateProjectInfo = async () => {
     if (payload.location) {
       payload.latitude = payload.location.lat;
       payload.longitude = payload.location.lng;
+      payload.address = payload.location.address;
     }
     delete payload.location;
     await projectService.updateProject(p.id, payload);

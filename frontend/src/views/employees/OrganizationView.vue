@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue';
+import type { NodeMouseEvent } from '@vue-flow/core';
 import { VueFlow, useVueFlow, Position } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { Controls } from '@vue-flow/controls';
@@ -18,6 +19,14 @@ const { fitView } = useVueFlow();
 const nodes = ref([]);
 const edges = ref([]);
 const isLoading = ref(true);
+
+const selectedNode = ref<any>(null);
+const isModalOpen = ref(false);
+
+const onNodeClick = (event: NodeMouseEvent) => {
+  selectedNode.value = event.node.data;
+  isModalOpen.value = true;
+};
 
 const fetchOrgChart = async () => {
   try {
@@ -60,7 +69,11 @@ const buildGraph = (rootNodes: any[]) => {
       data: { 
         name: current.name,
         position: current.position,
-        department: current.department 
+        department: current.department,
+        email: current.email,
+        phone: current.phone,
+        matricule: current.matricule,
+        status: current.status
       }
     });
     
@@ -207,6 +220,8 @@ onMounted(() => {
         :nodes="nodes" 
         :edges="edges" 
         :default-edge-options="{ type: 'smoothstep' }"
+        :nodes-draggable="false"
+        @node-click="onNodeClick"
         :min-zoom="0.1"
         :max-zoom="4"
         fit-view-on-init
@@ -247,6 +262,70 @@ onMounted(() => {
         </template>
         
       </VueFlow>
+    </div>
+
+    <!-- Employee Detail Modal -->
+    <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" @click.self="isModalOpen = false">
+      <div class="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden transform transition-all">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <h3 class="text-lg font-bold text-gray-900">Détails de l'employé</h3>
+          <button @click="isModalOpen = false" class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-md hover:bg-gray-100">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="p-6" v-if="selectedNode">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="w-16 h-16 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-2xl font-bold text-gray-600 shadow-sm">
+              {{ selectedNode.name ? selectedNode.name.charAt(0) : '?' }}
+            </div>
+            <div>
+              <h4 class="text-xl font-bold text-gray-900">{{ selectedNode.name }}</h4>
+              <p class="text-red-600 font-medium">{{ selectedNode.position }}</p>
+            </div>
+          </div>
+          
+          <div class="space-y-4">
+            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+              <p class="text-xs text-gray-500 font-medium mb-1">Département</p>
+              <p class="text-sm text-gray-900 font-medium">{{ selectedNode.department }}</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <p class="text-xs text-gray-500 font-medium mb-1">Email</p>
+                <p class="text-sm text-gray-900 truncate font-medium" :title="selectedNode.email">{{ selectedNode.email || 'Non renseigné' }}</p>
+              </div>
+              <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <p class="text-xs text-gray-500 font-medium mb-1">Téléphone</p>
+                <p class="text-sm text-gray-900 font-medium">{{ selectedNode.phone || 'Non renseigné' }}</p>
+              </div>
+              <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <p class="text-xs text-gray-500 font-medium mb-1">Matricule</p>
+                <p class="text-sm text-gray-900 font-medium">{{ selectedNode.matricule || 'Non renseigné' }}</p>
+              </div>
+              <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <p class="text-xs text-gray-500 font-medium mb-1">Statut</p>
+                <p class="text-sm text-gray-900">
+                  <span v-if="selectedNode.status === 'Actif' || selectedNode.status === 'Active'" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                    Actif
+                  </span>
+                  <span v-else-if="selectedNode.status === 'Inactif' || selectedNode.status === 'Inactive'" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                    Inactif
+                  </span>
+                  <span v-else class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                    {{ selectedNode.status || 'Non renseigné' }}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   </AppLayout>

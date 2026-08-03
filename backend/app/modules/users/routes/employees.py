@@ -63,6 +63,10 @@ def get_org_chart(
             name=f"{emp.first_name or ''} {emp.last_name or ''}".strip() or f"Employé #{emp.id}",
             position=emp.position or "",
             department=emp.department.name if emp.department else "Sans département",
+            email=emp.email,
+            phone=emp.phone,
+            matricule=emp.matricule,
+            status=emp.status,
             manager_id=emp.manager_id,
             children=[]
         )
