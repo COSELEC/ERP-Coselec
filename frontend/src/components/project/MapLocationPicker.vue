@@ -16,6 +16,14 @@
       >
         Chercher
       </button>
+      <button 
+        type="button" 
+        @click="locateMe" 
+        class="bg-red-50 border border-red-200 text-red-600 px-3 py-1.5 rounded-md text-sm hover:bg-red-100 transition-colors flex items-center"
+        title="Ma position actuelle"
+      >
+        <span class="material-symbols-outlined text-[18px]">my_location</span>
+      </button>
 
       <!-- Dropdown results -->
       <div v-if="searchResults.length > 0" class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
@@ -132,6 +140,43 @@ const searchLocation = async () => {
     searchResults.value = data;
   } catch (error) {
     console.error("Geocoding error:", error);
+  }
+};
+
+const locateMe = () => {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const newPos = [lat, lng];
+        markerPosition.value = newPos;
+        center.value = newPos;
+        zoom.value = 16;
+        currentAddress.value = 'Localisation en cours...';
+        emit('update:modelValue', { lat, lng, address: '' });
+        reverseGeocode(lat, lng);
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            alert("L'accès à la géolocalisation a été refusé.\n\nVeuillez cliquer sur l'icône de cadenas à côté de l'URL dans votre navigateur (Chrome, Safari, Edge) et autoriser la 'Position' ou 'Localisation', puis réessayez.");
+            break;
+          case error.POSITION_UNAVAILABLE:
+            alert("Les informations de localisation sont indisponibles.");
+            break;
+          case error.TIMEOUT:
+            alert("La demande pour obtenir votre position a expiré.");
+            break;
+          default:
+            alert("Une erreur s'est produite lors de la géolocalisation.");
+            break;
+        }
+      }
+    );
+  } else {
+    alert("La géolocalisation n'est pas supportée par votre navigateur.");
   }
 };
 
