@@ -41,7 +41,7 @@ const routes = [
     path: "/org-chart",
     component: () => import("../views/employees/OrganizationView.vue"),
     meta: {
-      requiredRoles: ["Admin", "RH", "Direction", "Employe"],
+      requiredRoles: ["Admin", "RH", "Direction", "Employe", "Qualité", "Qualite"],
     },
   },
   // stock
@@ -93,19 +93,24 @@ const routes = [
     path: "/quality",
     name: "quality",
     component: () => import("../views/quality/QualityDashboardView.vue"),
-    meta: { requiresAuth: true },
+    meta: { requiredRoles: ["Admin", "Direction", "Qualité", "Qualite"] },
   },
   {
     path: "/quality/kpi",
     name: "quality-kpi",
     component: () => import("../views/quality/KpiDashboardView.vue"),
-    meta: { requiresAuth: true },
+    meta: { requiredRoles: ["Admin", "Direction", "Qualité", "Qualite"] },
+  },
+  {
+    path: "/quality/library",
+    name: "quality-library",
+    component: () => import("../views/quality/QualityLibraryView.vue"),
   },
   {
     path: "/quality/:id",
     name: "quality-detail",
     component: () => import("../views/quality/QualityDocumentDetail.vue"),
-    meta: { requiresAuth: true },
+    meta: { requiredRoles: ["Admin", "Direction", "Qualité", "Qualite"] },
   },
   {
     path: "/requests",

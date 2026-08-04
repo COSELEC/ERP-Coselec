@@ -30,6 +30,7 @@ export interface QualityDocument {
   updated_at: string;
   versions: DocumentVersion[];
   role_reviews: DocumentRoleReview[];
+  visible_roles?: { id: number; name: string }[];
 }
 
 export const qualityService = {
@@ -42,6 +43,16 @@ export const qualityService = {
     const response = await api.get("/quality/documents", {
       params: { filter_pending_for_me: filterPendingForMe },
     });
+    return response.data;
+  },
+
+  async getLibraryDocuments(): Promise<QualityDocument[]> {
+    const response = await api.get("/quality/documents/library");
+    return response.data;
+  },
+
+  async updateDocumentVisibility(docId: number, roleIds: number[]): Promise<QualityDocument> {
+    const response = await api.put(`/quality/documents/${docId}/visibility`, { role_ids: roleIds });
     return response.data;
   },
 

@@ -25,17 +25,37 @@ const reviewLoading = ref(false);
 
 const availableRoles = ref<{id: number, name: string}[]>([]);
 
+const visibilityRoleIds = ref<number[]>([]);
+const visibilityLoading = ref(false);
+
 const loadDocument = async () => {
   loading.value = true;
   try {
     const id = parseInt(route.params.id as string);
     doc.value = await qualityService.getDocument(id);
     availableRoles.value = await qualityService.getAvailableRoles();
+    if (doc.value.visible_roles) {
+      visibilityRoleIds.value = doc.value.visible_roles.map((r: any) => r.id);
+    }
   } catch (error) {
     toast.error("Document introuvable");
     router.push("/quality");
   } finally {
     loading.value = false;
+  }
+};
+
+const saveVisibility = async () => {
+  if (!doc.value) return;
+  visibilityLoading.value = true;
+  try {
+    await qualityService.updateDocumentVisibility(doc.value.id, visibilityRoleIds.value);
+    toast.success("Accès mis à jour avec succès");
+    await loadDocument();
+  } catch (error: any) {
+    toast.error(error.response?.data?.detail || "Erreur lors de la mise à jour des accès");
+  } finally {
+    visibilityLoading.value = false;
   }
 };
 
@@ -80,24 +100,44 @@ const sortedVersions = computed(() => {
 const pendingRolesForMe = computed(() => {
   if (!doc.value || !profile?.roles) return [];
   
-  // Find the IDs of the roles the user has by matching names
+  const normalizeStr = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  
+  // Find the IDs of the roles the user has by matching names (case insensitive & accent insensitive)
   const myRoleIds = availableRoles.value
-    .filter(r => profile.roles.includes(r.name))
-    .map(r => r.id);
+    .filter(r => profile.roles.some(pr => normalizeStr(pr) === normalizeStr(r.name)))
+    .map(r => Number(r.id));
   
-  const myUserId = profile.id;
+  const myUserId = Number(profile.id);
   
-  return doc.value.role_reviews.filter(r => 
-    r.status === "PENDING" && (
-      r.assigned_user_id === myUserId || 
-      (r.assigned_user_id === null && myRoleIds.includes(r.role_id))
-    )
-  );
+  return doc.value.role_reviews.filter(r => {
+    const assignedUserId = r.assigned_user_id ? Number(r.assigned_user_id) : null;
+    const roleId = Number(r.role_id);
+    
+    return r.status === "PENDING" && (
+      assignedUserId === myUserId || 
+      (assignedUserId === null && myRoleIds.includes(roleId))
+    );
+  });
 });
 
 const canUploadNewVersion = computed(() => {
   if (!doc.value || !profile) return false;
-  return doc.value.status === "REJECTED" && (doc.value.created_by_id === profile.id || profile.roles?.some(r => r === "Admin" || r === "Qualité"));
+  
+  const isCreator = doc.value.created_by_id === profile.id;
+  const isAdmin = profile.roles?.some(r => r === "Admin" || r === "Qualité" || r === "Qualite");
+  
+  const normalizeStr = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  
+  const isReviewer = doc.value.role_reviews.some(r => {
+    if (r.assigned_user_id === profile.id) return true;
+    const hasRole = availableRoles.value.some(role => 
+      role.id === r.role_id && 
+      profile.roles.some(pr => normalizeStr(pr) === normalizeStr(role.name))
+    );
+    return hasRole;
+  });
+
+  return doc.value.status === "REJECTED" && (isCreator || isAdmin || isReviewer);
 });
 
 const openReviewModal = (reviewId: number) => {
@@ -165,16 +205,20 @@ const downloadVersion = async (versionId: number) => {
   }
 };
 const getReviewerDisplayName = (review: any) => {
-  const role = availableRoles.value.find(r => r.id === review.role_id);
-  const roleName = role ? role.name : `Rôle #${review.role_id}`;
-  
+  if (review.assigned_user) return review.assigned_user.name;
+
   if (review.assigned_user_id) {
-    const user = role?.users?.find((u: any) => u.id === review.assigned_user_id);
-    const userName = user ? user.name : `Utilisateur #${review.assigned_user_id}`;
-    return `${roleName} (Assigné à : ${userName})`;
+    // If we have users list from availableRoles
+    for (const role of availableRoles.value) {
+      const user = role.users?.find((u: any) => u.id === review.assigned_user_id);
+      if (user) return user.name;
+    }
+    return `Utilisateur #${review.assigned_user_id}`; // fallback
   }
   
-  return roleName;
+  // Otherwise find role name
+  const role = availableRoles.value.find(r => r.id === review.role_id);
+  return role ? role.name : `Rôle #${review.role_id}`;
 };
 
 const canDeleteDocument = computed(() => {
@@ -280,6 +324,32 @@ const deleteDocument = async () => {
               </div>
             </div>
 
+            <!-- Visibility Section (For APPROVED documents) -->
+            <div v-if="doc.status === 'APPROVED' && (isCreator || isAdmin)" class="bg-white rounded-xl border border-red-200 shadow-sm overflow-hidden mb-6">
+              <div class="bg-red-50 px-6 py-4 border-b border-red-200 flex items-center gap-2 text-red-800">
+                <span class="material-symbols-outlined">visibility</span>
+                <h3 class="font-bold">Visibilité dans la bibliothèque</h3>
+              </div>
+              <div class="p-6">
+                <p class="text-sm text-gray-600 mb-4">Sélectionnez les rôles qui peuvent consulter ce document dans la bibliothèque :</p>
+                <div class="flex flex-wrap gap-3 mb-4">
+                  <label v-for="role in availableRoles" :key="role.id" class="flex items-center gap-2 text-sm text-gray-700 bg-gray-50 border border-gray-200 px-3 py-2 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                    <input type="checkbox" :value="role.id" v-model="visibilityRoleIds" class="rounded border-gray-300 text-[#d10f2f] focus:ring-[#d10f2f]" />
+                    {{ role.name }}
+                  </label>
+                </div>
+                <button 
+                  @click="saveVisibility"
+                  class="bg-[#d10f2f] hover:bg-[#a80c26] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center gap-2"
+                  :disabled="visibilityLoading"
+                >
+                  <span v-if="visibilityLoading" class="material-symbols-outlined animate-spin text-sm">progress_activity</span>
+                  <span v-else class="material-symbols-outlined text-sm">save</span>
+                  Enregistrer les accès
+                </button>
+              </div>
+            </div>
+
             <!-- Reviews Table -->
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
               <div class="px-6 py-4 border-b border-gray-100">
@@ -304,7 +374,7 @@ const deleteDocument = async () => {
                         </span>
                       </td>
                       <td class="px-6 py-4 text-gray-500">
-                        {{ review.reviewed_by_id ? `Utilisateur #${review.reviewed_by_id}` : '-' }}
+                        {{ review.reviewed_by ? review.reviewed_by.name : (review.reviewed_by_id ? `Utilisateur #${review.reviewed_by_id}` : '-') }}
                       </td>
                       <td class="px-6 py-4 text-gray-500 max-w-xs truncate" :title="review.comment || ''">
                         {{ review.comment || '-' }}
@@ -332,17 +402,19 @@ const deleteDocument = async () => {
                        :class="index === 0 ? 'bg-red-100 text-[#d10f2f]' : 'bg-gray-100 text-gray-500'">
                     <span class="material-symbols-outlined text-sm">{{ index === 0 ? 'stars' : 'description' }}</span>
                   </div>
-                  <div class="ml-4 p-4 bg-gray-50 rounded-lg border border-gray-100 flex-1">
-                    <div class="flex justify-between items-start">
-                      <div>
+                  <div class="ml-4 p-4 bg-gray-50 rounded-lg border border-gray-100 flex-1 min-w-0">
+                    <div class="flex flex-wrap justify-between items-start gap-3">
+                      <div class="min-w-0 flex-1">
                         <h4 class="font-semibold text-gray-900 text-sm">Version {{ v.version_number }}</h4>
                         <p class="text-xs text-gray-500 mt-1">{{ new Date(v.uploaded_at).toLocaleString('fr-FR') }}</p>
+                        <p v-if="v.uploaded_by" class="text-xs text-gray-500 mt-1">Soumis par : <span class="font-medium">{{ v.uploaded_by.name }}</span></p>
                       </div>
-                      <button @click="downloadVersion(v.id)" class="text-gray-400 hover:text-[#d10f2f] transition-colors p-1" title="Télécharger">
-                        <span class="material-symbols-outlined">download</span>
+                      <button @click="downloadVersion(v.id)" class="flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-[#d10f2f] hover:bg-red-50 px-3 py-1.5 rounded-md transition-colors border border-gray-200 hover:border-red-200 shrink-0" title="Télécharger">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">download</span>
+                        Télécharger
                       </button>
                     </div>
-                    <div class="mt-2 text-xs font-medium text-gray-500 truncate" :title="v.original_filename">
+                    <div class="mt-2 text-xs font-medium text-gray-500 truncate w-full" :title="v.original_filename">
                       {{ v.original_filename }}
                     </div>
                   </div>

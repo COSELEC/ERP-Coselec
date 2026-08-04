@@ -156,6 +156,10 @@ RBAC_ROLES: dict[str, dict[str, Iterable[str]]] = {
             "notifications.read",
             "notifications.update",
             "dashboard.read",
+            "documents.read",
+            "documents.create",
+            "documents.update",
+            "documents.delete",
         },
     },
     "Finance": {

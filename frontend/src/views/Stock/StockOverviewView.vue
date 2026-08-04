@@ -532,7 +532,7 @@ onBeforeUnmount(() => {
                   <span class="material-symbols-outlined text-sm">{{ getSortIcon('name') }}</span>
                 </button>
               </th>
-              <th rowspan="2" class="px-3 py-4 text-center border-r border-b border-red-100 bg-red-50 min-w-[110px] w-[110px] sticky left-[230px] z-40">
+              <th rowspan="2" class="px-3 py-4 text-center border-r border-b border-red-100 bg-red-50 min-w-[110px] w-[110px]">
                 <button type="button" class="inline-flex items-center gap-1 hover:text-[#d10f2f] transition-colors" @click="toggleSort('magasin')">
                   <span>Magasin</span>
                   <span class="material-symbols-outlined text-sm">{{ getSortIcon('magasin') }}</span>
@@ -570,7 +570,7 @@ onBeforeUnmount(() => {
               </td>
               
               <!-- Central Unassigned Warehouse (Magasin) Quantity -->
-              <td class="px-3 py-5 text-center border-r border-b border-red-100 sticky left-[230px] z-10 bg-red-50">
+              <td class="px-3 py-5 text-center border-r border-b border-red-100 bg-red-50">
                 <span
                   :class="product.magasinQty > 0 ? 'bg-red-100 text-[#b3232b] border-red-200' : 'bg-white text-gray-300 border-gray-200'"
                   class="inline-flex min-w-[52px] justify-center px-2.5 py-1 rounded-full border text-sm font-semibold"

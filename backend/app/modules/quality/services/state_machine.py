@@ -91,6 +91,9 @@ def submit_review(
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
         
+    if doc.created_by_id == current_user.id:
+        raise HTTPException(status_code=403, detail="Le créateur du document ne peut pas valider sa propre version")
+        
     # Permission check
     if review.assigned_user_id:
         if review.assigned_user_id != current_user.id:
@@ -145,11 +148,44 @@ def upload_new_version(
     if doc.status != QualityDocStatus.REJECTED:
         raise HTTPException(status_code=400, detail="Can only upload new version if rejected")
         
+    # Permission check: creator or reviewer or Admin/Qualité
+    is_admin = any(r.name in ["Admin", "Qualité", "Qualite"] for r in current_user.roles)
+    is_creator = doc.created_by_id == current_user.id
+    
+    is_reviewer = False
+    for r in doc.role_reviews:
+        if r.assigned_user_id == current_user.id:
+            is_reviewer = True
+            break
+        if not r.assigned_user_id and any(role.id == r.role_id for role in current_user.roles):
+            is_reviewer = True
+            break
+
+    if not (is_admin or is_creator or is_reviewer):
+        raise HTTPException(status_code=403, detail="You do not have permission to upload a new version")
+        
     # Reset doc
     doc.status = QualityDocStatus.IN_REVIEW
     
     # Reset reviews
     reviews = db.query(DocumentRoleReview).filter(DocumentRoleReview.document_id == document_id).all()
+    
+    if doc.created_by_id != current_user.id:
+        old_creator_id = doc.created_by_id
+        doc.created_by_id = current_user.id
+        swapped = False
+        for rev in reviews:
+            if rev.assigned_user_id == current_user.id:
+                rev.assigned_user_id = old_creator_id
+                swapped = True
+                break
+        if not swapped:
+            for rev in reviews:
+                if not rev.assigned_user_id and any(role.id == rev.role_id for role in current_user.roles):
+                    rev.assigned_user_id = old_creator_id
+                    swapped = True
+                    break
+
     for rev in reviews:
         rev.status = ReviewStatus.PENDING
         rev.comment = None

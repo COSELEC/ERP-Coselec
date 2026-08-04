@@ -148,6 +148,12 @@ onMounted(async () => {
           label="KPI Qualité"
           :collapsed="collapsed"
         />
+        <SidebarItem
+          to="/quality/library"
+          icon="local_library"
+          label="Bibliothèque Qualité"
+          :collapsed="collapsed"
+        />
       </div>
      
       <!-- RH -->

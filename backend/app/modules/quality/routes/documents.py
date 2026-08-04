@@ -29,6 +29,51 @@ def api_get_available_roles(
         result.append({"id": r.id, "name": r.name, "users": users})
     return result
 
+from app.modules.quality.models.document import QualityDocStatus
+from app.modules.users.models.role import Role
+from app.modules.quality.schemas.document import VisibilityUpdate
+
+@router.get("/library", response_model=list[QualityDocumentResponse])
+def api_get_library_documents(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    is_admin = any(r.name in ["Admin", "Qualité", "Qualite"] for r in current_user.roles)
+    
+    query = db.query(QualityDocument).filter(QualityDocument.status == QualityDocStatus.APPROVED)
+    
+    if not is_admin:
+        user_role_ids = [r.id for r in current_user.roles]
+        query = query.filter(
+            or_(
+                QualityDocument.created_by_id == current_user.id,
+                QualityDocument.visible_roles.any(Role.id.in_(user_role_ids))
+            )
+        )
+        
+    return query.order_by(QualityDocument.updated_at.desc()).all()
+
+@router.put("/{doc_id}/visibility", response_model=QualityDocumentResponse)
+def api_update_visibility(
+    doc_id: int,
+    payload: VisibilityUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    doc = db.query(QualityDocument).filter(QualityDocument.id == doc_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    is_admin = any(r.name in ["Admin", "Qualité", "Qualite"] for r in current_user.roles)
+    if doc.created_by_id != current_user.id and not is_admin:
+        raise HTTPException(status_code=403, detail="Not authorized to update visibility")
+        
+    roles = db.query(Role).filter(Role.id.in_(payload.role_ids)).all()
+    doc.visible_roles = roles
+    db.commit()
+    db.refresh(doc)
+    return doc
+
 @router.get("", response_model=list[QualityDocumentResponse])
 def api_get_documents(
     filter_pending_for_me: bool = False,
@@ -120,8 +165,8 @@ def api_download_document(
     if not version:
         raise HTTPException(status_code=404, detail="Version not found")
         
-    from app.services.storage import get_presigned_url
-    url = get_presigned_url(version.r2_file_key, version.original_filename)
+    from app.services.storage import get_file_url_from_minio
+    url = get_file_url_from_minio(version.r2_file_key)
     return {"url": url}
 
 @router.delete("/{doc_id}")

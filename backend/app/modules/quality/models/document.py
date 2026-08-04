@@ -15,6 +15,14 @@ class ReviewStatus(str, enum.Enum):
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
 
+from sqlalchemy import Table
+
+quality_document_visible_roles = Table(
+    'quality_document_visible_roles', Base.metadata,
+    Column('document_id', Integer, ForeignKey('quality_documents.id', ondelete="CASCADE"), primary_key=True),
+    Column('role_id', Integer, ForeignKey('roles.id', ondelete="CASCADE"), primary_key=True)
+)
+
 class QualityDocument(Base):
     __tablename__ = "quality_documents"
 
@@ -31,6 +39,7 @@ class QualityDocument(Base):
     created_by = relationship("User", foreign_keys=[created_by_id])
     versions = relationship("DocumentVersion", back_populates="document", cascade="all, delete-orphan", order_by="desc(DocumentVersion.version_number)")
     role_reviews = relationship("DocumentRoleReview", back_populates="document", cascade="all, delete-orphan")
+    visible_roles = relationship("Role", secondary=quality_document_visible_roles)
 
 class DocumentVersion(Base):
     __tablename__ = "quality_document_versions"

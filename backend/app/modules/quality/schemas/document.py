@@ -3,13 +3,21 @@ from typing import List, Optional
 from datetime import datetime
 from app.modules.quality.models.document import QualityDocStatus, ReviewStatus
 
+class UserShort(BaseModel):
+    id: int
+    name: str
+    model_config = ConfigDict(from_attributes=True)
+
 class DocumentRoleReviewResponse(BaseModel):
     id: int
     role_id: int
     status: ReviewStatus
     comment: Optional[str] = None
+    assigned_user_id: Optional[int] = None
+    assigned_user: Optional[UserShort] = None
     reviewed_by_id: Optional[int] = None
     reviewed_at: Optional[datetime] = None
+    reviewed_by: Optional[UserShort] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -20,6 +28,7 @@ class DocumentVersionResponse(BaseModel):
     r2_file_key: str
     uploaded_by_id: int
     uploaded_at: datetime
+    uploaded_by: Optional[UserShort] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -34,6 +43,11 @@ class QualityDocumentUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
 
+class RoleShort(BaseModel):
+    id: int
+    name: str
+    model_config = ConfigDict(from_attributes=True)
+
 class QualityDocumentResponse(QualityDocumentBase):
     id: int
     status: QualityDocStatus
@@ -43,8 +57,12 @@ class QualityDocumentResponse(QualityDocumentBase):
     
     versions: List[DocumentVersionResponse]
     role_reviews: List[DocumentRoleReviewResponse]
+    visible_roles: List[RoleShort] = []
 
     model_config = ConfigDict(from_attributes=True)
+
+class VisibilityUpdate(BaseModel):
+    role_ids: List[int]
 
 class ReviewSubmit(BaseModel):
     status: ReviewStatus
