@@ -14,6 +14,8 @@ class UserBase(BaseModel):
     last_name: Optional[str] = None
     status: Optional[str] = "CDI"
     email: EmailStr
+    department_id: Optional[int] = None
+    manager_id: Optional[int] = None
 
 class UserCreate(UserBase):
     role_name: str # Using role_name to easily assign a role (e.g., 'Admin', 'Employe')
@@ -25,6 +27,8 @@ class UserUpdate(BaseModel):
     status: Optional[str] = None
     email: Optional[EmailStr] = None
     role_name: Optional[str] = None
+    department_id: Optional[int] = None
+    manager_id: Optional[int] = None
 
 class UserResponse(UserBase):
     id: int

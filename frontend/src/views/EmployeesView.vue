@@ -278,6 +278,10 @@
                 <p class="text-xs text-gray-500 uppercase">Email professionnel</p>
                 <p class="font-medium text-gray-900">{{ selectedEmployee.email }}</p>
               </div>
+              <div>
+                <p class="text-xs text-gray-500 uppercase">Manager</p>
+                <p class="font-medium text-gray-900">{{ getManagerName(selectedEmployee.manager_id) }}</p>
+              </div>
               </div>
           </section>
 
@@ -341,6 +345,7 @@ interface Employee {
   email: string;
   position: string;
   status: string;
+  manager_id?: number | null;
 }
 
 const showCreateModal = ref(false);
@@ -350,10 +355,17 @@ const departments = ref<any[]>([]);
 const fetchDepartments = async () => {
   try {
     const res = await api.get('/departments');
-    departments.value = res.data;
+    const allowedDepts = ['Achats', 'RH', 'Travaux', 'Etudes', 'Informatique'];
+    departments.value = res.data.filter((d: any) => allowedDepts.includes(d.name));
   } catch (e) {
     console.error("Error fetching departments", e);
   }
+};
+
+const getManagerName = (managerId?: number | null) => {
+  if (!managerId) return 'Aucun';
+  const manager = employees.value.find(emp => emp.id === managerId);
+  return manager ? `${manager.first_name || ''} ${manager.last_name || ''}`.trim() : 'Inconnu';
 };
 
 const openCreateModal = () => {
@@ -511,7 +523,9 @@ onMounted(async () => {
       api.get('/departments')
     ]);
     employees.value = empRes.data;
-    departments.value = depRes.data;
+    
+    const allowedDepts = ['Achats', 'RH', 'Travaux', 'Etudes', 'Informatique'];
+    departments.value = depRes.data.filter((d: any) => allowedDepts.includes(d.name));
   } catch (e) {
     console.error("Error loading data", e);
   }

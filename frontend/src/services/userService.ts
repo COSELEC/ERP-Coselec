@@ -13,6 +13,8 @@ export interface User {
   status?: string;
   email: string;
   roles: Role[];
+  department_id?: number;
+  manager_id?: number | null;
 }
 
 export interface UserListResponse {
@@ -29,6 +31,8 @@ export interface UserCreate {
   status?: string;
   email: string;
   role_name: string;
+  department_id?: number;
+  manager_id?: number | null;
 }
 
 export interface UserUpdate {
@@ -38,6 +42,8 @@ export interface UserUpdate {
   status?: string;
   email?: string;
   role_name?: string;
+  department_id?: number;
+  manager_id?: number | null;
 }
 
 export interface CreateUserResponse {

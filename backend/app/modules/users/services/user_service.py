@@ -66,6 +66,8 @@ def create_user(db: Session, user_data: UserCreate, current_user: User) -> Tuple
         status=user_data.status or "CDI",
         email=user_data.email,
         hashed_password=hashed_pwd,
+        department_id=user_data.department_id,
+        manager_id=user_data.manager_id,
         requires_password_change=True # Forcer le changement de mot de passe à la première connexion
     )
     
@@ -106,6 +108,12 @@ def update_user(db: Session, user_id: int, user_data: UserUpdate, current_user: 
     if user_data.status is not None:
         user.status = user_data.status
         new_values["status"] = user.status
+    if user_data.department_id is not None:
+        user.department_id = user_data.department_id
+        new_values["department_id"] = user.department_id
+    if 'manager_id' in user_data.dict(exclude_unset=True):
+        user.manager_id = user_data.manager_id
+        new_values["manager_id"] = user.manager_id
         
     # S'il y a un prénom et nom sans nom global
     if user.first_name and not user_data.name:

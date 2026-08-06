@@ -60,6 +60,19 @@
           </div>
 
           <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Département</label>
+            <select 
+              v-model="formData.department_id"
+              class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            >
+              <option value="" disabled>Sélectionner un département</option>
+              <option v-for="dept in departments" :key="dept.id" :value="dept.id">
+                {{ dept.name }}
+              </option>
+            </select>
+          </div>
+
+          <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
             <select 
               v-model="formData.status"
@@ -71,6 +84,22 @@
               <option value="STAGIAIRE">Stagiaire</option>
               <option value="PRESTATAIRE">Prestataire</option>
               <option value="INACTIF">Inactif</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Manager</label>
+            <select 
+              v-model="formData.manager_id"
+              class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            >
+              <option :value="undefined">Aucun</option>
+              <option 
+                v-for="mgr in availableManagers" 
+                :key="mgr.id" 
+                :value="mgr.id"
+              >
+                {{ mgr.first_name || '' }} {{ mgr.last_name || mgr.name || '' }}
+              </option>
             </select>
           </div>
         </div>
@@ -109,6 +138,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import api from '@/services/api';
 import { userService, type User, type UserCreate, type UserUpdate } from '@/services/userService';
 
 const props = defineProps<{
@@ -124,6 +154,8 @@ const isEdit = computed(() => !!props.user);
 const loading = ref(false);
 const error = ref('');
 const tempPassword = ref('');
+const departments = ref<any[]>([]);
+const usersList = ref<User[]>([]);
 
 // Ces rôles pourraient aussi venir de l'API dans un cas réel
 const availableRoles = [
@@ -138,16 +170,37 @@ const availableRoles = [
   'Employé'
 ];
 
+const availableManagers = computed(() => {
+  if (isEdit.value && props.user) {
+    return usersList.value.filter(u => u.id !== props.user?.id);
+  }
+  return usersList.value;
+});
+
 const formData = ref({
   name: '',
   first_name: '',
   last_name: '',
   status: 'CDI',
   email: '',
-  role_name: ''
+  role_name: '',
+  department_id: undefined as number | undefined,
+  manager_id: undefined as number | null | undefined
 });
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    const deptRes = await api.get('/departments');
+    const allowedDepts = ['Achats', 'RH', 'Travaux', 'Etudes', 'Informatique'];
+    departments.value = deptRes.data.filter((d: any) => allowedDepts.includes(d.name));
+    
+    // Fetch users for manager list
+    const usersRes = await userService.getUsers(0, 100);
+    usersList.value = usersRes.items;
+  } catch (err) {
+    console.error('Erreur lors du chargement des données (départements ou utilisateurs)', err);
+  }
+
   if (props.user) {
     formData.value = {
       name: props.user.name,
@@ -155,7 +208,9 @@ onMounted(() => {
       last_name: props.user.last_name || '',
       status: props.user.status || 'CDI',
       email: props.user.email,
-      role_name: props.user.roles?.[0]?.name || ''
+      role_name: props.user.roles?.[0]?.name || '',
+      department_id: props.user.department_id,
+      manager_id: props.user.manager_id
     };
   }
 });

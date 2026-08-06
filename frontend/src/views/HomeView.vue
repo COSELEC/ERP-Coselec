@@ -43,14 +43,15 @@ const refreshDashboard = async () => {
   try {
     const kpiRes = await api.get('/dashboard/kpis');
     const data = kpiRes.data;
-    if (kpis.value[0]) kpis.value[0].value = data.active_projects.toString();
-    if (kpis.value[1]) kpis.value[1].value = data.employees.toString();
-    if (kpis.value[2]) kpis.value[2].value = data.pending_requests.toString();
-    if (kpis.value[3]) kpis.value[3].value = data.stock_alerts.toString();
+    if (kpis.value[0]) kpis.value[0].value = (data.active_projects || 0).toString();
+    if (kpis.value[1]) kpis.value[1].value = (data.users || 0).toString();
+    if (kpis.value[2]) kpis.value[2].value = (data.pending_requests || 0).toString();
+    if (kpis.value[3]) kpis.value[3].value = (data.stock_alerts || 0).toString();
     
     const activityRes = await api.get('/dashboard/recent-activity');
     recentActivity.value = activityRes.data;
-  } catch {
+  } catch (error) {
+    console.error("Failed to load dashboard data", error);
     // Silently fail — KPI cards show "0" as defaults
   }
 };
