@@ -1,8 +1,8 @@
-"""Add VoucherAttachment
+"""Add DeliveryNote models
 
-Revision ID: 590a210938e8
-Revises: ca916c10e41b
-Create Date: 2026-07-24 11:26:46.833798
+Revision ID: 202f6d5ef11a
+Revises: 2b4c1327f1d0
+Create Date: 2026-08-05 15:22:30.578460
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '590a210938e8'
-down_revision: Union[str, Sequence[str], None] = 'ca916c10e41b'
+revision: str = '202f6d5ef11a'
+down_revision: Union[str, Sequence[str], None] = '2b4c1327f1d0'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

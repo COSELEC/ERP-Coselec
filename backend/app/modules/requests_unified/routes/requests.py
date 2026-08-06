@@ -75,7 +75,7 @@ def _notify_creation_targets(db: Session, request: GenericRequest, requester: Us
     """Notify admins, managers, and relevant role users when a new request is created."""
     try:
         from app.modules.users.models.role import Role
-        from app.modules.users.models.employee import Employee
+        from app.modules.users.models.user import User
 
         target_roles = {"Admin"}
 
@@ -91,7 +91,7 @@ def _notify_creation_targets(db: Session, request: GenericRequest, requester: Us
         recipient_user_ids: set[int] = set()
 
         # Check direct manager
-        requester_emp = db.query(Employee).filter(Employee.email == requester.email).first()
+        requester_emp = db.query(User).filter(User.email == requester.email).first()
         if requester_emp and requester_emp.manager:
             mgr_emp = requester_emp.manager
             mgr_user = db.query(User).filter(User.email == mgr_emp.email).first()
@@ -268,6 +268,38 @@ def create_request(
     db.add(new_request)
     db.flush()
 
+    # Immediate Budget Impact
+    if new_request.project_id and new_request.type in (RequestType.FUEL, RequestType.IT_EQUIPMENT, RequestType.FACILITY_SUPPLIES):
+        from app.models.project.expense import ProjectExpense
+        from app.models.project.budget import ProjectBudget
+        
+        estimated_amount = 0.0
+        if new_request.type == RequestType.FUEL:
+            # Prix fixe pour le carburant: 1000 XOF le litre (ou selon la logique métier)
+            qty = float(new_request.payload.get("quantity_liters") or new_request.payload.get("quantity") or 0)
+            estimated_amount = qty * 1000.0
+        else:
+            # Pour le matériel, s'il y a un estimated_cost dans le payload
+            estimated_amount = float(new_request.payload.get("estimated_cost") or 0.0)
+            
+        if estimated_amount > 0:
+            # Trouver le budget approprié pour le projet (ex: le premier budget de la catégorie correspondante, ou le budget global)
+            budget = db.query(ProjectBudget).filter(ProjectBudget.project_id == new_request.project_id).first()
+            if budget:
+                expense = ProjectExpense(
+                    project_id=new_request.project_id,
+                    budget_id=budget.id,
+                    expense_date=datetime.utcnow().date(),
+                    amount=estimated_amount,
+                    currency=budget.currency or "XOF",
+                    category="Achat/Carburant" if new_request.type == RequestType.FUEL else "Achat Matériel",
+                    description=f"Demande {new_request.type.value} #{new_request.id}",
+                    status="PENDING", # PENDING means it's an engagement, not yet paid
+                    reference=f"REQ-{new_request.id}",
+                )
+                db.add(expense)
+                db.flush()
+
     # Record creation in audit log
     _record_history(db, new_request, None, initial.value, current_user.id, "Request created")
 
@@ -301,10 +333,10 @@ def update_request_status(
     if not is_admin:
         if payload.status == RequestStatus.PENDING_FINANCE_APPROVAL or (payload.status == RequestStatus.REJECTED and request.status == RequestStatus.PENDING_MANAGER_APPROVAL):
             if "DIRECTION" not in role_names:
-                from app.modules.users.models.employee import Employee
-                current_employee = db.query(Employee).filter(Employee.email == current_user.email).first()
+                from app.modules.users.models.user import User
+                current_employee = db.query(User).filter(User.email == current_user.email).first()
                 requester = db.get(User, request.requester_id)
-                requester_employee = db.query(Employee).filter(Employee.email == requester.email).first() if requester else None
+                requester_employee = db.query(User).filter(User.email == requester.email).first() if requester else None
                 
                 is_direct_manager = current_employee and requester_employee and requester_employee.manager_id == current_employee.id
                 if not is_direct_manager:
@@ -346,6 +378,13 @@ def update_request_status(
 
     if payload.rejection_comment:
         request.rejection_comment = payload.rejection_comment
+
+    # Cancel Budget Impact if Rejected/Cancelled
+    if payload.status in {RequestStatus.REJECTED, RequestStatus.CANCELLED}:
+        from app.models.project.expense import ProjectExpense
+        expense = db.query(ProjectExpense).filter(ProjectExpense.reference == f"REQ-{request.id}").first()
+        if expense:
+            db.delete(expense)
 
     # Mark resolution timestamp for terminal states
     if payload.status in {RequestStatus.COMPLETED, RequestStatus.REJECTED}:
@@ -398,9 +437,9 @@ def update_request_status(
         def _generate_fuel_pdf():
             with SessionLocal() as bg_db:
                 try:
-                    from app.services.pdf_generator import generate_fuel_request_pdf
+                    from app.services.pdf_generator import generate_dmcar_pdf
                     bg_request = bg_db.get(GenericRequest, request.id)
-                    pdf_url = generate_fuel_request_pdf(bg_request, bg_db)
+                    pdf_url = generate_dmcar_pdf(bg_request)
                     bg_request.attachment_url = pdf_url
                     bg_db.commit()
                 except Exception:
@@ -420,51 +459,47 @@ def update_request_status(
             if isinstance(end_date, str):
                 end_date = date_type.fromisoformat(end_date)
 
-            target_employee_id = request.payload.get("employee_id") or request.requester_id
+            target_user_id = request.payload.get("user_id") or request.requester_id
 
             # Use a NEW session for the background task to avoid session lifecycle issues
             def _process_leave():
                 with SessionLocal() as bg_db:
                     try:
                         from app.modules.requests_unified.services.leave_workflow import process_approved_leave
-                        process_approved_leave(bg_db, int(target_employee_id), start_date, end_date)
+                        process_approved_leave(bg_db, int(target_user_id), start_date, end_date)
                     except Exception:
                         logger.exception("Failed to process approved leave for request %s", request_id)
 
             background_tasks.add_task(_process_leave)
 
-    if request.status == RequestStatus.APPROVED and request.type in (RequestType.IT_EQUIPMENT, RequestType.FACILITY_SUPPLIES):
+    if request.status == RequestStatus.APPROVED and request.type in (RequestType.IT_EQUIPMENT, RequestType.FACILITY_SUPPLIES, RequestType.FUEL):
         is_return = request.payload.get("is_return", False)
         if not is_return:
-            def _generate_po():
+            def _generate_caisse_voucher():
                 with SessionLocal() as bg_db:
                     try:
-                        from app.models.procurement.purchase import PurchaseOrder, PurchaseOrderLine
-                        import uuid
-                        po = PurchaseOrder(
-                            reference=f"PO-{request_id}-{uuid.uuid4().hex[:6]}".upper(),
-                            generic_request_id=request_id,
-                            project_id=request.project_id
-                        )
-                        bg_db.add(po)
-                        bg_db.flush()
+                        from app.models.caisse_voucher import CaisseVoucher, CaisseVoucherStatus
+                        from app.models.project.expense import ProjectExpense
                         
-                        items = request.payload.get("items", [])
-                        for item in items:
-                            line = PurchaseOrderLine(
-                                purchase_order_id=po.id,
-                                product_id=item.get("product_id"),
-                                designation=item.get("designation", "Article inconnu"),
-                                quantity=item.get("quantity", 1),
-                                unit_price=0.0
-                            )
-                            bg_db.add(line)
+                        expense = bg_db.query(ProjectExpense).filter(ProjectExpense.reference == f"REQ-{request_id}").first()
+                        amount = expense.amount if expense else 0.0
+                        
+                        voucher = CaisseVoucher(
+                            date=datetime.utcnow(),
+                            description=f"Demande de décaissement pour {request.type.value} #{request_id}",
+                            type="Sortie",
+                            amount=amount,
+                            beneficiary=request.payload.get("beneficiary", "Fournisseur inconnu"),
+                            status=CaisseVoucherStatus.DRAFT,
+                            generic_request_id=request_id
+                        )
+                        bg_db.add(voucher)
                         bg_db.commit()
                     except Exception:
                         bg_db.rollback()
-                        logger.exception("Failed to process PO for request %s", request_id)
+                        logger.exception("Failed to generate Caisse Voucher for request %s", request_id)
             
-            background_tasks.add_task(_generate_po)
+            background_tasks.add_task(_generate_caisse_voucher)
 
     return request
 
@@ -539,15 +574,14 @@ def download_request_pdf(
     if not request or not request.attachment_url:
         raise HTTPException(status_code=404, detail="PDF not found")
         
-    from fastapi.responses import FileResponse
-    import os
+    from fastapi.responses import RedirectResponse
+    from app.services.storage import get_file_url_from_minio
     
     file_path = request.attachment_url
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="PDF file missing on disk")
-        
-    return FileResponse(
-        path=file_path,
-        media_type="application/pdf",
-        filename=f"Request_{request_id}.pdf"
-    )
+    
+    try:
+        url = get_file_url_from_minio(file_path)
+        return RedirectResponse(url=url)
+    except Exception as e:
+        logger.error(f"Error generating presigned URL for {file_path}: {e}")
+        raise HTTPException(status_code=500, detail="Error retrieving PDF from storage")

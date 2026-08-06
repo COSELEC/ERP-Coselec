@@ -54,7 +54,7 @@ const loadEmployeeContracts = async () => {
     loading.value = true;
     const allContracts = await contractService.getAll();
     // Filtrage pour n'avoir que les contrats de l'employé en cours
-    contracts.value = allContracts.filter(c => c.employee_id === props.employeeId);
+    contracts.value = allContracts.filter(c => c.user_id === props.employeeId);
   } catch (error) {
     errorMessage.value = "Erreur lors du chargement des contrats.";
   } finally {
@@ -71,7 +71,7 @@ const handleSubmit = async () => {
   try {
     const payload: ContractCreate = {
       ...form.value,
-      employee_id: props.employeeId,
+      user_id: props.employeeId,
       end_date: form.value.end_date || null
     };
     await contractService.create(payload);

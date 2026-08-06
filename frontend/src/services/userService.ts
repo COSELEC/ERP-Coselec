@@ -8,6 +8,9 @@ export interface Role {
 export interface User {
   id: number;
   name: string;
+  first_name?: string;
+  last_name?: string;
+  status?: string;
   email: string;
   roles: Role[];
 }
@@ -20,13 +23,19 @@ export interface UserListResponse {
 }
 
 export interface UserCreate {
-  name: string;
+  name?: string;
+  first_name?: string;
+  last_name?: string;
+  status?: string;
   email: string;
   role_name: string;
 }
 
 export interface UserUpdate {
   name?: string;
+  first_name?: string;
+  last_name?: string;
+  status?: string;
   email?: string;
   role_name?: string;
 }

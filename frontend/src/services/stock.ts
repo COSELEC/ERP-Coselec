@@ -44,6 +44,12 @@
     getStockOverview(){
       return api.get('/stocks/');
     },
+    getGeneralStock() {
+      return api.get('/stocks/general');
+    },
+    getProjectStock(projectId: number) {
+      return api.get(`/stocks/projects/${projectId}`);
+    },
     createCategory(payload: {name: string, description?: string; code?: string}){
       const normalizedCode = (payload.code || payload.name || 'CAT')
         .toUpperCase()

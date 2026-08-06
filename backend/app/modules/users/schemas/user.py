@@ -9,7 +9,10 @@ class RoleResponse(BaseModel):
         from_attributes = True
 
 class UserBase(BaseModel):
-    name: str
+    name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    status: Optional[str] = "CDI"
     email: EmailStr
 
 class UserCreate(UserBase):
@@ -17,6 +20,9 @@ class UserCreate(UserBase):
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    status: Optional[str] = None
     email: Optional[EmailStr] = None
     role_name: Optional[str] = None
 

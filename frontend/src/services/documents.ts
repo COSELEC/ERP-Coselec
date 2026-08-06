@@ -15,7 +15,7 @@ export interface EmployeeDocument {
 export const documentService = {
   // Récupérer les documents d'un employé spécifique
   async getByEmployee(employeeId: number): Promise<EmployeeDocument[]> {
-    const response = await api.get<EmployeeDocument[]>(`/employees/${employeeId}/documents`);
+    const response = await api.get<EmployeeDocument[]>(`/users/${employeeId}/documents`);
     return response.data;
   },
 
@@ -34,7 +34,7 @@ export const documentService = {
     }
 
     const response = await api.post<EmployeeDocument>(
-      `/employees/${employeeId}/documents`, 
+      `/users/${employeeId}/documents`, 
       formData,
       {
         headers: {
@@ -47,7 +47,7 @@ export const documentService = {
 
   async download(documentId: number, fileName: string): Promise<void> {
     const response = await api.get<Blob>(
-      `/employees/documents/${documentId}/download`,
+      `/users/documents/${documentId}/download`,
       {
         responseType: 'blob'
       }
@@ -65,6 +65,6 @@ export const documentService = {
 
   // Supprimer un document
   async delete(documentId: number): Promise<void> {
-    await api.delete(`/employees/documents/${documentId}`);
+    await api.delete(`/users/documents/${documentId}`);
   }
 };

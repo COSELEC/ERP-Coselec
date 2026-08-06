@@ -25,23 +25,23 @@ const handleScroll = (e: Event) => {
 const roles = computed(() => profile.value?.roles || []);
 
 const canViewHr = computed(() => {
-  return hasAnyRole(roles.value, ["Admin", "RH", "Direction"]);
+  return hasAnyRole(roles.value, ["Admin", "Direction", "RH / Comptabilité"]);
 });
 
 const canViewStock = computed(() => {
-  return hasAnyRole(roles.value, ["Admin", "Stock / Logistique", "Direction", "Finance"]);
+  return hasAnyRole(roles.value, ["Admin", "Achats", "Direction"]);
 });
 
 const canViewDocuments = computed(() => {
-  return hasAnyRole(roles.value, ["Admin", "Direction", "Finance"]);
+  return hasAnyRole(roles.value, ["Admin", "Direction", "Qualité", "Employé"]);
 });
 
 const canViewTreasury = computed(() => {
-  return hasAnyRole(roles.value, ["Admin", "Direction", "Finance", "Comptabilité"]);
+  return hasAnyRole(roles.value, ["Admin", "Direction", "RH / Comptabilité"]);
 });
 
 const canViewProjects = computed(() => {
-  return hasAnyRole(roles.value, ["Admin", "Responsable Projet", "Direction"]);
+  return hasAnyRole(roles.value, ["Admin", "Direction", "Chef de Projet", "Chef d'Equipe", "Commercial"]);
 });
 
 const canViewAdmin = computed(() => {
@@ -49,13 +49,11 @@ const canViewAdmin = computed(() => {
 });
 
 const canViewValidationRequests = computed(() => {
-  return hasAnyRole(roles.value, ["Admin", "RH", "Direction", "IT Admin", "Admin IT", "IT", "Responsable IT", "Facility Manager", "Facility", "Finance", "Stock / Logistique"]);
+  return hasAnyRole(roles.value, ["Admin", "Direction", "RH / Comptabilité", "Achats"]);
 });
 
-
-
 const canViewFuelRequests = computed(() => {
-  return hasAnyRole(roles.value, ["Admin", "Facility", "Logistique", "Direction", "Finance"]);
+  return hasAnyRole(roles.value, ["Admin", "Direction", "Achats", "Employé"]);
 });
 
 onMounted(async () => {
@@ -83,31 +81,43 @@ onMounted(async () => {
     ]"
   >
     <!-- Header -->
-    <div
-      class="p-6 border-b border-white/10 flex items-center justify-between"
-    >
-      <h1
-        v-if="!collapsed"
-        class="text-2xl font-bold whitespace-nowrap"
-      >
-        COSELEC ERP
-      </h1>
+    <div class="p-6 border-b border-white/10">
+      <div class="flex items-center justify-between">
+        <h1
+          v-if="!collapsed"
+          class="text-2xl font-bold whitespace-nowrap"
+        >
+          COSELEC ERP
+        </h1>
 
-      <div
-        v-else
-        class="w-full flex justify-center text-2xl font-bold"
-      >
-        C
+        <div
+          v-else
+          class="w-full flex justify-center text-2xl font-bold"
+        >
+          C
+        </div>
+
+        <button
+          @click="toggleSidebar"
+          class="p-2 rounded-lg hover:bg-white/10 transition"
+        >
+          <span class="material-symbols-outlined">
+            menu
+          </span>
+        </button>
       </div>
 
-      <button
-        @click="toggleSidebar"
-        class="p-2 rounded-lg hover:bg-white/10 transition"
-      >
-        <span class="material-symbols-outlined">
-          menu
-        </span>
-      </button>
+      <!-- User Info Placeholder -->
+      <div v-if="!collapsed" class="mt-8 flex flex-col space-y-1">
+        <span class="text-sm text-red-200">Connecté en tant que</span>
+        <span class="font-medium text-lg capitalize">{{ profile?.name || 'Utilisateur' }}</span>
+        <span class="text-xs text-red-100 capitalize">{{ roles.join(', ') || 'Aucun rôle' }}</span>
+        
+        <router-link to="/profile" class="mt-2 text-xs flex items-center space-x-1 hover:text-white text-red-200 transition-colors w-max">
+            <span class="material-symbols-outlined text-sm">person</span>
+            <span>Mon Profil</span>
+        </router-link>
+      </div>
     </div>
 
     <nav class="p-4 space-y-6">
@@ -176,6 +186,13 @@ onMounted(async () => {
           to="/departments"
           icon="apartment"
           label="Départements"
+          :collapsed="collapsed"
+        />
+
+        <SidebarItem
+          to="/attendance"
+          icon="fingerprint"
+          label="Pointages"
           :collapsed="collapsed"
         />
       </div>

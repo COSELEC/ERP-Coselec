@@ -3,7 +3,7 @@ from app.modules.daily_reports.domain.ports import INotificationService
 from app.models.notification import Notification, NotificationType
 from app.core.websockets.manager import broadcast_notification_sync
 from app.models.project.project import Project
-from app.modules.users.models.employee import Employee
+from app.modules.users.models.user import User
 from app.modules.users.models.user import User
 from sqlalchemy.orm import Session
 
@@ -13,19 +13,19 @@ class WebSocketNotificationAdapter(INotificationService):
     def __init__(self, db: Session):
         self.db = db
 
-    def notify_missing_report(self, employee_id: int, project_id: int):
-        # We need to find the user_id for the employee, and the project name
-        employee = self.db.query(Employee).filter(Employee.id == employee_id).first()
+    def notify_missing_report(self, user_id: int, project_id: int):
+        # We need to find the user_id for the user, and the project name
+        user = self.db.query(User).filter(User.id == user_id).first()
         project = self.db.query(Project).filter(Project.id == project_id).first()
         
-        if not employee or not project:
+        if not user or not project:
             return
             
-        user = self.db.query(User).filter(User.email == employee.email).first()
+        user = self.db.query(User).filter(User.email == user.email).first()
         if not user:
             return
 
-        msg = f"Rappel : Vous n'avez pas encore soumis votre rapport journalier pour le projet {project.name}."
+        msg = f"Rappel : Vous n'avez pas encore soumis votre rapport hebdomadaire pour le projet {project.nom}."
         
         new_notification = Notification(
             user_id=user.id,

@@ -4,7 +4,7 @@ from sqlalchemy import func
 from app.core.database import get_db
 
 from app.models.project.project import Project, ProjectStatus
-from app.modules.users.models.employee import Employee
+from app.modules.users.models.user import User
 
 from app.modules.stock.models.stock import Stock
 from app.modules.stock.models.stockmovement import StockMovement
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 @router.get("/kpis")
 def get_dashboard_kpis(db: Session = Depends(get_db)):
     active_projects = db.query(Project).filter(Project.status == ProjectStatus.ONGOING).count()
-    total_employees = db.query(Employee).count()
+    total_employees = db.query(User).count()
     
     # Calculate total pending requests across all types
     pending_statuses = [
@@ -30,7 +30,7 @@ def get_dashboard_kpis(db: Session = Depends(get_db)):
 
     return {
         "active_projects": active_projects,
-        "employees": total_employees,
+        "users": total_employees,
         "pending_requests": total_pending_requests,
         "stock_alerts": stock_alerts
     }

@@ -1,40 +1,54 @@
 import { api } from './api';
 
-export interface DailyReportCreate {
+export interface WeeklyReportCreate {
   project_id: number;
+  report_date: string;       // Date de soumission (YYYY-MM-DD)
+  week_start?: string;       // Lundi de la semaine (calculé auto si absent)
+  week_end?: string;         // Vendredi de la semaine
+  hours_worked: number;
+  progress_percentage?: number;
+  tasks_completed: string;
+  issues_encountered?: string;
+  plan_next_week?: string;
+}
+
+export interface WeeklyReportResponse {
+  id: number;
+  user_id: number;
+  project_id: number;
+  week_start: string;
+  week_end: string;
   report_date: string;
   hours_worked: number;
   progress_percentage?: number;
   tasks_completed: string;
   issues_encountered?: string;
-  plan_for_tomorrow?: string;
-}
-
-export interface DailyReportResponse extends DailyReportCreate {
-  id: number;
-  employee_id: number;
+  plan_next_week?: string;
   status: 'DRAFT' | 'SUBMITTED' | 'APPROVED';
   created_at: string;
   updated_at: string;
 }
 
+// Aliases rétrocompatibilité
+export type DailyReportCreate = WeeklyReportCreate;
+export type DailyReportResponse = WeeklyReportResponse;
+
 export const dailyReportsService = {
-  async submitReport(data: DailyReportCreate): Promise<DailyReportResponse> {
-    const response = await api.post<DailyReportResponse>('/daily-reports', data);
+  async submitReport(data: WeeklyReportCreate): Promise<WeeklyReportResponse> {
+    const response = await api.post<WeeklyReportResponse>('/weekly-reports', data);
     return response.data;
   },
 
-  async getReports(projectId?: number, date?: string): Promise<DailyReportResponse[]> {
+  async getReports(projectId?: number, weekStart?: string): Promise<WeeklyReportResponse[]> {
     const params = new URLSearchParams();
     if (projectId) params.append('project_id', projectId.toString());
-    if (date) params.append('report_date', date);
-    
-    const response = await api.get<DailyReportResponse[]>(`/daily-reports?${params.toString()}`);
+    if (weekStart) params.append('week_start', weekStart);
+    const response = await api.get<WeeklyReportResponse[]>(`/weekly-reports?${params.toString()}`);
     return response.data;
   },
 
-  async updateStatus(reportId: number, status: 'DRAFT' | 'SUBMITTED' | 'APPROVED'): Promise<DailyReportResponse> {
-    const response = await api.patch<DailyReportResponse>(`/daily-reports/${reportId}/status`, { status });
+  async updateStatus(reportId: number, status: 'DRAFT' | 'SUBMITTED' | 'APPROVED'): Promise<WeeklyReportResponse> {
+    const response = await api.patch<WeeklyReportResponse>(`/weekly-reports/${reportId}/status`, { status });
     return response.data;
-  }
+  },
 };

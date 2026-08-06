@@ -10,29 +10,37 @@ class ReportStatus(str, enum.Enum):
     APPROVED = "APPROVED"
 
 class DailyReport(Base):
-    __tablename__ = "daily_reports"
+    """Modèle des rapports hebdomadaires d'avancement de projet.
+    La classe garde le nom DailyReport pour la compatibilité des imports existants,
+    mais la table sous-jacente est désormais 'weekly_reports'.
+    """
+    __tablename__ = "weekly_reports"
 
     id = Column(Integer, primary_key=True, index=True)
-    employee_id = Column(Integer, ForeignKey("employees.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
-    
-    report_date = Column(Date, nullable=False, default=date.today)
+
+    # Semaine couverte par ce rapport
+    week_start = Column(Date, nullable=False)   # Lundi de la semaine
+    week_end = Column(Date, nullable=False)     # Vendredi de la semaine
+    report_date = Column(Date, nullable=False, default=date.today)  # Date de soumission effective
+
     hours_worked = Column(Float, nullable=False)
     progress_percentage = Column(Integer, nullable=True)
-    
+
     tasks_completed = Column(Text, nullable=False)
     issues_encountered = Column(Text, nullable=True)
-    plan_for_tomorrow = Column(Text, nullable=True)
-    
+    plan_next_week = Column(Text, nullable=True)   # Remplace plan_for_tomorrow
+
     status = Column(SQLEnum(ReportStatus), default=ReportStatus.SUBMITTED)
-    
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # A report is unique per employee, per project, per day
+    # Un rapport unique par employé, par projet, par semaine (clé = lundi de la semaine)
     __table_args__ = (
-        UniqueConstraint('employee_id', 'project_id', 'report_date', name='uq_employee_project_date'),
+        UniqueConstraint('user_id', 'project_id', 'week_start', name='uq_employee_project_week'),
     )
 
-    employee = relationship("Employee")
+    user = relationship("User")
     project = relationship("Project")

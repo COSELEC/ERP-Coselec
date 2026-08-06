@@ -3,14 +3,14 @@ from app.models.notification import Notification, NotificationType
 from app.modules.users.models.user import User
 from app.modules.users.models.role import Role
 from app.models.hr.document import EmployeeDocument
-from app.modules.users.models.employee import Employee
+from app.modules.users.models.user import User
 from app.services.email import send_ticket_email
 from app.core.database import SessionLocal
 import os
 
 async def notify_request_created(request_id: int, request_category: str, target_role_names: list[str]):
     """
-    Called when an employee creates a request.
+    Called when an user creates a request.
     Notifies all users holding the target_role_names.
     """
     db: Session = SessionLocal()
@@ -39,7 +39,7 @@ async def notify_request_status_change(request_id: int, request_category: str, n
         creator_email = None
         creator_id = None
         
-        # We need to fetch the request to get creator_id / employee_id
+        # We need to fetch the request to get creator_id / user_id
         request_obj = None
         if request_category == "Generic":
             from app.modules.requests_unified.models.request import GenericRequest

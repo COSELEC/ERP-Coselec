@@ -36,8 +36,8 @@
               v-if="selectedProject"
               @click="isDailyReportModalOpen = true"
             >
-              <span class="material-symbols-outlined">assignment</span>
-              <span class="ml-1 font-medium text-sm">Rapport journalier</span>
+              <span class="material-symbols-outlined">calendar_month</span>
+              <span class="ml-1 font-medium text-sm">Rapport hebdomadaire</span>
             </button>
           </div>
 
@@ -66,22 +66,28 @@
               class="px-4 py-2 hover:bg-red-50 font-medium transition-colors border-l border-red-500">
               Rapports
             </button>
+            <button 
+              @click="currentView = 'Stock'" 
+              :class="{'bg-red-500 text-white': currentView === 'Stock', 'text-red-600': currentView !== 'Stock'}" 
+              class="px-4 py-2 hover:bg-red-50 font-medium transition-colors border-l border-red-500">
+              Stock
+            </button>
           </div>
         </div>
 
-        <div v-if="milestones.length > 0" class="flex gap-2 overflow-x-auto border-b border-gray-200">
+        <div v-if="milestones.length > 0" class="flex gap-2 overflow-x-auto border-b border-gray-200 pt-2 shrink-0">
             <div
                 v-for="m in milestones" 
                 :key="m.id"
                 @click="selectMilestone(m.id)"
                 :class="[
-                    'relative px-5 py-3 flex flex-col items-start justify-center gap-2 transition-colors border-b-2 cursor-pointer select-none',
+                    'relative px-5 pt-4 pb-4 flex flex-col items-start gap-2 transition-colors border-b-2 cursor-pointer select-none whitespace-nowrap',
                     selectedMilestone === m.id 
                       ? 'border-red-600 bg-red-50' 
                       : 'border-transparent hover:bg-gray-50 text-gray-500 hover:text-gray-700'
                 ]"
             >
-                <span :class="['font-semibold text-sm', selectedMilestone === m.id ? 'text-red-700' : '']">{{ m.title }}</span>
+                <span :class="['font-semibold text-sm leading-normal', selectedMilestone === m.id ? 'text-red-700' : '']">{{ m.title }}</span>
                 <span 
                     class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full inline-block leading-none" 
                     :class="m.status === 'Achieved' ? 'bg-green-100 text-green-700' : (m.status === 'Active' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500')"
@@ -91,11 +97,13 @@
             </div>
         </div>
 
-        <div class="relative w-full min-h-75">
+        <div class="relative w-full min-h-[75vh] shrink-0">
   <GanttView 
     v-if="currentView === 'Gantt'" 
     key="gantt-chart-layout" 
     :tasks="tasks" 
+    :employees-list="employees"
+    :milestones-list="milestones"
     @update-task="handleTaskUpdate" 
   />
   <KanbanView 
@@ -114,6 +122,11 @@
   <ProjectDailyReportsList
     v-else-if="currentView === 'Rapports'"
     key="reports-layout"
+    :project-id="resolveActiveProjectId()"
+  />
+  <ProjectStockView
+    v-else-if="currentView === 'Stock'"
+    key="stock-layout"
     :project-id="resolveActiveProjectId()"
   />
   <div v-else key="empty-fallback-layout" class="text-gray-400 text-center py-8">
@@ -219,6 +232,7 @@ import KanbanView from '@/components/project/KanbanView.vue';
 import ProjectResources from '@/components/project/ProjectResources.vue';
 import MapLocationPicker from '@/components/project/MapLocationPicker.vue';
 import ProjectDailyReportsList from '@/components/projects/ProjectDailyReportsList.vue';
+import ProjectStockView from '@/components/project/ProjectStockView.vue';
 import DailyReportForm from '@/components/projects/DailyReportForm.vue';
 import { shallowRef, ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
@@ -257,6 +271,8 @@ const createProject = async () => {
       payload.address = payload.location.address;
     }
     delete payload.location;
+    // Backend requires date_fin_prevue
+    payload.date_fin_prevue = payload.date_fin_estimee;
     await projectService.createProject(payload);
     toast.success("Projet créé avec succès");
     

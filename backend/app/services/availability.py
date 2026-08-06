@@ -3,7 +3,7 @@ from datetime import date, datetime
 from app.models.hr.attendance import Attendance, AttendanceStatus
 from app.modules.requests_unified.models.request import GenericRequest, RequestType, RequestStatus
 
-def is_employee_on_leave(db: Session, employee_id: int, start_date: date, end_date: date = None) -> bool:
+def is_employee_on_leave(db: Session, user_id: int, start_date: date, end_date: date = None) -> bool:
     """
     Vérifie si un employé est en congé sur une période donnée.
     Si end_date n'est pas fourni, vérifie uniquement pour start_date.
@@ -15,7 +15,7 @@ def is_employee_on_leave(db: Session, employee_id: int, start_date: date, end_da
     end_dt = datetime.combine(end_date, datetime.max.time())
     
     leave_count = db.query(Attendance).filter(
-        Attendance.employee_id == employee_id,
+        Attendance.user_id == user_id,
         Attendance.status == AttendanceStatus.CONGE.value,
         Attendance.date >= start_dt,
         Attendance.date <= end_dt
@@ -25,7 +25,7 @@ def is_employee_on_leave(db: Session, employee_id: int, start_date: date, end_da
         return True
         
     requests = db.query(GenericRequest).filter(
-        GenericRequest.requester_id == employee_id,
+        GenericRequest.requester_id == user_id,
         GenericRequest.type == RequestType.LEAVE,
         GenericRequest.status.in_([RequestStatus.APPROVED, RequestStatus.PENDING])
     ).all()

@@ -6,15 +6,16 @@ from app.models.project.daily_report import DailyReport
 from app.modules.daily_reports.domain.ports import IDailyReportRepository, IProjectAssignmentRepository
 from app.models.project.assignment import ProjectAssignment
 
+
 class SqlAlchemyDailyReportRepository(IDailyReportRepository):
     def __init__(self, db: Session):
         self.db = db
 
-    def get_by_employee_project_date(self, employee_id: int, project_id: int, report_date: date) -> Optional[DailyReport]:
+    def get_by_employee_project_week(self, user_id: int, project_id: int, week_start: date) -> Optional[DailyReport]:
         return self.db.query(DailyReport).filter(
-            DailyReport.employee_id == employee_id,
+            DailyReport.user_id == user_id,
             DailyReport.project_id == project_id,
-            DailyReport.report_date == report_date
+            DailyReport.week_start == week_start,
         ).first()
 
     def save(self, report: DailyReport) -> DailyReport:
@@ -22,30 +23,33 @@ class SqlAlchemyDailyReportRepository(IDailyReportRepository):
         self.db.flush()
         return report
 
-    def find_missing_reports_for_date(self, check_date: date) -> List[dict]:
-        # Fetch all active assignments for the check_date that DO NOT have a corresponding daily report
+    def find_missing_reports_for_week(self, week_start: date) -> List[dict]:
+        """
+        Trouve tous les membres ayant une assignment active pendant cette semaine
+        qui n'ont pas encore soumis de rapport hebdomadaire.
+        """
         query = text("""
-            SELECT pa.employee_id, pa.project_id 
+            SELECT pa.user_id, pa.project_id
             FROM project_assignments pa
-            LEFT JOIN daily_reports dr 
-              ON pa.employee_id = dr.employee_id 
-              AND pa.project_id = dr.project_id 
-              AND dr.report_date = :check_date
-            WHERE pa.start_date <= :check_date 
-              AND (pa.end_date IS NULL OR pa.end_date >= :check_date)
-              AND dr.id IS NULL
+            LEFT JOIN weekly_reports wr
+              ON pa.user_id = wr.user_id
+              AND pa.project_id = wr.project_id
+              AND wr.week_start = :week_start
+            WHERE pa.start_date <= :week_start
+              AND (pa.end_date IS NULL OR pa.end_date >= :week_start)
+              AND wr.id IS NULL
         """)
-        
-        result = self.db.execute(query, {"check_date": check_date})
-        return [{"employee_id": row[0], "project_id": row[1]} for row in result]
+        result = self.db.execute(query, {"week_start": week_start})
+        return [{"user_id": row[0], "project_id": row[1]} for row in result]
+
 
 class SqlAlchemyProjectAssignmentRepository(IProjectAssignmentRepository):
     def __init__(self, db: Session):
         self.db = db
 
-    def is_active_assignment(self, employee_id: int, project_id: int, check_date: date) -> bool:
+    def is_active_assignment(self, user_id: int, project_id: int, check_date: date) -> bool:
         assignment = self.db.query(ProjectAssignment).filter(
-            ProjectAssignment.employee_id == employee_id,
+            ProjectAssignment.user_id == user_id,
             ProjectAssignment.project_id == project_id,
             ProjectAssignment.start_date <= check_date
         ).filter(

@@ -5,10 +5,12 @@ from app.core.database import get_db
 from app.models.project.project import Project, ProjectStatus
 from app.modules.stock.models.partner import Partner
 from app.schemas.project.project import ProjectCreate, ProjectResponse, ProjectUpdate
-from app.core.security.auth import check_permission
+from app.core.security.auth import check_permission, get_current_user
+from app.modules.users.models.user import User
 from app.services.pdf_generator import generate_project_report_pdf
 from app.services.storage import get_file_url_from_minio
 from typing import List
+from sqlalchemy import or_
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -86,10 +88,22 @@ def add_partner_to_project(
 @router.get("", response_model=List[ProjectResponse], status_code=status.HTTP_200_OK)
 def get_projects(
     db:Session = Depends(get_db),
-    user_permissions = Depends(check_permission("projects.read"))
+    user_permissions = Depends(check_permission("projects.read")),
+    current_user: User = Depends(get_current_user)
 ):
     from sqlalchemy.orm import joinedload
-    return db.query(Project).options(
+    query = db.query(Project)
+    
+    has_global_access = any(r.name in ["Admin", "Direction", "RH / Comptabilité", "Achats"] for r in current_user.roles)
+    if not has_global_access:
+        query = query.filter(
+            or_(
+                Project.chef_projet_id == current_user.id,
+                Project.assignments.any(user_id=current_user.id)
+            )
+        )
+        
+    return query.options(
         joinedload(Project.client),
         joinedload(Project.expenses),
         joinedload(Project.phases),
@@ -101,16 +115,29 @@ def get_project(
     project_id:int,
     db:Session = Depends(get_db),
     user_permissions=Depends(check_permission("projects.read")),
+    current_user: User = Depends(get_current_user)
 ):
     from sqlalchemy.orm import joinedload
-    project = db.query(Project).options(
+    query = db.query(Project)
+    
+    has_global_access = any(r.name in ["Admin", "Direction", "RH / Comptabilité", "Achats"] for r in current_user.roles)
+    if not has_global_access:
+        query = query.filter(
+            or_(
+                Project.chef_projet_id == current_user.id,
+                Project.assignments.any(user_id=current_user.id)
+            )
+        )
+        
+    project = query.options(
         joinedload(Project.client),
         joinedload(Project.expenses),
         joinedload(Project.phases),
         joinedload(Project.attendances)
     ).filter(Project.id == project_id).first()
+    
     if project is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project non trouvé")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project non trouvé ou accès refusé")
     return project
 
 
@@ -226,7 +253,7 @@ def get_project_dashboard(project_id: int, db: Session = Depends(get_db)):
 
     # 6. HR Data
     active_assignments = [a for a in getattr(project, "assignments", []) if getattr(a, "current_status", "Active") == "Active"]
-    num_assigned_employees = len(set(a.employee_id for a in active_assignments))
+    num_assigned_employees = len(set(a.user_id for a in active_assignments))
     avg_allocation = sum(a.allocation for a in active_assignments) / len(active_assignments) if active_assignments else 0.0
     
     role_distribution = defaultdict(int)

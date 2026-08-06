@@ -35,8 +35,8 @@ function connectWS() {
 
   const isSecure = window.location.protocol === 'https:';
   const wsProtocol = isSecure ? 'wss:' : 'ws:';
-  const host = `${window.location.hostname}:8000`;
-  const wsUrl = `${wsProtocol}//${host}/notifications/ws?token=${encodeURIComponent(token)}`;
+  const host = window.location.host; // Use Vite's host and port
+  const wsUrl = `${wsProtocol}//${host}/api/notifications/ws?token=${encodeURIComponent(token)}`;
 
   socket = new WebSocket(wsUrl);
 

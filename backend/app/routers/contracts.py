@@ -4,7 +4,7 @@ from app.core.database import get_db
 from app.core.security.auth import get_current_user, check_permission
 from app.modules.users.models.user import User
 from app.models.hr.contract import Contract
-from app.modules.users.models.employee import Employee
+from app.modules.users.models.user import User
 from app.models.notification import NotificationType
 from app.services.notification import create_notification
 from app.schemas.hr.hr import ContractCreate, ContractUpdate, ContractResponse
@@ -30,9 +30,9 @@ def create_contract(
     db: Session = Depends(get_db)
 ):
     # Vérification de l'existence de l'employé
-    employee = db.query(Employee).filter(Employee.id == contract_data.employee_id).first()
-    if not employee:
-        raise HTTPException(status_code=404, detail="Employee not found")
+    user = db.query(User).filter(User.id == contract_data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
 
     new_contract = Contract(**contract_data.model_dump())
     db.add(new_contract)
@@ -42,7 +42,7 @@ def create_contract(
     create_notification(
         db=db,
         user_id=current_user.id,
-        message=f"Nouveau contrat créé pour l'employé {employee.first_name} {employee.last_name}",
+        message=f"Nouveau contrat créé pour l'employé {user.first_name} {user.last_name}",
         type=NotificationType.INFO,
         reference_id=new_contract.id
     )

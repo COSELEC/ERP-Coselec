@@ -48,8 +48,22 @@ def create_user(db: Session, user_data: UserCreate, current_user: User) -> Tuple
     temp_password = generate_temp_password()
     hashed_pwd = hash_password(temp_password)
     
+    first_name = user_data.first_name
+    last_name = user_data.last_name
+    name = user_data.name
+
+    if first_name and not name:
+        name = f"{first_name} {last_name or ''}".strip()
+    elif name and not first_name:
+        parts = name.split(' ', 1)
+        first_name = parts[0]
+        last_name = parts[1] if len(parts) > 1 else ''
+
     new_user = User(
-        name=user_data.name,
+        name=name,
+        first_name=first_name,
+        last_name=last_name,
+        status=user_data.status or "CDI",
         email=user_data.email,
         hashed_password=hashed_pwd,
         requires_password_change=True # Forcer le changement de mot de passe à la première connexion
@@ -77,9 +91,27 @@ def update_user(db: Session, user_id: int, user_data: UserUpdate, current_user: 
     old_values = {"name": user.name, "email": user.email, "role": user.roles[0].name if user.roles else None}
     new_values = {}
     
-    if user_data.name is not None and user_data.name != user.name:
+    # Vérification des changements
+    if user_data.name is not None and user.name != user_data.name:
+        log_audit(db, current_user.id, user_id, "UPDATE_NAME", user.name, user_data.name)
         user.name = user_data.name
         new_values["name"] = user.name
+        
+    if user_data.first_name is not None:
+        user.first_name = user_data.first_name
+        new_values["first_name"] = user.first_name
+    if user_data.last_name is not None:
+        user.last_name = user_data.last_name
+        new_values["last_name"] = user.last_name
+    if user_data.status is not None:
+        user.status = user_data.status
+        new_values["status"] = user.status
+        
+    # S'il y a un prénom et nom sans nom global
+    if user.first_name and not user_data.name:
+        user.name = f"{user.first_name} {user.last_name or ''}".strip()
+        new_values["name"] = user.name
+        
     if user_data.email is not None and user_data.email != user.email:
         user.email = user_data.email
         new_values["email"] = user.email

@@ -14,7 +14,7 @@ def process_approved_leave(db: Session, requester_id: int, start_date, end_date)
             # Create or update attendance
             # Check if attendance already exists
             existing = db.query(Attendance).filter(
-                Attendance.employee_id == requester_id,
+                Attendance.user_id == requester_id,
                 Attendance.date == datetime.combine(current_date, datetime.min.time())
             ).first()
             
@@ -22,7 +22,7 @@ def process_approved_leave(db: Session, requester_id: int, start_date, end_date)
                 existing.status = AttendanceStatus.CONGE.value
             else:
                 new_attendance = Attendance(
-                    employee_id=requester_id,
+                    user_id=requester_id,
                     date=datetime.combine(current_date, datetime.min.time()),
                     status=AttendanceStatus.CONGE.value,
                     notes="Congé approuvé via le système de demandes"

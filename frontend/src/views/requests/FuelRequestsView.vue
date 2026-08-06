@@ -294,8 +294,8 @@ async function submitRequest() {
   try {
     await api.post('/requests/', {
       type: 'FUEL',
-      priority: 'NORMAL',
-      description: form.value.objet_deplacement,
+      project_id: parseInt(form.value.project_id) || null,
+      description: form.value.objet_deplacement || "Demande de carburant",
       payload: { 
         type: 'FUEL',
         request_date: form.value.request_date,

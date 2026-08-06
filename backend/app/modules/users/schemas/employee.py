@@ -4,19 +4,16 @@ from pydantic import BaseModel
 from typing import Optional
 
 class EmployeeCreate(BaseModel):
-    matricule: str
-    first_name: str
-    last_name: str
-
+    matricule: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     email: str
-    phone: str
-
-    position: str
-
-    status: str
-
-    department_id: int
+    phone: Optional[str] = None
+    position: Optional[str] = None
+    status: Optional[str] = None
+    department_id: Optional[int] = None
     manager_id: Optional[int] = None
+    supervised_employee_ids: Optional[list[int]] = None
 
 
 class EmployeeResponse(EmployeeCreate):

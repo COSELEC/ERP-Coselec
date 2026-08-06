@@ -1,9 +1,9 @@
 from pydantic import BaseModel, model_validator
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 from app.models.hr.document import DocumentCategory
 class AttendanceUpdate(BaseModel):
-    employee_id: int
+    user_id: int
     date: date
     status: str
     notes: Optional[str] = None
@@ -12,9 +12,34 @@ class AttendanceUpdate(BaseModel):
     class Config:
         from_attributes = True
 
+# --- Schémas Timeclock (Pointage) --- #
+class TimeclockResponse(BaseModel):
+    id: int
+    user_id: int
+    date: datetime
+    check_in: Optional[datetime] = None
+    check_out: Optional[datetime] = None
+    status: str
+    notes: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class TimeclockHistoryItem(BaseModel):
+    id: int
+    user_id: int
+    user_name: str
+    date: datetime
+    check_in: Optional[datetime] = None
+    check_out: Optional[datetime] = None
+    duration_minutes: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
 # --- Schémas Contrat --- #
 class ContractBase(BaseModel):
-    employee_id: int
+    user_id: int
     contract_type: str
     start_date: date
     end_date: Optional[date] = None
@@ -38,7 +63,7 @@ class ContractResponse(ContractBase):
 # --- Documents --- #
 class DocumentResponse(BaseModel):
     id: int
-    employee_id: int
+    user_id: int
     category: DocumentCategory
     file_name: str
     storage_path: str
@@ -49,4 +74,3 @@ class DocumentResponse(BaseModel):
 
     class Config:
         from_attributes = True
-

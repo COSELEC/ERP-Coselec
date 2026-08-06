@@ -10,14 +10,14 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security.auth import get_current_user, check_permission
 from app.modules.users.models.user import User
-from app.modules.users.models.employee import Employee
+from app.modules.users.models.user import User
 from app.models.hr.document import EmployeeDocument, DocumentCategory
 from app.services.storage import upload_file_to_minio, get_file_url_from_minio, delete_file_from_minio
 from app.schemas.hr.hr import DocumentResponse
 
 router = APIRouter(
-    prefix="/employees",
-    tags=["Employee Documents"]
+    prefix="/users",
+    tags=["User Documents"]
 )
 
 
@@ -38,24 +38,24 @@ def download_document(
     except Exception as e:
         raise HTTPException(status_code=404, detail="Erreur lors de la récupération du fichier")
 
-@router.get("/{employee_id}/documents", response_model=list[DocumentResponse])
+@router.get("/{user_id}/documents", response_model=list[DocumentResponse])
 def get_employee_documents(
-    employee_id: int,
+    user_id: int,
     _: None = Depends(check_permission("documents.read")), # Adapte la permission si besoin
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     # Vérifier que l'employé existe
-    employee = db.query(Employee).filter(Employee.id == employee_id).first()
-    if not employee:
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
         raise HTTPException(status_code=404, detail="Employé introuvable")
 
-    documents = db.query(EmployeeDocument).filter(EmployeeDocument.employee_id == employee_id).all()
+    documents = db.query(EmployeeDocument).filter(EmployeeDocument.user_id == user_id).all()
     return documents
 
-@router.post("/{employee_id}/documents", response_model=DocumentResponse)
+@router.post("/{user_id}/documents", response_model=DocumentResponse)
 def upload_employee_document(
-    employee_id: int,
+    user_id: int,
     file: UploadFile = File(...),
     category: DocumentCategory = Form(...),
     numero: Optional[str] = Form(None),
@@ -65,13 +65,13 @@ def upload_employee_document(
     db: Session = Depends(get_db)
 ):
     # 1. Vérifier que l'employé existe
-    employee = db.query(Employee).filter(Employee.id == employee_id).first()
-    if not employee:
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
         raise HTTPException(status_code=404, detail="Employé introuvable")
 
     # 2. Générer un nom de fichier unique pour éviter les écrasements
     file_extension = file.filename.split(".")[-1] if "." in file.filename else "bin"
-    unique_filename = f"emp_{employee_id}_{uuid.uuid4().hex[:8]}.{file_extension}"
+    unique_filename = f"emp_{user_id}_{uuid.uuid4().hex[:8]}.{file_extension}"
 
     # 3. Sauvegarde du fichier via le service de stockage
     try:
@@ -81,7 +81,7 @@ def upload_employee_document(
 
     # 4. Enregistrer dans la base de données
     new_doc = EmployeeDocument(
-        employee_id=employee_id,
+        user_id=user_id,
         category=category,
         file_name=file.filename, # On garde le nom original pour l'affichage
         storage_path=storage_path, # Le chemin de stockage

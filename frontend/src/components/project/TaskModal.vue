@@ -269,18 +269,6 @@ const handleSave = () => {
           </div>
 
           <div>
-  <label class="block text-sm font-medium text-gray-900 mb-1">Employé assigné</label>
-  <select 
-    class="w-full border border-gray-300 rounded-md px-4 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white transition-shadow"
-    v-model="localTask.assignee_id"
-  >
-    <option v-for="emp in employees" :key="emp.id" :value="emp.id">
-  {{ getEmployeeLabel(emp) }}
-</option>
-  </select>
-</div>
-
-          <div>
             <label class="block text-sm font-medium text-gray-900 mb-1">Jalon (Milestone)</label>
             <select 
               class="w-full border border-gray-300 rounded-md px-4 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white"

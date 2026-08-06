@@ -22,26 +22,36 @@ const routes = [
     path: "/home",
     component: HomeView,
   },
+  {
+    path: "/profile",
+    name: "profile",
+    component: () => import("../views/ProfileView.vue"),
+  },
   //rh
   {
     path: "/employees",
     component: EmployeesView,
     meta: {
-      requiredRoles: ["Admin", "RH", "Direction"],
+      requiredRoles: ["Admin", "Direction", "RH / Comptabilité"],
     },
   },
   {
     path: "/departments",
     component: () => import("../views/employees/DepartmentView.vue"),
     meta: {
-      requiredRoles: ["Admin", "RH", "Direction"],
+      requiredRoles: ["Admin", "Direction", "RH / Comptabilité"],
     },
   },
   {
     path: "/org-chart",
     component: () => import("../views/employees/OrganizationView.vue"),
+  },
+  {
+    path: "/attendance",
+    name: "attendance",
+    component: () => import("../views/employees/AttendanceView.vue"),
     meta: {
-      requiredRoles: ["Admin", "RH", "Direction", "Employe", "Qualité", "Qualite"],
+      requiredRoles: ["Admin", "Direction", "RH / Comptabilité"],
     },
   },
   // stock
@@ -49,35 +59,42 @@ const routes = [
     path: "/stock/movement",
     component: () => import("../views/Stock/StockMovementView.vue"),
     meta: {
-      requiredRoles: ["Admin", "Stock / Logistique", "Direction", "Finance"],
+      requiredRoles: ["Admin", "Achats", "Direction"],
     },
   },
   {
     path: "/stock",
     component: () => import("../views/Stock/StockOverviewView.vue"),
     meta: {
-      requiredRoles: ["Admin", "Stock / Logistique", "Direction", "Finance"],
+      requiredRoles: ["Admin", "Achats", "Direction"],
     },
   },
   {
     path: "/stock/canvas",
     component: () => import("../views/Stock/StockCanvasView.vue"),
     meta: {
-      requiredRoles: ["Admin", "Stock / Logistique", "Direction", "Finance"],
+      requiredRoles: ["Admin", "Achats", "Direction"],
     },
   },
   {
     path: "/stock/matrix",
     component: () => import("../views/Stock/StockMatrixView.vue"),
     meta: {
-      requiredRoles: ["Admin", "Stock / Logistique", "Direction", "Finance"],
+      requiredRoles: ["Admin", "Achats", "Direction"],
     },
   },
   {
     path: "/stock/reception",
     component: () => import("../views/Stock/ReceptionControlForm.vue"),
     meta: {
-      requiredRoles: ["Admin", "Stock / Logistique", "Direction"],
+      requiredRoles: ["Admin", "Achats", "Direction"],
+    },
+  },
+  {
+    path: "/stock/delivery-notes",
+    component: () => import("../views/Stock/DeliveryNoteView.vue"),
+    meta: {
+      requiredRoles: ["Admin", "Stock / Logistique", "Chef de Projet", "Direction"],
     },
   },
   // requests boards
@@ -86,20 +103,20 @@ const routes = [
     path: "/fuel-requests",
     name: "fuel-requests",
     component: () => import("../views/requests/FuelRequestsView.vue"),
-    meta: { requiredRoles: ["Admin", "Facility", "Logistique", "Direction", "Finance"] }
+    meta: { requiredRoles: ["Admin", "Achats", "Direction"] }
   },
 
   {
     path: "/quality",
     name: "quality",
     component: () => import("../views/quality/QualityDashboardView.vue"),
-    meta: { requiredRoles: ["Admin", "Direction", "Qualité", "Qualite"] },
+    meta: { requiredRoles: ["Admin", "Direction", "Qualité"] },
   },
   {
     path: "/quality/kpi",
     name: "quality-kpi",
     component: () => import("../views/quality/KpiDashboardView.vue"),
-    meta: { requiredRoles: ["Admin", "Direction", "Qualité", "Qualite"] },
+    meta: { requiredRoles: ["Admin", "Direction", "Qualité"] },
   },
   {
     path: "/quality/library",
@@ -110,7 +127,7 @@ const routes = [
     path: "/quality/:id",
     name: "quality-detail",
     component: () => import("../views/quality/QualityDocumentDetail.vue"),
-    meta: { requiredRoles: ["Admin", "Direction", "Qualité", "Qualite"] },
+    meta: { requiredRoles: ["Admin", "Direction", "Qualité"] },
   },
   {
     path: "/requests",
@@ -121,19 +138,19 @@ const routes = [
     path: "/norms",
     name: "norms",
     component: () => import("../views/NormLibraryView.vue"),
-    meta: { requiredRoles: ["Admin", "Direction", "Finance"] }
+    meta: { requiredRoles: ["Admin", "Direction", "Qualité"] }
   },
   {
     path: "/caisse",
     name: "caisse",
     component: () => import("../views/CaisseView.vue"),
-    meta: { requiredRoles: ["Admin", "Finance", "Direction"] }
+    meta: { requiredRoles: ["Admin", "RH / Comptabilité", "Direction"] }
   },
   {
     path: "/bank-voucher",
     name: "bank-voucher",
     component: () => import("../views/BankVoucherView.vue"),
-    meta: { requiredRoles: ["Admin", "Finance", "Direction"] }
+    meta: { requiredRoles: ["Admin", "RH / Comptabilité", "Direction"] }
   }
   ,
   {
@@ -146,7 +163,8 @@ const routes = [
     path: "/projects",
     name: "projects",
     component: () => import("@/views/project/ProjectView.vue"),
-    props: true
+    props: true,
+    meta: { requiredRoles: ["Admin", "Direction", "Chef de Projet", "Chef d'Equipe", "Commercial"] }
   },
   // Admin Routes
   {
@@ -178,19 +196,19 @@ const routes = [
     path: "/procurement",
     name: "procurement",
     component: () => import("../views/ProcurementView.vue"),
-    meta: { requiredRoles: ["Admin", "Logistique", "Finance", "Responsable Projet"] }
+    meta: { requiredRoles: ["Admin", "Commercial", "Achat", "Finance", "Responsable Projet", "Direction"] }
   },
   {
     path: "/stock-reservations",
     name: "stock-reservations",
     component: () => import("../views/StockReservationView.vue"),
-    meta: { requiredRoles: ["Admin", "Stock / Logistique", "Responsable Projet"] }
+    meta: { requiredRoles: ["Admin", "Stock / Logistique", "Responsable Projet", "Direction", "Achat"] }
   },
   {
     path: "/project-dashboard",
     name: "project-dashboard",
     component: () => import("../views/ProjectDashboardView.vue"),
-    meta: { requiredRoles: ["Admin", "Responsable Projet", "Direction"] }
+    meta: { requiredRoles: ["Admin", "Responsable Projet", "Direction", "Stock / Logistique", "Achat", "Finance"] }
   }
 
 ];

@@ -6,5 +6,5 @@ class NotAssignedException(DailyReportDomainException):
         super().__init__(message)
 
 class DuplicateReportException(DailyReportDomainException):
-    def __init__(self, message="Un rapport a déjà été soumis pour ce projet aujourd'hui."):
+    def __init__(self, message="Un rapport hebdomadaire a déjà été soumis pour ce projet cette semaine."):
         super().__init__(message)

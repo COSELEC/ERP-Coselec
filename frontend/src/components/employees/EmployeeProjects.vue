@@ -68,7 +68,7 @@ const fetchAssignments = async () => {
   loading.value = true;
   error.value = null;
   try {
-    const res = await api.get(`/employees/${props.employeeId}/assignments`);
+    const res = await api.get(`/users/${props.employeeId}/assignments`);
     assignments.value = res.data;
   } catch (err) {
     error.value = "Erreur lors du chargement des affectations.";

@@ -27,6 +27,8 @@ class ReceptionPayload(BaseModel):
     po_id: Optional[int]
     supplier_id: Optional[int]
     created_by: Optional[int]
+    stock_type: Optional[str] = "GENERAL"
+    project_id: Optional[int] = None
     lines: List[ReceptionLinePayload]
 
 @router.post("")
@@ -36,6 +38,8 @@ def create_reception(payload: ReceptionPayload, background_tasks: BackgroundTask
         po_id=payload.po_id,
         supplier_id=payload.supplier_id,
         created_by=payload.created_by,
+        stock_type=payload.stock_type,
+        project_id=payload.project_id,
         delivery_date=datetime.utcnow()
     )
     db.add(reception)

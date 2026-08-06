@@ -6,7 +6,7 @@
           <span>Gestion des employés</span>
         </h1>
         <button
-          @click="showCreateModal = true"
+          @click="openCreateModal"
           class="bg-[#d10f2f] w-max text-white px-4 py-2 rounded-xl hover:bg-[#97091f] shadow-[0_10px_30px_rgba(209,15,47,0.28)] transition flex items-center gap-2 mb-6"
         >
           <span class="material-symbols-outlined">person_add</span>
@@ -67,11 +67,11 @@
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full bg-red-100 text-[#d10f2f] flex items-center justify-center font-semibold">
-                      {{ employee.first_name[0] }}
+                      {{ employee.first_name ? employee.first_name[0].toUpperCase() : (employee.email ? employee.email[0].toUpperCase() : '?') }}
                     </div>
                     <div>
                       <p class="font-medium text-gray-900">
-                        {{ employee.first_name }} {{ employee.last_name }}
+                        {{ employee.first_name || 'Inconnu' }} {{ employee.last_name || '' }}
                       </p>
                       <p class="text-xs text-gray-500">
                         {{ employee.email }}
@@ -186,6 +186,30 @@
                   <option value="INACTIF">Inactif</option>
                 </select>
               </div>
+              <div class="col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Supérieur hiérarchique (Manager)</label>
+                <select 
+                  v-model="form.manager_id" 
+                  class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
+                >
+                  <option value="">-- Aucun --</option>
+                  <option v-for="emp in employees" :key="emp.id" :value="emp.id">
+                    {{ emp.first_name }} {{ emp.last_name }} - {{ emp.position }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Employés supervisés (Maintenez Ctrl pour sélection multiple)</label>
+                <select 
+                  v-model="form.supervised_employee_ids" 
+                  multiple
+                  class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition h-32"
+                >
+                  <option v-for="emp in employees" :key="emp.id" :value="emp.id">
+                    {{ emp.first_name }} {{ emp.last_name }} - {{ emp.position }}
+                  </option>
+                </select>
+              </div>
             </div>
             <div class="mt-8 flex justify-end gap-3 pt-4 border-t">
               <button type="button" @click="showCreateModal = false" class="px-6 py-2 text-gray-700 hover:bg-gray-100 rounded-xl transition">
@@ -212,7 +236,7 @@
         <div v-if="selectedEmployee" class="px-6 py-6 bg-white border-b border-red-100 flex justify-between items-start shadow-sm z-10">
           <div class="flex items-center gap-4">
             <div class="w-14 h-14 rounded-full bg-red-100 text-[#d10f2f] flex items-center justify-center text-xl font-bold">
-              {{ selectedEmployee.first_name[0] }}{{ selectedEmployee.last_name[0] }}
+              {{ selectedEmployee.first_name ? selectedEmployee.first_name[0].toUpperCase() : '' }}{{ selectedEmployee.last_name ? selectedEmployee.last_name[0].toUpperCase() : '' }}
             </div>
             <div>
               <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -323,6 +347,20 @@ const showCreateModal = ref(false);
 const employees = ref<Employee[]>([]);
 const departments = ref<any[]>([]);
 
+const fetchDepartments = async () => {
+  try {
+    const res = await api.get('/departments');
+    departments.value = res.data;
+  } catch (e) {
+    console.error("Error fetching departments", e);
+  }
+};
+
+const openCreateModal = () => {
+  fetchDepartments();
+  showCreateModal.value = true;
+};
+
 // Sorting logic
 const sortColumn = ref('');
 const sortOrder = ref<'asc' | 'desc'>('asc');
@@ -362,14 +400,17 @@ const form = ref({
   matricule: '',
   position: '',
   department_id: '',
-  status: 'CDI'
+  manager_id: '',
+  status: 'CDI',
+  supervised_employee_ids: [] as number[]
 });
 
 async function submitEmployee() {
   try {
     const payload = {
       ...form.value,
-      department_id: form.value.department_id ? Number(form.value.department_id) : null
+      department_id: form.value.department_id ? Number(form.value.department_id) : null,
+      manager_id: form.value.manager_id ? Number(form.value.manager_id) : null
     };
     await api.post('/employees/', payload);
     showCreateModal.value = false;
@@ -382,7 +423,9 @@ async function submitEmployee() {
       matricule: '',
       position: '',
       department_id: '',
-      status: 'CDI'
+      manager_id: '',
+      status: 'CDI',
+      supervised_employee_ids: [] as number[]
     };
     
     // Refresh list
@@ -465,7 +508,7 @@ onMounted(async () => {
   try {
     const [empRes, depRes] = await Promise.all([
       employeeService.getAllEmployees(),
-      api.get('/departments/')
+      api.get('/departments')
     ]);
     employees.value = empRes.data;
     departments.value = depRes.data;

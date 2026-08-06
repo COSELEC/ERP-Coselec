@@ -82,15 +82,13 @@ export const ChatService = {
    * Create a new WebSocket instance pointing to the backend chat endpoint
    */
   createWebSocket(roomId: string): WebSocket {
-  // Le token est géré automatiquement par le navigateur via un cookie HttpOnly.
-  // Plus besoin de le chercher dans le localStorage !
+  // Le backend tourne en HTTP simple (pas de TLS), on force ws:// même si la page est en https://
   const token = '';
 
   const isSecure = window.location.protocol === 'https:';
   const wsProtocol = isSecure ? 'wss:' : 'ws:';
-  const host = `${window.location.hostname}:8000`;
-
-  const wsUrl = `${wsProtocol}//${host}/chat/ws/${roomId}?token=${encodeURIComponent(token)}`;
+  const host = window.location.host; // Use Vite's host and port
+  const wsUrl = `${wsProtocol}//${host}/api/chat/ws/${roomId}?token=${encodeURIComponent(token)}`;
   return new WebSocket(wsUrl);
 },
   /**

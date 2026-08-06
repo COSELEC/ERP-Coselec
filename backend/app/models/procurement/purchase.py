@@ -21,7 +21,7 @@ class PurchaseRequest(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
-    requester_id = Column(Integer, ForeignKey("employees.id", ondelete="SET NULL"), nullable=True)
+    requester_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     
     status = Column(SQLEnum(PurchaseRequestStatus), default=PurchaseRequestStatus.PENDING)
     description = Column(Text, nullable=True)
@@ -29,7 +29,7 @@ class PurchaseRequest(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     project = relationship("Project")
-    requester = relationship("Employee")
+    requester = relationship("User")
     orders = relationship("PurchaseOrder", back_populates="purchase_request", cascade="all, delete-orphan")
 
 class PurchaseOrder(Base):
@@ -50,6 +50,7 @@ class PurchaseOrder(Base):
     purchase_request = relationship("PurchaseRequest", back_populates="orders")
     supplier = relationship("Partner")
     lines = relationship("PurchaseOrderLine", back_populates="order", cascade="all, delete-orphan")
+    delivery_notes = relationship("DeliveryNote", back_populates="purchase_order", cascade="all, delete-orphan")
 
 class PurchaseOrderLine(Base):
     __tablename__ = "purchase_order_lines"

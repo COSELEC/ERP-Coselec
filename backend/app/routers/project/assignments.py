@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.core.database import get_db
 from app.models.project.assignment import ProjectAssignment
 from app.models.project.project import Project
-from app.modules.users.models.employee import Employee
+from app.modules.users.models.user import User
 from app.schemas.project.assignment import AssignmentCreate, AssignmentUpdate, AssignmentResponse
 from fastapi import BackgroundTasks
 from app.modules.users.models.user import User
@@ -15,9 +15,9 @@ from app.services.availability import is_employee_on_leave
 
 router = APIRouter(tags=["Project Assignments"])
 
-def get_employee_active_allocation(db: Session, employee_id: int, exclude_assignment_id: int = None) -> float:
+def get_employee_active_allocation(db: Session, user_id: int, exclude_assignment_id: int = None) -> float:
     today = date.today()
-    query = db.query(ProjectAssignment).filter(ProjectAssignment.employee_id == employee_id)
+    query = db.query(ProjectAssignment).filter(ProjectAssignment.user_id == user_id)
     assignments = query.all()
     
     total = 0.0
@@ -33,7 +33,7 @@ def get_employee_active_allocation(db: Session, employee_id: int, exclude_assign
 @router.get("/projects/{project_id}/assignments", response_model=List[AssignmentResponse])
 def get_project_assignments(project_id: int, db: Session = Depends(get_db)):
     assignments = db.query(ProjectAssignment).options(
-        joinedload(ProjectAssignment.employee)
+        joinedload(ProjectAssignment.user)
     ).filter(ProjectAssignment.project_id == project_id).all()
     return assignments
 
@@ -44,32 +44,32 @@ def create_project_assignment(project_id: int, assignment: AssignmentCreate, bac
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    # Check if employee exists
-    employee = db.query(Employee).filter(Employee.id == assignment.employee_id).first()
-    if not employee:
-        raise HTTPException(status_code=404, detail="Employee not found")
+    # Check if user exists
+    user = db.query(User).filter(User.id == assignment.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
 
     # Check leave status
-    if is_employee_on_leave(db, assignment.employee_id, assignment.start_date, assignment.end_date):
+    if is_employee_on_leave(db, assignment.user_id, assignment.start_date, assignment.end_date):
         raise HTTPException(status_code=400, detail="Employé en congé sur cette période")
 
     # Check duplicate
     existing = db.query(ProjectAssignment).filter(
         ProjectAssignment.project_id == project_id,
-        ProjectAssignment.employee_id == assignment.employee_id
+        ProjectAssignment.user_id == assignment.user_id
     ).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Employee is already assigned to this project")
+        raise HTTPException(status_code=400, detail="User is already assigned to this project")
 
     # Check allocation
     today = date.today()
     is_active = assignment.start_date <= today and (assignment.end_date is None or assignment.end_date >= today)
     if is_active:
-        current_allocation = get_employee_active_allocation(db, assignment.employee_id)
+        current_allocation = get_employee_active_allocation(db, assignment.user_id)
         if current_allocation + assignment.allocation > 100:
             raise HTTPException(
                 status_code=400, 
-                detail=f"Allocation exceeds 100%. Employee currently has {current_allocation}% active allocation."
+                detail=f"Allocation exceeds 100%. User currently has {current_allocation}% active allocation."
             )
 
     db_assignment = ProjectAssignment(
@@ -80,18 +80,18 @@ def create_project_assignment(project_id: int, assignment: AssignmentCreate, bac
     db.commit()
     db.refresh(db_assignment)
     
-    # Reload with employee
+    # Reload with user
     db_assignment = db.query(ProjectAssignment).options(
-        joinedload(ProjectAssignment.employee)
+        joinedload(ProjectAssignment.user)
     ).filter(ProjectAssignment.id == db_assignment.id).first()
     
-    if employee.email:
-        user = db.query(User).filter(User.email == employee.email).first()
+    if user.email:
+        user = db.query(User).filter(User.email == user.email).first()
         if user:
             background_tasks.add_task(
                 notify_user,
                 user.id,
-                f"Vous avez été assigné au projet: {project.name}",
+                f"Vous avez été assigné au projet: {project.nom}",
                 NotificationType.INFO,
                 db_assignment.id
             )
@@ -113,18 +113,18 @@ def update_project_assignment(assignment_id: int, assignment_update: AssignmentU
         new_end = update_data.get("end_date", db_assignment.end_date)
         
         # Check leave status
-        if is_employee_on_leave(db, db_assignment.employee_id, new_start, new_end):
+        if is_employee_on_leave(db, db_assignment.user_id, new_start, new_end):
             raise HTTPException(status_code=400, detail="Employé en congé sur cette période")
         
         today = date.today()
         is_active = new_start <= today and (new_end is None or new_end >= today)
         
         if is_active:
-            current_allocation = get_employee_active_allocation(db, db_assignment.employee_id, exclude_assignment_id=assignment_id)
+            current_allocation = get_employee_active_allocation(db, db_assignment.user_id, exclude_assignment_id=assignment_id)
             if current_allocation + new_alloc > 100:
                 raise HTTPException(
                     status_code=400, 
-                    detail=f"Allocation exceeds 100%. Employee currently has {current_allocation}% active allocation elsewhere."
+                    detail=f"Allocation exceeds 100%. User currently has {current_allocation}% active allocation elsewhere."
                 )
 
     for key, value in update_data.items():
@@ -134,7 +134,7 @@ def update_project_assignment(assignment_id: int, assignment_update: AssignmentU
     db.refresh(db_assignment)
     
     db_assignment = db.query(ProjectAssignment).options(
-        joinedload(ProjectAssignment.employee)
+        joinedload(ProjectAssignment.user)
     ).filter(ProjectAssignment.id == db_assignment.id).first()
     
     return db_assignment
@@ -149,9 +149,9 @@ def delete_project_assignment(assignment_id: int, db: Session = Depends(get_db))
     db.commit()
     return None
 
-@router.get("/employees/{employee_id}/assignments", response_model=List[AssignmentResponse])
-def get_employee_assignments(employee_id: int, db: Session = Depends(get_db)):
+@router.get("/users/{user_id}/assignments", response_model=List[AssignmentResponse])
+def get_employee_assignments(user_id: int, db: Session = Depends(get_db)):
     assignments = db.query(ProjectAssignment).options(
         joinedload(ProjectAssignment.project)
-    ).filter(ProjectAssignment.employee_id == employee_id).all()
+    ).filter(ProjectAssignment.user_id == user_id).all()
     return assignments

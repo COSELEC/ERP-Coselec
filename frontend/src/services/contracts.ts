@@ -2,7 +2,7 @@ import api from "./api";
 
 export interface Contract {
   id: number;
-  employee_id: number;
+  user_id: number;
   contract_type: string;
   start_date: string;
   end_date: string | null;
@@ -10,7 +10,7 @@ export interface Contract {
 }
 
 export interface ContractCreate {
-  employee_id: number;
+  user_id: number;
   contract_type: string;
   start_date: string;
   end_date: string | null;

@@ -65,6 +65,10 @@ const miniScrollPosition = ref(0);
 const miniScrollMax = ref(0);
 let tableResizeObserver: ResizeObserver | null = null;
 
+const viewMode = ref<'GENERAL' | 'PROJECT'>('GENERAL');
+const selectedProjectId = ref<number | null>(null);
+const projectsList = ref<any[]>([]);
+
 const tableMinWidth = computed(() => {
   const fixedColumnsWidth = 230 + 110;
   const warehouseColumnsWidth = displayedWarehouses.value.length * 150;
@@ -312,18 +316,41 @@ const initOverview = async () => {
   isLoading.value = true;
   errorMessage.value = '';
   try {
-    const [catRes, prodRes, whRes, partRes, stockRes] = await Promise.all([
+    const [catRes, prodRes, whRes, partRes, projRes] = await Promise.all([
       StockService.getCategories(),
       StockService.getProducts(),
       StockService.getWarehouses(),
       StockService.getPartners(),
-      StockService.getStockOverview()
+      api.get('/projects/')
     ]);
     
     categories.value = catRes.data;
     products.value = prodRes.data;
     warehouses.value = whRes.data;
     partners.value = partRes.data;
+    projectsList.value = projRes.data;
+
+    await loadStockData();
+  } catch {
+    errorMessage.value = "Impossible de charger les données. Vérifiez votre connexion et réessayez.";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const loadStockData = async () => {
+  isLoading.value = true;
+  try {
+    let stockRes;
+    if (viewMode.value === 'GENERAL') {
+      stockRes = await StockService.getGeneralStock();
+    } else {
+      if (!selectedProjectId.value) {
+        inventoryRaw.value = [];
+        return;
+      }
+      stockRes = await StockService.getProjectStock(selectedProjectId.value);
+    }
     inventoryRaw.value = stockRes.data;
   } catch {
     errorMessage.value = "Impossible de charger les données de stock. Vérifiez votre connexion et réessayez.";
@@ -331,6 +358,10 @@ const initOverview = async () => {
     isLoading.value = false;
   }
 };
+
+watch([viewMode, selectedProjectId], () => {
+  loadStockData();
+});
 
 const getMagasinQty = (productId: number) => {
   const magasinId = magasinWarehouseId.value;
@@ -465,6 +496,9 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', syncMiniScrollMetrics);
 });
 </script>
+<script lang="ts">
+import api from '@/services/api'
+</script>
 
 <template>
   <AppLayout>
@@ -491,14 +525,34 @@ onBeforeUnmount(() => {
         
       </div>
       
-      <!-- Live Filter Input -->
-      <div class="relative w-full md:max-w-md">
-        <input 
-          v-model="searchQuery" 
-          type="text" 
-          placeholder="Rechercher un article, SKU..." 
-          class="w-full border border-gray-300 rounded-lg pl-3 pr-4 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
-        />
+      <div class="flex flex-col md:flex-row gap-4 w-full md:max-w-2xl">
+        <select 
+          v-model="viewMode" 
+          class="border border-gray-300 rounded-lg pl-3 pr-4 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+        >
+          <option value="GENERAL">Stock Général</option>
+          <option value="PROJECT">Stock par Projet</option>
+        </select>
+        
+        <select 
+          v-if="viewMode === 'PROJECT'"
+          v-model="selectedProjectId" 
+          class="border border-gray-300 rounded-lg pl-3 pr-4 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 flex-1"
+        >
+          <option :value="null">Sélectionnez un projet...</option>
+          <option v-for="p in projectsList" :key="p.id" :value="p.id">
+            {{ p.nom }} ({{ p.code }})
+          </option>
+        </select>
+
+        <div class="relative w-full md:max-w-xs ml-auto">
+          <input 
+            v-model="searchQuery" 
+            type="text" 
+            placeholder="Rechercher un article, SKU..." 
+            class="w-full border border-gray-300 rounded-lg pl-3 pr-4 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+          />
+        </div>
       </div>
     </div>
 

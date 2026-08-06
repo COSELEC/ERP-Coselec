@@ -20,6 +20,7 @@ class CaisseVoucher(Base):
     num = Column(String(50), nullable=True)
     affaire = Column(String(255), nullable=True)
     cia = Column(String(255), nullable=True)
+    payment_method = Column(String(50), nullable=True)
     
     status = Column(SQLEnum(VoucherStatus), default=VoucherStatus.DRAFT)
     finalized_at = Column(DateTime, nullable=True)

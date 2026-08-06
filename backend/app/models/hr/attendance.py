@@ -13,11 +13,15 @@ class AttendanceStatus(enum.Enum):
 class Attendance(Base):
     __tablename__ = "attendances"
     id = Column(Integer, primary_key=True, index=True)
-    employee_id = Column(Integer, ForeignKey("employees.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     status = Column(String, nullable=False)
     date = Column(DateTime, nullable=False)
     notes = Column(String, nullable=True)
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=True)
-    
-    employee = relationship("Employee", back_populates="attendances")
+
+    # Champs de pointage (timeclock)
+    check_in = Column(DateTime, nullable=True)   # Heure d'arrivée UTC
+    check_out = Column(DateTime, nullable=True)  # Heure de sortie UTC
+
+    user = relationship("User", back_populates="attendances")
     project = relationship("Project")

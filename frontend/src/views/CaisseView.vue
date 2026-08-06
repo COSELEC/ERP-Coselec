@@ -21,7 +21,7 @@
           <!-- Formulaire de saisie -->
           <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-8">
             <!-- Entête -->
-            <div class="grid grid-cols-3 gap-6">
+            <div class="grid grid-cols-4 gap-6">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">NUM</label>
                 <input v-model="form.num" type="text" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
@@ -33,6 +33,16 @@
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">N° CIA</label>
                 <input v-model="form.cia" type="text" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">MOYEN DE PAIEMENT</label>
+                <select v-model="form.payment_method" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition">
+                  <option value="">Sélectionner</option>
+                  <option value="Transfert (Wave/Orange Money)">Transfert (Wave/Orange Money)</option>
+                  <option value="Liquide">Liquide</option>
+                  <option value="Chèque">Chèque</option>
+                  <option value="Carte Bancaire">Carte Bancaire</option>
+                </select>
               </div>
             </div>
 
@@ -194,6 +204,7 @@ const form = ref({
   num: '',
   affaire: '',
   cia: '',
+  payment_method: '',
   depenses: [{ date: '', designation: '', montant: '' }],
   recettes: [{ date: '', designation: '', montant: '' }]
 });

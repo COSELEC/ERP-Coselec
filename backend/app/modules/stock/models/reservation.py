@@ -16,7 +16,7 @@ class ProjectStockReservation(Base):
     id = Column(Integer, primary_key=True, index=True)
     project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
-    reserved_by_id = Column(Integer, ForeignKey("employees.id", ondelete="SET NULL"), nullable=True)
+    reserved_by_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     task_id = Column(Integer, ForeignKey("tasks.id", ondelete="CASCADE"), nullable=True)
     
     quantity = Column(Integer, nullable=False, default=1)
@@ -26,5 +26,5 @@ class ProjectStockReservation(Base):
 
     project = relationship("Project")
     product = relationship("Product")
-    reserved_by = relationship("Employee")
+    reserved_by = relationship("User")
     task = relationship("Task", back_populates="reservations")

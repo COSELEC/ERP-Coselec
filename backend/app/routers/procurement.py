@@ -238,3 +238,87 @@ def approve_purchase_order(
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 
+from pydantic import BaseModel, ConfigDict
+from typing import List, Optional
+from datetime import datetime
+
+class DeliveryNoteLineUpdate(BaseModel):
+    id: int
+    delivered_quantity: float
+    is_compliant: bool
+    notes: Optional[str] = None
+
+class DeliveryNoteApproveRequest(BaseModel):
+    lines: List[DeliveryNoteLineUpdate]
+    comments: Optional[str] = None
+    action: str # 'magasinier' or 'manager'
+
+class DeliveryNoteLineResponse(BaseModel):
+    id: int
+    product_id: Optional[int] = None
+    designation: Optional[str] = None
+    ordered_quantity: float
+    delivered_quantity: float
+    is_compliant: bool
+    notes: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
+
+class DeliveryNoteResponse(BaseModel):
+    id: int
+    reference: str
+    purchase_order_id: int
+    supplier_name: Optional[str] = None
+    created_at: datetime
+    status: str
+    magasinier_validator_id: Optional[int] = None
+    magasinier_validated_at: Optional[datetime] = None
+    manager_validator_id: Optional[int] = None
+    manager_validated_at: Optional[datetime] = None
+    lines: List[DeliveryNoteLineResponse] = []
+    model_config = ConfigDict(from_attributes=True)
+
+@router.get("/delivery-notes", response_model=List[DeliveryNoteResponse])
+def get_delivery_notes(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(check_permission("stock.read")),
+):
+    from app.models.procurement.delivery import DeliveryNote
+    return db.query(DeliveryNote).order_by(DeliveryNote.created_at.desc()).all()
+
+@router.post("/delivery-notes/{note_id}/validate", response_model=DeliveryNoteResponse)
+def validate_delivery_note(
+    note_id: int,
+    req: DeliveryNoteApproveRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(check_permission("stock.create")),
+):
+    from app.models.procurement.delivery import DeliveryNote, DeliveryNoteStatus, DeliveryNoteLine
+    
+    note = db.query(DeliveryNote).filter(DeliveryNote.id == note_id).first()
+    if not note:
+        raise HTTPException(status_code=404, detail="Delivery Note not found")
+        
+    # Update lines
+    for line_req in req.lines:
+        line = db.query(DeliveryNoteLine).filter(DeliveryNoteLine.id == line_req.id, DeliveryNoteLine.delivery_note_id == note.id).first()
+        if line:
+            line.delivered_quantity = line_req.delivered_quantity
+            line.is_compliant = line_req.is_compliant
+            line.notes = line_req.notes
+            
+    if req.action == "magasinier":
+        if note.status != DeliveryNoteStatus.DRAFT:
+            raise HTTPException(status_code=400, detail="Delivery Note is not in DRAFT status")
+        note.status = DeliveryNoteStatus.CHECKED_BY_MAGASINIER
+        note.magasinier_validator_id = current_user.id
+        note.magasinier_validated_at = datetime.utcnow()
+    elif req.action == "manager":
+        if note.status != DeliveryNoteStatus.CHECKED_BY_MAGASINIER:
+            raise HTTPException(status_code=400, detail="Delivery Note must be checked by magasinier first")
+        note.status = DeliveryNoteStatus.VALIDATED_BY_MANAGER
+        note.manager_validator_id = current_user.id
+        note.manager_validated_at = datetime.utcnow()
+        
+    db.commit()
+    db.refresh(note)
+    return note

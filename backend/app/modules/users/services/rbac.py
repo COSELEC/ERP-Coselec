@@ -54,21 +54,15 @@ RBAC_PERMISSIONS: dict[str, tuple[str, str]] = {
 
 RBAC_ROLES: dict[str, dict[str, Iterable[str]]] = {
     "Admin": {
-        "description": "Acces total a la plateforme",
+        "description": "Super-administrateur IT, accès total",
         "permissions": RBAC_PERMISSIONS.keys(),
     },
-    "Employe": {
-        "description": "Acces standard collaborateur",
-        "permissions": {
-            "fuel_requests.read",
-            "fuel_requests.create",
-            "notifications.read",
-            "notifications.update",
-            "stock.read",
-        },
+    "Direction": {
+        "description": "Vision globale, lecture et validation",
+        "permissions": RBAC_PERMISSIONS.keys(),
     },
-    "RH": {
-        "description": "Gestion RH et planning",
+    "RH / Comptabilité": {
+        "description": "Ressources Humaines et Finance/Trésorerie",
         "permissions": {
             "employees.read",
             "employees.create",
@@ -78,42 +72,41 @@ RBAC_ROLES: dict[str, dict[str, Iterable[str]]] = {
             "contracts.read",
             "contracts.create",
             "contracts.update",
+            "contracts.delete",
             "documents.read",
             "documents.create",
             "documents.delete",
             "requests.validate_hr",
-            "notifications.read",
-            "notifications.update",
-        },
-    },
-    "IT": {
-        "description": "Support Informatique et Administration",
-        "permissions": {
-            "requests.validate_it",
-            "notifications.read",
-            "notifications.update",
-        },
-    },
-    "Commercial": {
-        "description": "Role commercial (base)",
-        "permissions": {
-            "notifications.read",
-            "notifications.update",
-        },
-    },
-    "Direction": {
-        "description": "Vision consolidee et pilotage",
-        "permissions": {
-            "dashboard.read",
-            "stock.read",
-            "employees.read",
+            "requests.validate_finance",
             "fuel_requests.read",
+            "fuel_requests.validate_finance",
+            "dashboard.read",
             "notifications.read",
+            "notifications.update",
         },
     },
-    "Responsable Projet": {
-        "description": "Suivi projet et demandes associees",
+    "Achats": {
+        "description": "Achats, Logistique, Stocks et Moyens Généraux",
         "permissions": {
+            "employees.read",
+            "stock.read",
+            "stock.create",
+            "stock.update",
+            "stock.delete",
+            "fuel_requests.read",
+            "fuel_requests.create",
+            "fuel_requests.update",
+            "fuel_requests.delete",
+            "requests.validate_facility",
+            "dashboard.read",
+            "notifications.read",
+            "notifications.update",
+        },
+    },
+    "Chef de Projet": {
+        "description": "Pilotage et gestion des projets",
+        "permissions": {
+            "employees.read",
             "projects.read",
             "projects.create",
             "projects.update",
@@ -122,88 +115,64 @@ RBAC_ROLES: dict[str, dict[str, Iterable[str]]] = {
             "tasks.create",
             "tasks.update",
             "tasks.delete",
-            "stock.read",
-            "notifications.read",
-            "notifications.update",
-        },
-    },
-    "Stock / Logistique": {
-        "description": "Operations de stock et logistique",
-        "permissions": {
-            "stock.read",
-            "stock.create",
-            "stock.update",
-            "stock.delete",
+            "dashboard.read",
+            "hr.read",
             "fuel_requests.read",
-            "fuel_requests.update",
-            "dashboard.read",
             "notifications.read",
             "notifications.update",
         },
     },
-    "Maintenance": {
-        "description": "Maintenance et interventions",
+    "Chef d'Equipe": {
+        "description": "Supervision opérationnelle équipe",
         "permissions": {
-            "stock.read",
-            "requests.validate_facility",
+            "employees.read",
+            "projects.read",
+            "projects.update",
+            "tasks.read",
+            "tasks.create",
+            "tasks.update",
+            "tasks.delete",
+            "dashboard.read",
+            "hr.read",
+            "fuel_requests.read",
             "notifications.read",
             "notifications.update",
         },
     },
-    "Qualite": {
-        "description": "Suivi qualite et conformite",
+    "Commercial": {
+        "description": "Gestion client et commerce",
         "permissions": {
+            "employees.read",
+            "projects.read",
+            "projects.create",
+            "projects.update",
+            "tasks.read",
+            "dashboard.read",
+            "fuel_requests.read",
             "notifications.read",
             "notifications.update",
-            "dashboard.read",
+        },
+    },
+    "Qualité": {
+        "description": "Gestion de la qualité et des normes",
+        "permissions": {
+            "employees.read",
             "documents.read",
             "documents.create",
-            "documents.update",
             "documents.delete",
+            "dashboard.read",
+            "notifications.read",
+            "notifications.update",
         },
     },
-    "Finance": {
-        "description": "Suivi financier et budgetaire",
+    "Employé": {
+        "description": "Employé standard de l'entreprise",
         "permissions": {
+            "employees.read",
+            "documents.read",
             "dashboard.read",
-            "stock.read",
-            "notifications.read",
             "fuel_requests.read",
             "fuel_requests.create",
-            "fuel_requests.update",
-            "fuel_requests.delete",
-            "fuel_requests.validate_finance",
-            "requests.validate_finance",
-        },
-    },
-    "IT Admin": {
-        "description": "Administration IT et support technique",
-        "permissions": {
-            "requests.validate_it",
-            "stock.read",
-            "stock.update",
-            "notifications.read",
-            "notifications.update",
-        },
-    },
-    "Facility Manager": {
-        "description": "Gestion Moyens Généraux et interventions",
-        "permissions": {
-            "requests.validate_facility",
-            "stock.read",
-            "stock.update",
-            "fuel_requests.read",
-            "fuel_requests.update",
-            "notifications.read",
-            "notifications.update",
-            "dashboard.read",
-        },
-    },
-    "Achat": {
-        "description": "Gestion des achats et fournisseurs",
-        "permissions": {
-            "stock.read",
-            "requests.validate_finance",
             "notifications.read",
             "notifications.update",
         },
@@ -282,10 +251,7 @@ def assign_role_to_user(db: Session, user: User, role_name: str) -> bool:
 
 
 def assign_default_role(db: Session, user: User) -> None:
-    assigned = assign_role_to_user(db, user, "Employe")
-    if not assigned:
-        ensure_rbac_setup(db)
-        assign_role_to_user(db, user, "Employe")
+    pass
 
 
 ADMIN_BOOTSTRAP_PASSWORD = os.getenv("ADMIN_BOOTSTRAP_PASSWORD", "").strip()
@@ -326,4 +292,3 @@ def ensure_admin_role_for_email(db: Session, email: str | None = None) -> None:
 
     ensure_rbac_setup(db)
     assign_role_to_user(db, user, "Admin")
-

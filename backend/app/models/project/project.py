@@ -31,7 +31,7 @@ class Project(Base):
     is_archived = Column(Boolean, default=False)
     
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=True)
-    chef_projet_id = Column(Integer, ForeignKey("employees.id"), nullable=True)
+    chef_projet_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     
     #champs de dates
     date_debut_estimee = Column(Date, nullable=False)
@@ -56,7 +56,7 @@ class Project(Base):
         back_populates="projects"
     )
     client = relationship("Client")
-    chef_projet = relationship("Employee")
+    chef_projet = relationship("User")
     phases = relationship("ProjectPhase", back_populates="project", cascade="all, delete-orphan")
     milestones = relationship("ProjectMilestone", back_populates="project", cascade="all, delete-orphan")
     budgets = relationship("ProjectBudget", back_populates="project", cascade="all, delete-orphan")

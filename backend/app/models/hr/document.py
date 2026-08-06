@@ -13,7 +13,7 @@ class DocumentCategory(str, enum.Enum):
 class EmployeeDocument(Base):
     __tablename__ = "employee_documents"
     id = Column(Integer, primary_key=True, index=True)
-    employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     category = Column(Enum(DocumentCategory), nullable=False)
     file_name = Column(String, nullable=False)
     storage_path = Column(String, nullable=False) 
@@ -23,7 +23,7 @@ class EmployeeDocument(Base):
     expiry_date = Column(Date, nullable=True) 
     is_verified = Column(Boolean, default=False) 
 
-    employee = relationship("Employee", back_populates="documents")
+    user = relationship("User", back_populates="documents")
 
 class TaskDocument(Base):
     __tablename__ = "task_documents"

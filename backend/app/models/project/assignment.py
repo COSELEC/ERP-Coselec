@@ -8,7 +8,7 @@ class ProjectAssignment(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
-    employee_id = Column(Integer, ForeignKey("employees.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     
     role = Column(String(100), nullable=False)
     allocation = Column(Float, nullable=False, default=100.0) # 0 to 100 percentage
@@ -17,7 +17,7 @@ class ProjectAssignment(Base):
     notes = Column(Text, nullable=True)
 
     project = relationship("Project", back_populates="assignments")
-    employee = relationship("Employee", back_populates="project_assignments")
+    user = relationship("User", back_populates="project_assignments")
 
     @property
     def current_status(self) -> str:

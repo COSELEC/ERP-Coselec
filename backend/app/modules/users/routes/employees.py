@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 
 from app.core.security.auth import get_current_user, check_permission
 from app.core.database import get_db
 
-from app.modules.users.models.employee import Employee
+
 from app.models.notification import NotificationType
 from app.modules.users.models.user import User
 from app.services.notification import create_notification
@@ -22,15 +22,15 @@ router = APIRouter(
 )
 
 
-def _employee_label(employee: Employee) -> str:
-    full_name = f"{employee.first_name or ''} {employee.last_name or ''}".strip()
+def _employee_label(User: User) -> str:
+    full_name = f"{User.first_name or ''} {User.last_name or ''}".strip()
     if full_name:
         return full_name
 
-    if employee.matricule:
-        return employee.matricule
+    if User.matricule:
+        return User.matricule
 
-    return f"Employe #{employee.id}"
+    return f"Employe #{User.id}"
 
 
 @router.get(
@@ -42,7 +42,7 @@ def get_employees(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return db.query(Employee).all()
+    return db.query(User).all()
 
 @router.get(
     "/org-chart",
@@ -52,7 +52,7 @@ def get_org_chart(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    employees = db.query(Employee).options(joinedload(Employee.department)).all()
+    employees = db.query(User).options(joinedload(User.department)).all()
     
     employee_dict = {}
     root_nodes = []
@@ -80,6 +80,30 @@ def get_org_chart(
             
     return root_nodes
 
+@router.post("/{user_id}/signature")
+async def upload_employee_signature(
+    user_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    from app.services.storage import upload_file_to_minio
+    import uuid
+    
+    employee = db.query(User).filter(User.id == user_id).first()
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+        
+    ext = file.filename.split('.')[-1]
+    filename = f"signatures/{user_id}_{uuid.uuid4().hex}.{ext}"
+    
+    file_bytes = await file.read()
+    file_url = upload_file_to_minio(file_bytes, filename)
+    
+    employee.signature_url = file_url
+    db.commit()
+    
+    return {"signature_url": file_url}
+
 @router.get(
     "/{employee_id}",
     response_model=EmployeeResponse
@@ -91,12 +115,12 @@ def get_employee(
     db: Session = Depends(get_db)
 ):
     employee = (
-        db.query(Employee)
-        .filter(Employee.id == employee_id)
+        db.query(User)
+        .filter(User.id == employee_id)
         .first()
     )
 
-    if not employee:
+    if not User:
         raise HTTPException(
             status_code=404,
             detail="Employee not found"
@@ -109,23 +133,33 @@ def get_employee(
     response_model=EmployeeResponse
 )
 def create_employee(
-    employee: EmployeeCreate,
+    user_data: EmployeeCreate,
     _: None = Depends(check_permission("employees.create")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    new_employee = Employee(
-        **employee.model_dump()
-    )
-
+    dumped_data = user_data.model_dump(exclude_unset=True)
+    supervised_ids = dumped_data.pop("supervised_employee_ids", None)
+    
+    new_employee = User(**dumped_data)
     db.add(new_employee)
-    db.commit()
-    db.refresh(new_employee)
+
+    try:
+        db.commit()
+        db.refresh(new_employee)
+        
+        if supervised_ids is not None:
+            db.query(User).filter(User.id.in_(supervised_ids)).update({"manager_id": new_employee.id}, synchronize_session=False)
+            db.commit()
+            
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="User with this email or matricule already exists")
 
     create_notification(
         db=db,
         user_id=current_user.id,
-        message=f"Employe cree: {_employee_label(new_employee)}",
+        message=f"Employé créé: {_employee_label(new_employee)}",
         type=NotificationType.INFO,
         reference_id=new_employee.id
     )
@@ -144,8 +178,8 @@ def update_employee(
     db: Session = Depends(get_db)
 ):
     employee = (
-        db.query(Employee)
-        .filter(Employee.id == employee_id)
+        db.query(User)
+        .filter(User.id == employee_id)
         .first()
     )
 
@@ -155,21 +189,30 @@ def update_employee(
             detail="Employee not found"
         )
 
-    for key, value in employee_data.model_dump().items():
-        setattr(employee, key, value)
+    dumped_data = employee_data.model_dump(exclude_unset=True)
+    supervised_ids = dumped_data.pop("supervised_employee_ids", None)
 
+    for key, value in dumped_data.items():
+        setattr(employee, key, value)
+        
     db.commit()
     db.refresh(employee)
+    
+    if supervised_ids is not None:
+        db.query(User).filter(User.manager_id == employee.id).filter(~User.id.in_(supervised_ids)).update({"manager_id": None}, synchronize_session=False)
+        db.query(User).filter(User.id.in_(supervised_ids)).update({"manager_id": employee.id}, synchronize_session=False)
+        db.commit()
 
     create_notification(
         db=db,
         user_id=current_user.id,
-        message=f"Employe mis a jour: {_employee_label(employee)}",
+        message=f"Employé mis à jour: {_employee_label(employee)}",
         type=NotificationType.INFO,
         reference_id=employee.id
     )
 
     return employee
+
 
 @router.delete("/{employee_id}")
 def delete_employee(
@@ -179,8 +222,8 @@ def delete_employee(
     db: Session = Depends(get_db)
 ):
     employee = (
-        db.query(Employee)
-        .filter(Employee.id == employee_id)
+        db.query(User)
+        .filter(User.id == employee_id)
         .first()
     )
 
@@ -189,6 +232,8 @@ def delete_employee(
             status_code=404,
             detail="Employee not found"
         )
+
+    deleted_label = _employee_label(employee)
 
     try:
         db.delete(employee)
@@ -200,14 +245,14 @@ def delete_employee(
             detail="Impossible de supprimer l'employé : il est toujours assigné à des projets, tâches, ou possède des documents liés. Veuillez les réassigner ou les supprimer d'abord."
         )
 
-    deleted_label = _employee_label(employee)
+    deleted_label = _employee_label(User)
 
     create_notification(
         db=db,
         user_id=current_user.id,
         message=f"Employe supprime: {deleted_label}",
         type=NotificationType.WARNING,
-        reference_id=employee.id
+        reference_id=User.id
     )
 
     return {

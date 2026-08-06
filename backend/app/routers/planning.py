@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, time
 import unicodedata
 from app.core.security.auth import get_current_user, check_permission
 from app.core.database import get_db
-from app.modules.users.models.employee import Employee
+from app.modules.users.models.user import User
 from app.models.hr.attendance import Attendance, AttendanceStatus
 from app.models.notification import NotificationType
 from app.modules.users.models.user import User
@@ -57,7 +57,7 @@ def get_schedule_matrix(
         raise HTTPException(status_code=400, detail="Format de date invalide. Utilisez YYYY-MM-DD.")
     
     date_range = [start + timedelta(days=i) for i in range(days_count)]
-    employees = db.query(Employee).all()
+    users = db.query(User).all()
     
     # Pre-fetch overrides for the date range to avoid N+1 query performance hits
     end_date = date_range[-1]
@@ -68,11 +68,11 @@ def get_schedule_matrix(
         Attendance.date <= end_dt
     ).all()
     
-    override_map = {(o.employee_id, o.date.date()): o.status for o in overrides}
+    override_map = {(o.user_id, o.date.date()): o.status for o in overrides}
     
     response_matrix = []
     
-    for emp in employees:
+    for emp in users:
         schedule_days = []
         for current_date in date_range:
             
@@ -111,8 +111,8 @@ def update_attendance_slot(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Verify the target employee profile exists
-    emp_exists = db.query(Employee).filter(Employee.id == payload.employee_id).first()
+    # Verify the target user profile exists
+    emp_exists = db.query(User).filter(User.id == payload.user_id).first()
     if not emp_exists:
         raise HTTPException(status_code=404, detail="Collaborateur introuvable.")
         
@@ -124,7 +124,7 @@ def update_attendance_slot(
 
     # Check if a log entry already exists
     existing_record = db.query(Attendance).filter(
-        Attendance.employee_id == payload.employee_id,
+        Attendance.user_id == payload.user_id,
         func.date(Attendance.date) == payload.date
     ).first()
     
@@ -138,7 +138,7 @@ def update_attendance_slot(
     else:
         if status_enum != AttendanceStatus.SITE:
             new_record = Attendance(
-                employee_id=payload.employee_id,
+                user_id=payload.user_id,
                 date=datetime.combine(payload.date, time.min),
                 status=status_enum.value,
                 notes=payload.notes,
@@ -188,7 +188,7 @@ def update_attendance_slot(
         user_id=current_user.id,
         message=f"Planning mis a jour pour {employee_label} le {payload.date}",
         type=NotificationType.INFO,
-        reference_id=payload.employee_id
+        reference_id=payload.user_id
     )
 
     return {"message": "Planning mis à jour avec succès"}

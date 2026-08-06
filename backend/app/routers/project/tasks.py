@@ -8,7 +8,7 @@ from app.core.database import get_db
 from app.core.security.auth import check_permission, get_current_user
 from app.schemas.project.task import TaskDocumentResponse, TaskResponse, TaskUpdate, TaskCreate
 from app.models.project.project import Project
-from app.modules.users.models.employee import Employee
+from app.modules.users.models.user import User
 from app.models.project.task import Task, TaskStatus
 from app.models.hr.document import TaskDocument
 from app.services.storage import upload_file_to_minio, get_file_url_from_minio, delete_file_from_minio
@@ -44,8 +44,8 @@ def create_task_for_project( task_data : TaskCreate, project_id: int, db: Sessio
     if project is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Projet non trouvé")
     if task_data.assignee_id is not None:
-        employee= (db.query(Employee).filter(Employee.id == task_data.assignee_id)).first()
-        if employee is None:
+        user= (db.query(User).filter(User.id == task_data.assignee_id)).first()
+        if user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employé assigné à la tâche non trouvé")
         
         from app.services.availability import is_employee_on_leave

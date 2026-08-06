@@ -38,7 +38,7 @@ class StockMovement(Base):
     partner_id = Column(
         Integer,
         ForeignKey("partners.id"),
-        nullable=False
+        nullable=True  # nullable pour mouvements sans fournisseur (ex: ajustement interne)
     )
 
     type = Column(

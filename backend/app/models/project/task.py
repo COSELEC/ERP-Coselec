@@ -34,7 +34,7 @@ class Task(Base):
 
     #attributs de relation
     author_id = Column(Integer, ForeignKey("users.id"), nullable= False)
-    assignee_id = Column(Integer, ForeignKey("employees.id"), nullable=True)
+    assignee_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     project_id= Column(Integer, ForeignKey("projects.id"), nullable=True)
     milestone_id = Column(Integer, ForeignKey("project_milestones.id", ondelete="SET NULL"), nullable=True)
 

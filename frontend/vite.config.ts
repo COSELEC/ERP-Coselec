@@ -5,24 +5,25 @@ import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
-
-
+import basicSsl from '@vitejs/plugin-basic-ssl'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const loadedEnv = loadEnv(mode, process.cwd(), '')
-  
+
   return {
     plugins: [
       vue(),
       vueDevTools(),
-      tailwindcss()
+      tailwindcss(),
+      basicSsl()
     ],
     server: {
       proxy: {
         '/api': {
           target: loadedEnv.VITE_API_BASE_URL || 'http://localhost:8000',
           changeOrigin: true,
+          ws: true,
           rewrite: (path) => path.replace(/^\/api/, '')
         }
       }

@@ -27,6 +27,7 @@ class CaisseRequest(BaseModel):
     num: Optional[str] = ""
     affaire: Optional[str] = ""
     cia: Optional[str] = ""
+    payment_method: Optional[str] = None
     depenses: List[CaisseRow] = []
     recettes: List[CaisseRow] = []
     project_id: Optional[int] = None
@@ -38,6 +39,7 @@ class CaisseVoucherResponse(BaseModel):
     num: Optional[str]
     affaire: Optional[str]
     cia: Optional[str]
+    payment_method: Optional[str] = None
     pdf_url: Optional[str]
     created_at: datetime
     
@@ -89,6 +91,7 @@ def generate_caisse(payload: CaisseRequest, db: Session = Depends(get_db)):
         num=payload.num,
         affaire=payload.affaire,
         cia=payload.cia,
+        payment_method=payload.payment_method,
         pdf_url=pdf_url,
         project_id=payload.project_id,
         expense_id=payload.expense_id,
@@ -143,6 +146,83 @@ def finalize_caisse(voucher_id: int, db: Session = Depends(get_db)):
             expense.status = ExpenseStatus.APPROVED
             total_expense = sum(float(l.amount) for l in voucher.lines if l.line_type.value == "EXPENSE")
             expense.amount = total_expense
+            
+    # Workflow Automations for Requests
+    if voucher.generic_request_id:
+        # 1. Update ProjectExpense status if it exists and linked by reference
+        expense = db.query(ProjectExpense).filter(ProjectExpense.reference == f"REQ-{voucher.generic_request_id}").first()
+        if expense:
+            expense.status = "APPROVED"
+            
+        # 2. Generate Purchase Order
+        from app.models.procurement.purchase import PurchaseOrder, PurchaseOrderLine
+        from app.modules.requests_unified.models.request import GenericRequest, RequestType
+        import uuid
+        
+        request_obj = db.get(GenericRequest, voucher.generic_request_id)
+        if request_obj and request_obj.type in (RequestType.FUEL, RequestType.IT_EQUIPMENT, RequestType.FACILITY_SUPPLIES):
+            po = PurchaseOrder(
+                reference=f"PO-{voucher.generic_request_id}-{uuid.uuid4().hex[:6]}".upper(),
+                generic_request_id=voucher.generic_request_id,
+                project_id=request_obj.project_id
+            )
+            db.add(po)
+            db.flush()
+            
+            if request_obj.type == RequestType.FUEL:
+                line = PurchaseOrderLine(
+                    purchase_order_id=po.id,
+                    designation=f"Carburant pour véhicule {request_obj.payload.get('vehicle_plate', '')}",
+                    quantity=request_obj.payload.get("fuel_quantity", 1),
+                    unit_price=0.0
+                )
+                db.add(line)
+            else:
+                items = request_obj.payload.get("items", [])
+                for item in items:
+                    line = PurchaseOrderLine(
+                        purchase_order_id=po.id,
+                        product_id=item.get("product_id"),
+                        designation=item.get("designation", "Article inconnu"),
+                        quantity=item.get("quantity", 1),
+                        unit_price=0.0
+                    )
+                    db.add(line)
+                    
+            # 3. Generate Delivery Note (Bon de Livraison)
+            from app.models.procurement.delivery import DeliveryNote, DeliveryNoteLine
+            
+            delivery_note = DeliveryNote(
+                reference=f"BL-{voucher.generic_request_id}-{uuid.uuid4().hex[:6]}".upper(),
+                purchase_order_id=po.id,
+                supplier_name=request_obj.payload.get("beneficiary", "Fournisseur inconnu")
+            )
+            db.add(delivery_note)
+            db.flush()
+            
+            for item in po.lines:
+                dl = DeliveryNoteLine(
+                    delivery_note_id=delivery_note.id,
+                    product_id=item.product_id,
+                    designation=item.designation,
+                    ordered_quantity=item.quantity,
+                    delivered_quantity=0.0
+                )
+                db.add(dl)
+                    
+            # 4. Notify RH to create a BankVoucher
+            from app.models.notification import Notification, NotificationType
+            from app.modules.users.models.user import User
+            
+            rh_users = db.query(User).filter(User.roles.any(name="RH")).all()
+            for rh in rh_users:
+                notif = Notification(
+                    user_id=rh.id,
+                    message=f"La pièce de caisse #{voucher.id} a été validée. Merci de créer la pièce de banque correspondante pour le paiement.",
+                    type=NotificationType.INFO.value,
+                    reference_id=voucher.id
+                )
+                db.add(notif)
             
     db.commit()
     db.refresh(voucher)

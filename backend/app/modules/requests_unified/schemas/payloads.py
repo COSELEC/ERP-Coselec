@@ -13,7 +13,7 @@ class ItemPayload(BaseModel):
 
 class LeavePayload(BaseModel):
     type: Literal["LEAVE"] = "LEAVE"
-    employee_id: Optional[int] = None
+    user_id: Optional[int] = None
     start_date: date
     end_date: date
     leave_type: str = "Congé"
@@ -53,8 +53,8 @@ class FacilityMaintenancePayload(BaseModel):
 class FacilityBadgePayload(BaseModel):
     type: Literal["FACILITY_BADGE"] = "FACILITY_BADGE"
     badge_type: str = "access"  # "access", "parking", "visitor"
-    target_employee_name: Optional[str] = None
-    target_employee_id: Optional[int] = None
+    target_user_name: Optional[str] = None
+    target_user_id: Optional[int] = None
     zone: Optional[str] = None
 
 
@@ -68,7 +68,7 @@ class FacilitySuppliesPayload(BaseModel):
 
 class FuelPayload(BaseModel):
     type: Literal["FUEL"] = "FUEL"
-    employee_id: Optional[int] = None
+    user_id: Optional[int] = None
     vehicle_plate: str
     destination: str
     fuel_quantity: float = Field(gt=0)
@@ -82,7 +82,7 @@ class FuelPayload(BaseModel):
 class DocumentPayload(BaseModel):
     type: Literal["DOCUMENT"] = "DOCUMENT"
     document_type: str  # e.g. "attestation_travail", "fiche_paie", "certificat"
-    employee_id: Optional[int] = None
+    user_id: Optional[int] = None
     notes: Optional[str] = None
 
 

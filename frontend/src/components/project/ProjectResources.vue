@@ -38,11 +38,11 @@
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
                   <div class="w-8 h-8 rounded-full bg-red-100 text-[#d10f2f] flex items-center justify-center font-bold text-sm">
-                    {{ assign.employee?.first_name?.[0] || '?' }}
+                    {{ assign.user?.first_name?.[0] || '?' }}
                   </div>
                   <div>
-                    <div class="font-bold text-gray-900">{{ assign.employee?.first_name }} {{ assign.employee?.last_name }}</div>
-                    <div class="text-xs text-gray-500">{{ assign.employee?.position || 'N/A' }}</div>
+                    <div class="font-bold text-gray-900">{{ assign.user?.first_name }} {{ assign.user?.last_name }}</div>
+                    <div class="text-xs text-gray-500">{{ assign.user?.position || 'N/A' }}</div>
                   </div>
                 </div>
               </td>
@@ -297,6 +297,9 @@ const saveHRAssignment = async () => {
   savingHR.value = true;
   
   const payload: any = { ...hrForm.value };
+  payload.user_id = payload.employee_id;
+  delete payload.employee_id;
+  
   if (!payload.end_date) delete payload.end_date;
   if (!payload.notes) delete payload.notes;
 

@@ -1,5 +1,5 @@
 import logging
-from datetime import date
+from datetime import date, timedelta
 from app.core.database import SessionLocal
 from app.modules.daily_reports.adapters.sqlalchemy_repo import SqlAlchemyDailyReportRepository
 from app.modules.daily_reports.adapters.notification_adapter import WebSocketNotificationAdapter
@@ -7,24 +7,32 @@ from app.modules.daily_reports.domain.use_cases import CheckAndNotifyMissingRepo
 
 logger = logging.getLogger(__name__)
 
+
 def check_missing_daily_reports():
-    logger.info("Starting check for missing daily reports...")
+    """
+    Vérifie les rapports hebdomadaires manquants.
+    Déclenché le vendredi à 16h via APScheduler.
+    Notifie les chefs d'équipe/projet qui n'ont pas encore soumis
+    leur rapport pour la semaine en cours.
+    """
+    today = date.today()
+    # Ne s'exécute utilement que le vendredi (weekday == 4)
+    # mais peut être appelé manuellement pour des tests.
+    monday_of_week = today - timedelta(days=today.weekday())
+
+    logger.info(f"Vérification des rapports hebdomadaires manquants pour la semaine du {monday_of_week}...")
     try:
         db = SessionLocal()
         report_repo = SqlAlchemyDailyReportRepository(db)
         notification_service = WebSocketNotificationAdapter(db)
-        
+
         use_case = CheckAndNotifyMissingReportsUseCase(report_repo, notification_service)
-        
-        # Check for today
-        use_case.execute(date.today())
-        
-        # The WebSocketNotificationAdapter performs db.add() and db.flush(), 
-        # so we should commit after use_case execution.
+        use_case.execute(today)
+
         db.commit()
-        logger.info("Finished check for missing daily reports.")
+        logger.info("Vérification des rapports hebdomadaires terminée.")
     except Exception as e:
-        logger.error(f"Error checking missing daily reports: {e}")
+        logger.error(f"Erreur lors de la vérification des rapports hebdomadaires: {e}")
         if 'db' in locals():
             db.rollback()
     finally:

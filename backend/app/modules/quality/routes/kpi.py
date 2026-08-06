@@ -16,7 +16,7 @@ async def api_kpi_upload_preview(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user)
 ):
-    if not any(r.name in ["Admin", "Qualité"] for r in current_user.roles):
+    if not any(r.name in ["Admin", "Qualité", "Qualite"] for r in current_user.roles):
         raise HTTPException(status_code=403, detail="Permission denied")
         
     contents = await file.read()

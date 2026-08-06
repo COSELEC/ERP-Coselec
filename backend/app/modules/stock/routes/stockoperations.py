@@ -17,13 +17,15 @@ from app.services.notification import create_notification
 from app.modules.stock.schemas.stockoperations import (
     StockEntry,
     StockExit,
-    StockTransfer
+    StockTransfer,
+    StockTransferToProject
 )
 
 from app.modules.stock.services.stock_service import (
     stock_entry,
     stock_exit,
-    stock_transfer
+    stock_transfer,
+    stock_transfer_to_project
 )
 
 router = APIRouter(
@@ -163,6 +165,39 @@ def create_transfer(
             f"Transfert stock: produit {product_label}, "
             f"depot {from_warehouse_label} vers {to_warehouse_label}, "
             f"partenaire {partner_label}, "
+            f"quantite {payload.quantity}"
+        ),
+        type=NotificationType.INFO,
+        reference_id=payload.product_id
+    )
+
+    return result
+
+@router.post("/transfer-to-project")
+def create_transfer_to_project(
+    payload: StockTransferToProject,
+    _: None = Depends(check_permission("stock.update")),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    result = stock_transfer_to_project(
+        db,
+        payload.product_id,
+        payload.from_warehouse_id,
+        payload.project_id,
+        payload.quantity
+    )
+
+    product_label = _resolve_product_label(db, payload.product_id)
+    warehouse_label = _resolve_warehouse_label(db, payload.from_warehouse_id)
+
+    create_notification(
+        db=db,
+        user_id=current_user.id,
+        message=(
+            f"Transfert vers projet: produit {product_label}, "
+            f"depuis {warehouse_label}, "
+            f"projet {payload.project_id}, "
             f"quantite {payload.quantity}"
         ),
         type=NotificationType.INFO,

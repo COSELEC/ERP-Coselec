@@ -10,7 +10,7 @@ class AssignmentBase(BaseModel):
     notes: Optional[str] = None
 
 class AssignmentCreate(AssignmentBase):
-    employee_id: int
+    user_id: int
 
 class AssignmentUpdate(BaseModel):
     role: Optional[str] = None
@@ -19,7 +19,7 @@ class AssignmentUpdate(BaseModel):
     end_date: Optional[date] = None
     notes: Optional[str] = None
 
-class AssignmentEmployee(BaseModel):
+class AssignmentUser(BaseModel):
     id: int
     first_name: str
     last_name: str
@@ -35,8 +35,8 @@ class AssignmentProject(BaseModel):
 class AssignmentResponse(AssignmentBase):
     id: int
     project_id: int
-    employee_id: int
-    employee: Optional[AssignmentEmployee] = None
+    user_id: int
+    user: Optional[AssignmentUser] = None
     project: Optional[AssignmentProject] = None
     current_status: str
 

@@ -20,6 +20,22 @@
             <label class="mb-2 block text-sm font-semibold text-gray-700">Réf. Bon de Commande (PO) Optionnel</label>
             <input type="number" v-model.number="form.po_id" placeholder="ID du PO" class="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-red-400 focus:ring-4 focus:ring-red-100" />
           </div>
+          
+          <div>
+            <label class="mb-2 block text-sm font-semibold text-gray-700">Type de Stock</label>
+            <select v-model="form.stock_type" required class="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-red-400 focus:ring-4 focus:ring-red-100">
+              <option value="GENERAL">Général (Magasin)</option>
+              <option value="PROJECT">Projet</option>
+            </select>
+          </div>
+          
+          <div v-if="form.stock_type === 'PROJECT'">
+            <label class="mb-2 block text-sm font-semibold text-gray-700">Projet</label>
+            <select v-model="form.project_id" required class="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-red-400 focus:ring-4 focus:ring-red-100">
+              <option value="" disabled>Sélectionner un projet</option>
+              <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.nom }} ({{ p.code }})</option>
+            </select>
+          </div>
         </div>
 
         <div>
@@ -77,14 +93,19 @@ import { ref, reactive, onMounted } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
+import { getStoredProfile } from '@/services/session'
 
 const toast = useToast()
 const isSubmitting = ref(false)
 const suppliers = ref<any[]>([])
+const projects = ref<any[]>([])
+const currentEmployeeId = ref<number | null>(null)
 
 const form = reactive({
   supplier_id: '',
-  po_id: null,
+  po_id: null as number | null,
+  stock_type: 'GENERAL',
+  project_id: '' as string | number,
   lines: [
     { product_id: null, designation: '', qty_ordered: 0, qty_delivered: 0, is_compliant: true, notes: '' }
   ]
@@ -93,10 +114,28 @@ const form = reactive({
 onMounted(async () => {
   try {
     const res = await api.get('/partners/')
-    // Assumes partners include suppliers. Adjust if necessary.
     suppliers.value = res.data
   } catch (e) {
     console.error(e)
+  }
+  
+  try {
+    const resProj = await api.get('/projects/')
+    projects.value = resProj.data
+  } catch (e) {
+    console.error(e)
+  }
+  
+  // Résoudre l'ID employé du user connecté
+  try {
+    const profile = getStoredProfile()
+    if (profile?.email) {
+      const empRes = await api.get('/employees/', { params: { search: profile.email } })
+      const match = empRes.data?.find((e: any) => e.email === profile.email)
+      if (match) currentEmployeeId.value = match.id
+    }
+  } catch (e) {
+    console.warn('Impossible de résoudre l\'employé connecté:', e)
   }
 })
 
@@ -116,7 +155,9 @@ const submitReception = async () => {
     const payload = {
       po_id: form.po_id,
       supplier_id: form.supplier_id,
-      created_by: 1, // To do: use auth store
+      created_by: currentEmployeeId.value, // dynamique via session
+      stock_type: form.stock_type,
+      project_id: form.stock_type === 'PROJECT' ? form.project_id : null,
       lines: form.lines
     }
     
@@ -126,6 +167,8 @@ const submitReception = async () => {
     // Reset form
     form.po_id = null
     form.supplier_id = ''
+    form.stock_type = 'GENERAL'
+    form.project_id = ''
     form.lines = [{ product_id: null, designation: '', qty_ordered: 0, qty_delivered: 0, is_compliant: true, notes: '' }]
     
   } catch (error) {

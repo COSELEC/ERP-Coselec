@@ -14,14 +14,25 @@
 
       <form @submit.prevent="handleSubmit" class="p-6">
         <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
-            <input 
-              v-model="formData.name"
-              type="text" 
-              required
-              class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            />
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+              <input 
+                v-model="formData.first_name"
+                type="text" 
+                required
+                class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+              <input 
+                v-model="formData.last_name"
+                type="text" 
+                required
+                class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </div>
           </div>
 
           <div>
@@ -45,6 +56,21 @@
               <option v-for="role in availableRoles" :key="role" :value="role">
                 {{ role }}
               </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+            <select 
+              v-model="formData.status"
+              required
+              class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            >
+              <option value="CDI">CDI</option>
+              <option value="CDD">CDD</option>
+              <option value="STAGIAIRE">Stagiaire</option>
+              <option value="PRESTATAIRE">Prestataire</option>
+              <option value="INACTIF">Inactif</option>
             </select>
           </div>
         </div>
@@ -102,22 +128,21 @@ const tempPassword = ref('');
 // Ces rôles pourraient aussi venir de l'API dans un cas réel
 const availableRoles = [
   'Admin',
-  'Employe',
-  'RH',
   'Direction',
+  'RH / Comptabilité',
+  'Achats',
+  'Chef de Projet',
+  "Chef d'Equipe",
   'Commercial',
-  'Responsable Projet',
-  'Stock / Logistique',
-  'Maintenance',
-  'Qualite',
-  'Finance',
-  'IT Admin',
-  'Achat',
-  'Facility Manager'
+  'Qualité',
+  'Employé'
 ];
 
 const formData = ref({
   name: '',
+  first_name: '',
+  last_name: '',
+  status: 'CDI',
   email: '',
   role_name: ''
 });
@@ -126,6 +151,9 @@ onMounted(() => {
   if (props.user) {
     formData.value = {
       name: props.user.name,
+      first_name: props.user.first_name || '',
+      last_name: props.user.last_name || '',
+      status: props.user.status || 'CDI',
       email: props.user.email,
       role_name: props.user.roles?.[0]?.name || ''
     };

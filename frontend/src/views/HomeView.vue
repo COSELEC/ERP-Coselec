@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue";
 import AppLayout from "@/layouts/AppLayout.vue";
 import MapLocationPicker from "@/components/project/MapLocationPicker.vue";
+import AttendanceClockWidget from "@/components/AttendanceClockWidget.vue";
 import api from '../services/api';
 import { getStoredProfile } from '@/services/session';
 import { useToast } from '@/composables/useToast';
@@ -170,34 +171,39 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- Content Grid -->
+      <!-- Quick Actions -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">Actions Rapides</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <button @click="activeModal = 'project'" class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+            <span class="material-symbols-outlined text-[#d10f2f] mb-2">add_circle</span>
+            <span class="text-sm font-medium text-gray-700">Nouveau Projet</span>
+          </button>
+          <button @click="activeModal = 'hr'" class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+            <span class="material-symbols-outlined text-[#d10f2f] mb-2">post_add</span>
+            <span class="text-sm font-medium text-gray-700">Demande RH</span>
+          </button>
+          <router-link to="/stock/movement" class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+            <span class="material-symbols-outlined text-[#d10f2f] mb-2">sync_alt</span>
+            <span class="text-sm font-medium text-gray-700">Mouvement Stock</span>
+          </router-link>
+          <button @click="activeModal = 'fuel'" class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+            <span class="material-symbols-outlined text-[#d10f2f] mb-2">directions_car</span>
+            <span class="text-sm font-medium text-gray-700">Demande Carburant</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Attendance Clock Widget + Recent Activity -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- Quick Actions -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:col-span-2 h-min">
-          <h2 class="text-lg font-bold text-gray-900 mb-4">Actions Rapides</h2>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <button @click="activeModal = 'project'" class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-              <span class="material-symbols-outlined text-[#d10f2f] mb-2">add_circle</span>
-              <span class="text-sm font-medium text-gray-700">Nouveau Projet</span>
-            </button>
-            <button @click="activeModal = 'hr'" class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-              <span class="material-symbols-outlined text-[#d10f2f] mb-2">post_add</span>
-              <span class="text-sm font-medium text-gray-700">Demande RH</span>
-            </button>
-            <router-link to="/stock/movement" class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-              <span class="material-symbols-outlined text-[#d10f2f] mb-2">sync_alt</span>
-              <span class="text-sm font-medium text-gray-700">Mouvement Stock</span>
-            </router-link>
-            <button @click="activeModal = 'fuel'" class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-              <span class="material-symbols-outlined text-[#d10f2f] mb-2">directions_car</span>
-              <span class="text-sm font-medium text-gray-700">Demande Carburant</span>
-            </button>
-          </div>
+
+        <!-- Attendance Clock Widget -->
+        <div>
+          <AttendanceClockWidget />
         </div>
 
         <!-- Recent Activity -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:col-span-2">
           <h2 class="text-lg font-bold text-gray-900 mb-4">Activité Récente</h2>
           <ul class="space-y-4">
             <li v-for="act in recentActivity" :key="act.id" class="flex items-start gap-3">
@@ -213,6 +219,7 @@ onMounted(async () => {
         </div>
 
       </div>
+
 
     </div>
 

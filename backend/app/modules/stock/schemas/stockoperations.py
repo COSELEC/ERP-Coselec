@@ -28,3 +28,9 @@ class StockTransfer(BaseModel):
     project_id: Optional[int] = None
 
     quantity: int
+
+class StockTransferToProject(BaseModel):
+    product_id: int
+    from_warehouse_id: int
+    project_id: int
+    quantity: int

@@ -25,7 +25,7 @@ def check_document_expirations():
                 days_left = (doc.expiry_date - today).days
                 urgency = "ROUGE" if days_left <= 90 else "ORANGE"
                 
-                message = f"[{urgency}] Le document {doc.category.value} de l'employé #{doc.employee_id} expire dans {days_left} jours."
+                message = f"[{urgency}] Le document {doc.category.value} de l'employé #{doc.user_id} expire dans {days_left} jours."
                 
                 for rh_user in rh_users:
                     create_notification(

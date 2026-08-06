@@ -12,8 +12,11 @@ class ReceptionControl(Base):
     supplier_id = Column(Integer, ForeignKey("partners.id"), nullable=True)
     
     delivery_date = Column(DateTime, default=datetime.utcnow)
-    created_by = Column(Integer, ForeignKey("employees.id"), nullable=True)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     pdf_url = Column(String, nullable=True)
+    
+    stock_type = Column(String, default="GENERAL")
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True)
     
     lines = relationship("ReceptionControlLine", back_populates="reception_control", cascade="all, delete-orphan")
 

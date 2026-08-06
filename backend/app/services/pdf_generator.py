@@ -181,17 +181,36 @@ def _build_dmcar_table_data(request: Any) -> Table:
     ]))
     return t_main
 
+def _get_signature_cell(user_obj, fallback_name: str, prefix: str = ""):
+    if not user_obj:
+        return fallback_name
+        
+    sig_url = getattr(user_obj, 'signature_url', None)
+    if sig_url:
+        from app.services.storage import get_file_url_from_minio
+        try:
+            full_url = get_file_url_from_minio(sig_url)
+            # Use reportlab Image
+            from reportlab.platypus import Image as RLImage
+            # Adjust width and height to fit in the box (e.g., 80x40)
+            return [prefix, RLImage(full_url, width=80, height=40)]
+        except Exception:
+            pass
+            
+    name = getattr(user_obj, 'name', fallback_name)
+    return f"{prefix}\n{name}" if prefix else name
+
 def _build_dmcar_sig_table(request: Any) -> Table:
-    employee_name = request.requester.name if getattr(request, 'requester', None) else ""
-    manager_name = request.manager_validator.name if getattr(request, 'manager_validator', None) else ""
-    finance_name = request.finance_validator.name if getattr(request, 'finance_validator', None) else "En attente"
+    employee_cell = _get_signature_cell(getattr(request, 'requester', None), "")
+    manager_cell = _get_signature_cell(getattr(request, 'manager_validator', None), "En attente", "Validé par:")
+    finance_cell = _get_signature_cell(getattr(request, 'finance_validator', None), "En attente", "Validé par:")
     
     sig_data = [
         ["DEMANDEUR", "RESP. SERVICE", "VISA DIRECTION"],
         [
-            employee_name,
-            f"Validé par:\n{manager_name}",
-            f"Validé par:\n{finance_name}"
+            employee_cell,
+            manager_cell,
+            finance_cell
         ]
     ]
     t_sig = Table(sig_data, colWidths=[170, 170, 170], rowHeights=[20, 50])
@@ -233,7 +252,8 @@ def generate_caisse_pdf(data: dict) -> str:
     builder.add_spacer(10)
     builder.add_paragraph(f"<b>NUM :</b> {data.get('num', '')}", font_size=10, space_after=2)
     builder.add_paragraph(f"<b>N°AFFAIRE :</b> {data.get('affaire', '')}", font_size=10, space_after=2)
-    builder.add_paragraph(f"<b>N°CIA :</b> {data.get('cia', '')}", font_size=10, space_after=10)
+    builder.add_paragraph(f"<b>N°CIA :</b> {data.get('cia', '')}", font_size=10, space_after=2)
+    builder.add_paragraph(f"<b>MOYEN DE PAIEMENT :</b> {data.get('payment_method', '') or 'Non spécifié'}", font_size=10, space_after=10)
     
     depenses = data.get("depenses", [])
     t_depense_data = [["DATE", "DESIGNATION", "MONTANT"]]
