@@ -331,7 +331,7 @@ import { useToast } from '@/composables/useToast';
 
 const toast = useToast();
 
-// IMPORT DE SOUS-COMPOSANTS
+// Composants enfants
 import EmployeeContracts from "@/components/employees/EmployeeContracts.vue";
 import EmployeeDocuments from "@/components/employees/EmployeeDocuments.vue";
 import EmployeeLeaves from "@/components/employees/EmployeeLeaves.vue";
@@ -373,7 +373,7 @@ const openCreateModal = () => {
   showCreateModal.value = true;
 };
 
-// Sorting logic
+// Tri
 const sortColumn = ref('');
 const sortOrder = ref<'asc' | 'desc'>('asc');
 
@@ -449,13 +449,13 @@ async function submitEmployee() {
   }
 }
 
-// --- GESTION DU VOLET LATÉRAL (SLIDE-OVER) ---
+// Volet latéral
 const isSlideOverOpen = ref(false);
 const selectedEmployee = ref<Employee | null>(null);
 
 const openEmployeeDetails = (employee: Employee) => {
   selectedEmployee.value = employee;
-  // Petit délai optionnel pour la fluidité si beaucoup de données
+  // Délai d'animation
   setTimeout(() => {
     isSlideOverOpen.value = true;
   }, 10);
@@ -463,7 +463,7 @@ const openEmployeeDetails = (employee: Employee) => {
 
 const closeSlideOver = () => {
   isSlideOverOpen.value = false;
-  // On attend la fin de l'animation CSS (300ms) pour vider l'employé
+  // Attend l'animation CSS
   setTimeout(() => {
     selectedEmployee.value = null;
   }, 300);
@@ -491,7 +491,7 @@ const confirmDeleteEmployee = async () => {
     toast.error(errorMsg);
   }
 };
-// ---------------------------------------------
+// Helpers
 
 const getStatusClass = (status: string) => {
   if (!status) return "bg-slate-100 text-slate-700";

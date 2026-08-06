@@ -157,7 +157,7 @@ const tempPassword = ref('');
 const departments = ref<any[]>([]);
 const usersList = ref<User[]>([]);
 
-// Ces rôles pourraient aussi venir de l'API dans un cas réel
+// Rôles disponibles
 const availableRoles = [
   'Admin',
   'Direction',
@@ -227,9 +227,7 @@ const handleSubmit = async () => {
     } else {
       const response = await userService.createUser(formData.value as UserCreate);
       tempPassword.value = response.temporary_password || '';
-      // On ne ferme pas immédiatement la modale pour que l'admin puisse voir le mot de passe temp.
-      // S'il ferme lui-même, la liste sera rafraichie car on peut émettre saved lors du close s'il y a un mot de passe.
-      // Mais modifions plutôt : on affiche le mdp et on change le bouton "Fermer".
+
     }
   } catch (e: any) {
     error.value = e.response?.data?.detail || "Une erreur est survenue.";
