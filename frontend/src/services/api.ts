@@ -24,7 +24,7 @@ function normalizeApiUrl(url?: string): string | undefined {
     return url;
   }
 
-  if (/^https?:\/\
+  if (/^https?:\/\//.test(url)) {
     return url;
   }
 
