@@ -141,13 +141,13 @@ const routes = [
     path: "/caisse",
     name: "caisse",
     component: () => import("../views/CaisseView.vue"),
-    meta: { requiredRoles: ["Admin", "RH / Comptabilité", "Direction"] }
+    meta: { requiredRoles: ["RH", "RH / Comptabilité"] }
   },
   {
     path: "/bank-voucher",
     name: "bank-voucher",
     component: () => import("../views/BankVoucherView.vue"),
-    meta: { requiredRoles: ["Admin", "RH / Comptabilité", "Direction"] }
+    meta: { requiredRoles: ["RH", "RH / Comptabilité"] }
   }
   ,
   {

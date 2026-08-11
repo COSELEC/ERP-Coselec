@@ -143,6 +143,15 @@ def require_admin_role(current_user: User = Depends(get_current_user)):
         )
     return current_user
 
+def require_rh_role(current_user: User = Depends(get_current_user)):
+    is_rh = any(role.name in ["RH", "RH / Comptabilité"] for role in current_user.roles)
+    if not is_rh:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Accès réservé aux Ressources Humaines et Comptabilité"
+        )
+    return current_user
+
 async def get_current_user_ws(token: str, db: Session) -> User | None:
     """
     Validates a JWT token string (passed via WebSocket query parameter)

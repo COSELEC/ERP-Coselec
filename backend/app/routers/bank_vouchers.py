@@ -14,7 +14,13 @@ from app.models.voucher_attachment import VoucherAttachment
 from fastapi import UploadFile, File
 import uuid
 
-router = APIRouter(prefix="/bank-vouchers", tags=["Bank Vouchers"])
+from app.core.security.auth import require_rh_role
+
+router = APIRouter(
+    prefix="/bank-vouchers", 
+    tags=["Bank Vouchers"],
+    dependencies=[Depends(require_rh_role)]
+)
 
 class AnalyticalAllocationCreate(BaseModel):
     cost_center_code: str

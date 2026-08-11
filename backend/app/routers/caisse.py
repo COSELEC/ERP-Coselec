@@ -13,9 +13,12 @@ from fastapi import UploadFile, File, HTTPException
 import uuid
 from app.services.storage import upload_file_to_minio
 
+from app.core.security.auth import require_rh_role
+
 router = APIRouter(
     prefix="/caisse",
-    tags=["Caisse"]
+    tags=["Caisse"],
+    dependencies=[Depends(require_rh_role)]
 )
 
 class CaisseRow(BaseModel):

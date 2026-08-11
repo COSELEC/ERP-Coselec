@@ -37,7 +37,7 @@ const canViewDocuments = computed(() => {
 });
 
 const canViewTreasury = computed(() => {
-  return hasAnyRole(roles.value, ["Admin", "Direction", "RH / Comptabilité"]);
+  return hasAnyRole(roles.value, ["RH", "RH / Comptabilité"]);
 });
 
 const canViewProjects = computed(() => {
