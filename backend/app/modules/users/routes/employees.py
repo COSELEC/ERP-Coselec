@@ -12,6 +12,7 @@ from app.services.notification import create_notification
 
 from app.modules.users.schemas.employee import (
     EmployeeCreate,
+    EmployeeUpdate,
     EmployeeResponse,
     OrgChartNode
 )
@@ -22,15 +23,15 @@ router = APIRouter(
 )
 
 
-def _employee_label(User: User) -> str:
-    full_name = f"{User.first_name or ''} {User.last_name or ''}".strip()
+def _employee_label(user: User) -> str:
+    full_name = f"{user.first_name or ''} {user.last_name or ''}".strip()
     if full_name:
         return full_name
 
-    if User.matricule:
-        return User.matricule
+    if user.matricule:
+        return user.matricule
 
-    return f"Employe #{User.id}"
+    return f"Employé #{user.id}"
 
 
 @router.get(
@@ -120,7 +121,7 @@ def get_employee(
         .first()
     )
 
-    if not User:
+    if not employee:
         raise HTTPException(
             status_code=404,
             detail="Employee not found"
@@ -142,6 +143,8 @@ def create_employee(
     supervised_ids = dumped_data.pop("supervised_employee_ids", None)
     
     new_employee = User(**dumped_data)
+    if not new_employee.name:
+        new_employee.name = f"{new_employee.first_name or ''} {new_employee.last_name or ''}".strip() or new_employee.email
     db.add(new_employee)
 
     try:
@@ -154,7 +157,7 @@ def create_employee(
             
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=400, detail="User with this email or matricule already exists")
+        raise HTTPException(status_code=400, detail="Un employé avec cet email ou ce matricule existe déjà")
 
     create_notification(
         db=db,
@@ -172,7 +175,7 @@ def create_employee(
 )
 def update_employee(
     employee_id: int,
-    employee_data: EmployeeCreate,
+    employee_data: EmployeeUpdate,
     _: None = Depends(check_permission("employees.update")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -192,16 +195,32 @@ def update_employee(
     dumped_data = employee_data.model_dump(exclude_unset=True)
     supervised_ids = dumped_data.pop("supervised_employee_ids", None)
 
+    if "manager_id" in dumped_data and dumped_data["manager_id"] == employee_id:
+        raise HTTPException(status_code=400, detail="Un employé ne peut pas être son propre responsable")
+
+    if supervised_ids is not None and employee_id in supervised_ids:
+        raise HTTPException(status_code=400, detail="Un employé ne peut pas être dans sa propre liste de subordonnés")
+
     for key, value in dumped_data.items():
         setattr(employee, key, value)
         
-    db.commit()
-    db.refresh(employee)
-    
-    if supervised_ids is not None:
-        db.query(User).filter(User.manager_id == employee.id).filter(~User.id.in_(supervised_ids)).update({"manager_id": None}, synchronize_session=False)
-        db.query(User).filter(User.id.in_(supervised_ids)).update({"manager_id": employee.id}, synchronize_session=False)
+    full_name = f"{employee.first_name or ''} {employee.last_name or ''}".strip()
+    if full_name:
+        employee.name = full_name
+
+    try:
         db.commit()
+        db.refresh(employee)
+        
+        if supervised_ids is not None:
+            db.query(User).filter(User.manager_id == employee.id).filter(~User.id.in_(supervised_ids)).update({"manager_id": None}, synchronize_session=False)
+            if supervised_ids:
+                db.query(User).filter(User.id.in_(supervised_ids)).update({"manager_id": employee.id}, synchronize_session=False)
+            db.commit()
+            db.refresh(employee)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Un employé avec cet email ou ce matricule existe déjà")
 
     create_notification(
         db=db,
@@ -234,6 +253,7 @@ def delete_employee(
         )
 
     deleted_label = _employee_label(employee)
+    del_id = employee.id
 
     try:
         db.delete(employee)
@@ -245,16 +265,15 @@ def delete_employee(
             detail="Impossible de supprimer l'employé : il est toujours assigné à des projets, tâches, ou possède des documents liés. Veuillez les réassigner ou les supprimer d'abord."
         )
 
-    deleted_label = _employee_label(User)
-
     create_notification(
         db=db,
         user_id=current_user.id,
-        message=f"Employe supprime: {deleted_label}",
+        message=f"Employé supprimé: {deleted_label}",
         type=NotificationType.WARNING,
-        reference_id=User.id
+        reference_id=del_id
     )
 
     return {
         "message": "Employee deleted successfully"
     }
+

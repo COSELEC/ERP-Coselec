@@ -40,3 +40,10 @@ class User(Base):
         back_populates="user"
     )
     roles = relationship("Role", secondary=user_roles, back_populates="users")
+
+    @property
+    def supervised_employee_ids(self) -> list[int]:
+        if self.subordinates:
+            return [sub.id for sub in self.subordinates]
+        return []
+
