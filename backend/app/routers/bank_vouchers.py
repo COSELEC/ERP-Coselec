@@ -45,6 +45,8 @@ class BankVoucherCreate(BaseModel):
     reservation_id: Optional[int] = None
     linked_caisse_voucher_ids: List[int] = []
 
+from fastapi.responses import RedirectResponse
+
 @router.get("", status_code=status.HTTP_200_OK)
 def get_bank_vouchers(
     search: Optional[str] = None, 
@@ -67,13 +69,55 @@ def get_bank_vouchers(
                     BankVoucher.description.ilike(search_term)
                 )
             )
-    return query.order_by(BankVoucher.id.desc()).offset(skip).limit(limit).all()
+    vouchers = query.order_by(BankVoucher.id.desc()).offset(skip).limit(limit).all()
+    results = []
+    for v in vouchers:
+        results.append({
+            "id": v.id,
+            "bank_name": v.bank_name,
+            "check_number": v.check_number,
+            "date": v.date,
+            "period_num": v.period_num,
+            "description": v.description,
+            "recipient": v.recipient,
+            "status": v.status,
+            "finalized_at": v.finalized_at,
+            "amount_in_numbers": float(v.amount_in_numbers) if v.amount_in_numbers is not None else 0.0,
+            "currency": v.currency,
+            "amount_in_letters": v.amount_in_letters,
+            "pdf_url": get_file_url_from_minio(v.pdf_url) if v.pdf_url else None,
+            "linked_caisse_voucher_ids": v.linked_caisse_voucher_ids or [],
+            "project_id": v.project_id,
+            "expense_id": v.expense_id,
+            "reservation_id": v.reservation_id,
+        })
+    return results
 
 @router.get("/next-id", status_code=status.HTTP_200_OK)
 def get_next_bank_voucher_id(db: Session = Depends(get_db)):
     last_voucher = db.query(BankVoucher).order_by(BankVoucher.id.desc()).first()
     next_id = last_voucher.id + 1 if last_voucher else 1
     return {"next_id": next_id}
+
+@router.get("/{voucher_id}/pdf")
+def get_bank_voucher_pdf_url(voucher_id: int, db: Session = Depends(get_db)):
+    voucher = db.query(BankVoucher).filter(BankVoucher.id == voucher_id).first()
+    if not voucher:
+        raise HTTPException(status_code=404, detail="Pièce de banque non trouvée")
+        
+    if not voucher.pdf_url:
+        allocations = db.query(AnalyticalAllocation).filter(AnalyticalAllocation.bank_voucher_id == voucher.id).all()
+        pdf_filename = generate_bank_voucher_pdf(voucher, allocations)
+        if pdf_filename:
+            voucher.pdf_url = pdf_filename
+            db.commit()
+            db.refresh(voucher)
+
+    if not voucher.pdf_url:
+        raise HTTPException(status_code=404, detail="PDF non disponible")
+        
+    url = get_file_url_from_minio(voucher.pdf_url)
+    return RedirectResponse(url=url)
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_bank_voucher(voucher_in: BankVoucherCreate, db: Session = Depends(get_db)):
@@ -119,22 +163,38 @@ def create_bank_voucher(voucher_in: BankVoucherCreate, db: Session = Depends(get
         db_alloc = AnalyticalAllocation(bank_voucher_id=db_bank_voucher.id, **alloc_in.model_dump())
         db.add(db_alloc)
     
+    pdf_filename = None
     try:
         db.flush()
         pdf_filename = generate_bank_voucher_pdf(db_bank_voucher, voucher_in.allocations)
         if pdf_filename:
-            try:
-                db_bank_voucher.pdf_url = get_file_url_from_minio(pdf_filename)
-            except Exception as err:
-                print(f"Erreur lors de la génération de l'URL MinIO: {err}")
-                db_bank_voucher.pdf_url = pdf_filename
+            db_bank_voucher.pdf_url = pdf_filename
     except Exception as e:
         print(f"Erreur PDF : {e}")
 
     db.commit()
     db.refresh(db_bank_voucher)
 
-    return db_bank_voucher
+    fresh_pdf_url = get_file_url_from_minio(db_bank_voucher.pdf_url) if db_bank_voucher.pdf_url else None
+
+    return {
+        "id": db_bank_voucher.id,
+        "bank_name": db_bank_voucher.bank_name,
+        "check_number": db_bank_voucher.check_number,
+        "date": db_bank_voucher.date,
+        "period_num": db_bank_voucher.period_num,
+        "description": db_bank_voucher.description,
+        "recipient": db_bank_voucher.recipient,
+        "status": db_bank_voucher.status,
+        "amount_in_numbers": float(db_bank_voucher.amount_in_numbers),
+        "currency": db_bank_voucher.currency,
+        "amount_in_letters": db_bank_voucher.amount_in_letters,
+        "pdf_url": fresh_pdf_url,
+        "linked_caisse_voucher_ids": db_bank_voucher.linked_caisse_voucher_ids or [],
+        "project_id": db_bank_voucher.project_id,
+        "expense_id": db_bank_voucher.expense_id,
+        "reservation_id": db_bank_voucher.reservation_id,
+    }
 
 @router.post("/{voucher_id}/finalize")
 def finalize_bank_voucher(voucher_id: int, db: Session = Depends(get_db)):

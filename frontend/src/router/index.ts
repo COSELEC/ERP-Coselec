@@ -147,7 +147,7 @@ const routes = [
     path: "/bank-voucher",
     name: "bank-voucher",
     component: () => import("../views/BankVoucherView.vue"),
-    meta: { requiredRoles: ["RH", "RH / Comptabilité"] }
+    meta: { requiredRoles: ["RH", "RH / Comptabilité", "Admin"] }
   }
   ,
   {

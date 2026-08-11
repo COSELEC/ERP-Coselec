@@ -72,16 +72,48 @@ def upload_buffer_to_minio(buffer, file_name: str, content_type: str = "applicat
     )
     return file_name
 
-def get_file_url_from_minio(file_name: str) -> str:
-    """Generates a presigned URL to download a file securely, valid for 1 hour."""
-    minio_client = get_minio_client()
-    url = minio_client.get_presigned_url(
-        "GET",
-        BUCKET_NAME,
-        file_name,
-        expires=timedelta(hours=1),
-    )
-    return url
+from urllib.parse import urlparse, unquote
+
+def extract_minio_key(file_name_or_url: str) -> str:
+    """Extracts the clean MinIO object key from a full URL, presigned URL, or raw key."""
+    if not file_name_or_url:
+        return ""
+    
+    # Strip query parameters (e.g. presigned signature params)
+    path = file_name_or_url.split("?")[0].strip()
+    
+    # If it is a full URL, parse the pathname
+    if "://" in path:
+        parsed = urlparse(path)
+        path = unquote(parsed.path)
+    
+    path = path.lstrip("/")
+    
+    # Strip bucket name if present at the start of the path
+    if path.startswith(f"{BUCKET_NAME}/"):
+        path = path[len(BUCKET_NAME) + 1:]
+    
+    return path
+
+def get_file_url_from_minio(file_name: str, expires: timedelta = timedelta(days=7)) -> str:
+    """Generates a presigned URL to download a file securely, valid for up to 7 days."""
+    if not file_name:
+        return ""
+    clean_key = extract_minio_key(file_name)
+    if not clean_key:
+        return ""
+    try:
+        minio_client = get_minio_client()
+        url = minio_client.get_presigned_url(
+            "GET",
+            BUCKET_NAME,
+            clean_key,
+            expires=expires,
+        )
+        return url
+    except Exception as e:
+        print(f"Error generating presigned URL for {file_name}: {e}")
+        return file_name
 
 def delete_file_from_minio(file_name: str):
     """Deletes a file from the S3 compatible cloud storage."""

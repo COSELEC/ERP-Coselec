@@ -453,10 +453,7 @@ const submitVoucher = async () => {
     const response = await api.post('/bank-vouchers/', form);
     
     if (response.data && response.data.pdf_url) {
-      const url = response.data.pdf_url.startsWith('http') 
-        ? response.data.pdf_url 
-        : `${api.defaults.baseURL || 'http:
-      window.open(url, '_blank');
+      window.open(response.data.pdf_url, '_blank');
     }
     
     if (response.data && response.data.id) {

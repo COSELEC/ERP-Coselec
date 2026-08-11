@@ -60,6 +60,8 @@ class CaisseVoucherResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+from fastapi.responses import RedirectResponse
+
 @router.get("", response_model=List[CaisseVoucherResponse])
 def get_caisse_vouchers(
     search: Optional[str] = None, 
@@ -80,7 +82,22 @@ def get_caisse_vouchers(
                     CaisseVoucher.cia.ilike(search_term)
                 )
             )
-    return query.order_by(CaisseVoucher.id.desc()).offset(skip).limit(limit).all()
+    vouchers = query.order_by(CaisseVoucher.id.desc()).offset(skip).limit(limit).all()
+    results = []
+    for v in vouchers:
+        v_dict = CaisseVoucherResponse.model_validate(v).model_dump()
+        if v.pdf_url:
+            v_dict["pdf_url"] = get_file_url_from_minio(v.pdf_url)
+        results.append(CaisseVoucherResponse(**v_dict))
+    return results
+
+@router.get("/{voucher_id}/pdf")
+def get_caisse_voucher_pdf_url(voucher_id: int, db: Session = Depends(get_db)):
+    voucher = db.query(CaisseVoucher).filter(CaisseVoucher.id == voucher_id).first()
+    if not voucher or not voucher.pdf_url:
+        raise HTTPException(status_code=404, detail="PDF non trouvé")
+    url = get_file_url_from_minio(voucher.pdf_url)
+    return RedirectResponse(url=url)
 
 @router.post("/generate")
 def generate_caisse(payload: CaisseRequest, db: Session = Depends(get_db)):
@@ -88,14 +105,12 @@ def generate_caisse(payload: CaisseRequest, db: Session = Depends(get_db)):
     if not pdf_path:
         return {"error": "Failed to generate PDF"}
         
-    pdf_url = get_file_url_from_minio(pdf_path)
-    
     voucher = CaisseVoucher(
         num=payload.num,
         affaire=payload.affaire,
         cia=payload.cia,
         payment_method=payload.payment_method,
-        pdf_url=pdf_url,
+        pdf_url=pdf_path,
         project_id=payload.project_id,
         expense_id=payload.expense_id,
         reservation_id=payload.reservation_id
@@ -126,7 +141,8 @@ def generate_caisse(payload: CaisseRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(voucher)
     
-    return {"pdf_url": pdf_url, "voucher_id": voucher.id}
+    fresh_pdf_url = get_file_url_from_minio(pdf_path)
+    return {"pdf_url": fresh_pdf_url, "voucher_id": voucher.id}
 
 @router.post("/{voucher_id}/finalize")
 def finalize_caisse(voucher_id: int, db: Session = Depends(get_db)):
