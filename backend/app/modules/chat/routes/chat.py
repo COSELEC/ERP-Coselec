@@ -30,12 +30,8 @@ from app.modules.users.models.user import User
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
 
-# ==========================================
-# WebSocket Connection Manager
-# ==========================================
 class ChatConnectionManager:
     def __init__(self):
-        # Maps room_id (str) -> List[WebSocket]
         self.active_rooms: Dict[str, List[WebSocket]] = {}
 
     async def connect(self, websocket: WebSocket, room_id: str):
@@ -81,7 +77,6 @@ def get_user_rooms(
     current_user: User = Depends(get_current_user)
 ):
     """Fetch all chat rooms for the current user."""
-    # Find rooms where current_user is a member
     rooms = db.query(ChatRoom).filter(ChatRoom.members.any(id=current_user.id)).all()
     result = []
     for room in rooms:
@@ -100,7 +95,6 @@ def get_user_rooms(
             "last_message_time": last_message.created_at.isoformat() if last_message and last_message.created_at else room.created_at.isoformat() if room.created_at else None,
             "other_user_id": other_members[0].id if not room.is_group and other_members else None
         })
-    # Sort by recent message
     result.sort(key=lambda x: x["last_message_time"] or "", reverse=True)
     return result
 
@@ -124,7 +118,6 @@ def create_or_get_room(
     if existing_rooms:
         return {"id": str(existing_rooms[0].id)}
         
-    # Create new room
     new_room = ChatRoom(is_group=False)
     new_room.members.extend([current_user, target_user])
     db.add(new_room)
@@ -155,9 +148,6 @@ def create_group_room(
     return {"id": str(new_room.id)}
 
 
-# ==========================================
-# 1. HTTP GET: Fetch Chat Message History
-# ==========================================
 @router.get("/{room_id}/messages")
 def get_room_messages(
     room_id: int,
@@ -193,9 +183,6 @@ def get_room_messages(
     ]
 
 
-# ==========================================
-# 2. HTTP POST: Handle File & Attachment Uploads
-# ==========================================
 @router.post("/{room_id}/upload")
 async def upload_chat_file(
     room_id: int,
@@ -205,7 +192,6 @@ async def upload_chat_file(
     """
     Uploads a file/image to the server and returns the local URL path.
     """
-    # Generate unique filename to avoid collisions
     ext = Path(file.filename).suffix if file.filename else ""
     unique_filename = f"chat/{room_id}/chat_{uuid.uuid4().hex}{ext}"
     
@@ -233,9 +219,6 @@ def download_chat_file(file_path: str):
         raise HTTPException(status_code=404, detail="Erreur lors de la récupération du fichier")
 
 
-# ==========================================
-# 3. WebSocket: Real-time Live Messaging
-# ==========================================
 @router.websocket("/ws/{room_id}")
 async def websocket_chat(
     websocket: WebSocket,
@@ -250,21 +233,17 @@ async def websocket_chat(
 
     try:
         actual_token = token or websocket.cookies.get("access_token")
-        # Authenticate token passed via query parameter or cookie
         current_user = await get_current_user_ws(actual_token, db)
         if not current_user:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
 
-        # Register active socket connection
         await manager.connect(websocket, room_id)
 
         while True:
-            # Receive text payload (expects JSON formatted string)
             raw_data = await websocket.receive_text()
             data = json.loads(raw_data)
 
-            # Persist message to database
             new_message = Message(
                 room_id=int(room_id),
                 sender_id=current_user.id,
@@ -277,7 +256,6 @@ async def websocket_chat(
             db.commit()
             db.refresh(new_message)
 
-            # Build and broadcast JSON payload
             payload = {
                 "id": new_message.id,
                 "room_id": new_message.room_id,

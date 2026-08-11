@@ -9,10 +9,7 @@ def process_approved_leave(db: Session, requester_id: int, start_date, end_date)
     """
     current_date = start_date
     while current_date <= end_date:
-        # 5 = Saturday, 6 = Sunday
         if current_date.weekday() not in [5, 6]:
-            # Create or update attendance
-            # Check if attendance already exists
             existing = db.query(Attendance).filter(
                 Attendance.user_id == requester_id,
                 Attendance.date == datetime.combine(current_date, datetime.min.time())

@@ -378,7 +378,6 @@ const scrollToToday = () => {
 };
 
 onMounted(() => {
-    // Scroll timeline to today
     setTimeout(() => {
         scrollToToday();
     }, 100);

@@ -4,7 +4,6 @@ from datetime import datetime
 from enum import Enum
 from app.modules.quality.models.kpi import KPIOperator
 
-# Base Schemas
 class KPIValueBase(BaseModel):
     year: int
     month: int
@@ -67,14 +66,13 @@ class KPIProcessusResponse(KPIProcessusBase):
     class Config:
         from_attributes = True
 
-# Import Schemas
 class KPIImportPreviewResponse(BaseModel):
     sheet_names: List[str]
 
 class KPIImportRequest(BaseModel):
     sheet_name: str
     year: int
-    month_name: str # e.g. "janv-26", will be mapped to month 1
+    month_name: str 
 
 class KPIImportResponse(BaseModel):
     message: str

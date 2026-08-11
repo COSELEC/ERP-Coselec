@@ -10,7 +10,6 @@ class MovementType(str, Enum):
 
     ADJUSTMENT = "ADJUSTMENT"
     
-    # Nouveaux types pour le Stock Projet
     ENTRY_GENERAL = "ENTRY_GENERAL"
     ENTRY_PROJECT = "ENTRY_PROJECT"
     TRANSFER_TO_PROJECT = "TRANSFER_TO_PROJECT"

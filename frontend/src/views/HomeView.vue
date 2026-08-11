@@ -52,7 +52,6 @@ const refreshDashboard = async () => {
     recentActivity.value = activityRes.data;
   } catch (error) {
     console.error("Failed to load dashboard data", error);
-    // Silently fail — KPI cards show "0" as defaults
   }
 };
 

@@ -11,20 +11,15 @@ class NormService:
         self.storage_service = storage_service
 
     def upload_new_version(self, norm_id: int, file: UploadFile, version_number: int) -> NormVersion:
-        # Check if norm exists
         norm = self.repository.get_norm_by_id(norm_id)
         if not norm:
             raise HTTPException(status_code=404, detail="Norm not found")
 
-        # Start transaction logic
         try:
-            # 1. Upload file
             file_path = self.storage_service.save_file(file, path="norms")
 
-            # 2. Deactivate old active version
             self.repository.deactivate_active_version(norm_id)
 
-            # 3. Create new active version
             new_version = NormVersion(
                 norm_id=norm_id,
                 version_number=version_number,
@@ -41,14 +36,11 @@ class NormService:
 
     def create_norm_with_file(self, code: str, title: str, category_id: int, file: UploadFile) -> Norm:
         try:
-            # 1. Upload file
             file_path = self.storage_service.save_file(file, path="norms")
 
-            # 2. Create norm
             new_norm = Norm(code=code, title=title, category_id=category_id)
             self.repository.create_norm(new_norm)
 
-            # 3. Create version
             new_version = NormVersion(
                 norm_id=new_norm.id,
                 version_number=1,

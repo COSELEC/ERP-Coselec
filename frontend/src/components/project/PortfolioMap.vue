@@ -49,11 +49,9 @@ const props = defineProps({
   }
 });
 
-// Centré sur Dakar
 const center = ref([14.6928, -17.4467]);
 const zoom = ref(11);
 
-// Filtrer uniquement les projets avec des coordonnées valides
 const validProjects = computed(() => {
   return props.projects.filter(p => p.latitude != null && p.longitude != null);
 });

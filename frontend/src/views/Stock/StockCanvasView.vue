@@ -28,17 +28,14 @@ const isLoading = ref(false);
 const errorMessage = ref('');
 const toast = useToast();
 
-// App Lists
 const categories = ref<Category[]>([]);
 const products = ref<Product[]>([]);
 
-// Modals UI toggles
 const showCategoryModal = ref(false);
 const showProductModal = ref(false);
 const openCategoryMenuId = ref<number | null>(null);
 const openProductMenuId = ref<number | null>(null);
 
-// Reactive Forms State
 const catForm = reactive({ name: '', description: '' });
 const prodForm = reactive({ name: '', sku_code: '', category_id: '', safety_threshold: 5 });
 
@@ -72,7 +69,6 @@ const fetchData = async () => {
   }
 };
 
-// Map Products to Category Board Lists dynamically
 const canvasBoards = computed<CanvasBoard[]>(() => {
   return categories.value.map(cat => ({
     ...cat,
@@ -80,7 +76,6 @@ const canvasBoards = computed<CanvasBoard[]>(() => {
   }));
 });
 
-// Create Handler: Category
 const handleCreateCategory = async () => {
   if (!catForm.name) return;
   try {
@@ -92,13 +87,11 @@ const handleCreateCategory = async () => {
   } catch { toast.error("Erreur lors de la création de la catégorie."); }
 };
 
-// Open Product Modal preset with prefilled Category Id column selection
 const openAddProduct = (catId: number) => {
   prodForm.category_id = catId.toString();
   showProductModal.value = true;
 };
 
-// Create Handler: Product
 const handleCreateProduct = async () => {
   if (!prodForm.name || !prodForm.sku_code || !prodForm.category_id) return;
   try {

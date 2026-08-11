@@ -2,7 +2,6 @@ import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import App from '../App.vue'
 
-// Mock vue-router to prevent errors during rendering in jsdom
 vi.mock('vue-router', () => ({
   useRouter: () => ({
     push: vi.fn(),

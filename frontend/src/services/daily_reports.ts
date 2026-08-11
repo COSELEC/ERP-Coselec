@@ -2,9 +2,9 @@ import { api } from './api';
 
 export interface WeeklyReportCreate {
   project_id: number;
-  report_date: string;       // Date de soumission (YYYY-MM-DD)
-  week_start?: string;       // Lundi de la semaine (calculé auto si absent)
-  week_end?: string;         // Vendredi de la semaine
+  report_date: string;       
+  week_start?: string;       
+  week_end?: string;         
   hours_worked: number;
   progress_percentage?: number;
   tasks_completed: string;
@@ -29,7 +29,6 @@ export interface WeeklyReportResponse {
   updated_at: string;
 }
 
-// Aliases rétrocompatibilité
 export type DailyReportCreate = WeeklyReportCreate;
 export type DailyReportResponse = WeeklyReportResponse;
 

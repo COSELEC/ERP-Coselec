@@ -153,14 +153,12 @@ const loading = ref(false);
 const myProjects = ref<any[]>([]);
 const selectedWeek = ref('');
 
-// Calcule le lundi et vendredi à partir d'une string ISO week (YYYY-Www)
 function isoWeekToMondayFriday(isoWeek: string): { monday: string; friday: string } | null {
   if (!isoWeek) return null;
   const [yearStr, weekStr] = isoWeek.split('-W');
   const year = parseInt(yearStr);
   const week = parseInt(weekStr);
 
-  // Calcul du jeudi de la semaine ISO (méthode ISO 8601)
   const jan4 = new Date(year, 0, 4);
   const startOfWeek1 = new Date(jan4);
   startOfWeek1.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7));
@@ -188,11 +186,9 @@ const form = ref<WeeklyReportCreate>({
   plan_next_week: '',
 });
 
-// Init semaine courante
 function initCurrentWeek() {
   const today = new Date();
   const year = today.getFullYear();
-  // Numéro de semaine ISO
   const startOfYear = new Date(year, 0, 1);
   const dayOfYear = Math.floor((today.getTime() - startOfYear.getTime()) / 86400000);
   const weekNum = Math.ceil((dayOfYear + startOfYear.getDay() + 1) / 7);
@@ -234,7 +230,6 @@ async function handleSubmit() {
     await dailyReportsService.submitReport(payload as any);
     toast.success('Rapport hebdomadaire soumis avec succès ! ✅');
 
-    // Reset
     form.value = {
       project_id: '' as any,
       report_date: new Date().toISOString().split('T')[0],

@@ -136,9 +136,6 @@ class CoselecPdfBuilder:
             print(f"Error saving PDF to cloud: {e}")
             return ""
 
-# -----------------------------------------
-# DMCAR (FUEL REQUEST) PDF GENERATOR
-# -----------------------------------------
 
 def _build_dmcar_table_data(request: Any) -> Table:
     styles = getSampleStyleSheet()
@@ -190,9 +187,7 @@ def _get_signature_cell(user_obj, fallback_name: str, prefix: str = ""):
         from app.services.storage import get_file_url_from_minio
         try:
             full_url = get_file_url_from_minio(sig_url)
-            # Use reportlab Image
             from reportlab.platypus import Image as RLImage
-            # Adjust width and height to fit in the box (e.g., 80x40)
             return [prefix, RLImage(full_url, width=80, height=40)]
         except Exception:
             pass
@@ -235,9 +230,6 @@ def generate_dmcar_pdf(request: Any) -> str:
     
     return builder.build_and_upload()
 
-# -----------------------------------------
-# CAISSE PDF GENERATOR
-# -----------------------------------------
 
 def generate_caisse_pdf(data: dict) -> str:
     filename = f"caisse_vouchers/CAISSE_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
@@ -287,9 +279,6 @@ def generate_caisse_pdf(data: dict) -> str:
     
     return builder.build_and_upload()
 
-# -----------------------------------------
-# LEAVE CERTIFICATE PDF GENERATOR
-# -----------------------------------------
 
 def generate_leave_certificate(leave_request, employee) -> str:
     emp_name = f"{employee.first_name} {employee.last_name}" if hasattr(employee, 'first_name') else employee.name
@@ -315,9 +304,6 @@ def generate_leave_certificate(leave_request, employee) -> str:
     
     return builder.build_and_upload()
 
-# -----------------------------------------
-# PURCHASE ORDER PDF GENERATOR
-# -----------------------------------------
 
 def generate_purchase_order_pdf(order) -> str:
     filename = f"purchase_orders/BC_{order.id:04d}_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
@@ -390,9 +376,6 @@ def generate_purchase_order_pdf(order) -> str:
     
     return builder.build_and_upload()
 
-# -----------------------------------------
-# PROJECT REPORT PDF GENERATOR
-# -----------------------------------------
 
 def generate_project_report_pdf(project) -> str:
     filename = f"project_reports/Rapport_Projet_{project.code}_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
@@ -452,9 +435,6 @@ def generate_project_report_pdf(project) -> str:
     
     return builder.build_and_upload()
 
-# -----------------------------------------
-# BANK VOUCHER PDF GENERATOR
-# -----------------------------------------
 
 def generate_bank_voucher_pdf(voucher, allocations) -> str:
     from reportlab.lib import colors
@@ -526,7 +506,6 @@ def generate_bank_voucher_pdf(voucher, allocations) -> str:
         ["Code du centre", "désignation du centre", "client", "Compte analytique", "Montant"]
     ]
     for alloc in allocations:
-        # Check if alloc is a Pydantic model or SQLAlchemy model
         code = getattr(alloc, 'cost_center_code', '')
         name = getattr(alloc, 'cost_center_name', '')
         client = getattr(alloc, 'client', '')
@@ -562,23 +541,17 @@ def generate_bank_voucher_pdf(voucher, allocations) -> str:
 
     return builder.build_and_upload()
 
-# -----------------------------------------
-# GESTION MATERIEL / INVENTAIRE PDF
-# -----------------------------------------
 from typing import Any
 
 def _build_inventory_header(title: str, doc_ref: str, form_number: str) -> Table:
     """Standard header: Left=Logo, Center=Title, Right=Doc Ref & Form Number in red"""
     styles = getSampleStyleSheet()
     
-    # Left: Logo
     logo_style = ParagraphStyle('LogoStyle', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=14, textColor=colors.red)
     left_p = Paragraph("GROUPE<br/><b>Y</b><br/>COSELEC", logo_style)
     
-    # Center: Title
     title_p = Paragraph(f"<b>{title}</b>", ParagraphStyle('TitleStyle', parent=styles['Normal'], alignment=1, fontSize=14))
     
-    # Right: Ref
     ref_style = ParagraphStyle('RefStyle', parent=styles['Normal'], alignment=2, textColor=colors.red, fontSize=10, fontName='Helvetica-Bold')
     right_p = Paragraph(f"{doc_ref}<br/>{form_number}", ref_style)
     
@@ -612,15 +585,12 @@ def generate_stock_release_pdf(movement_id: int, movement_data: Any) -> str:
     filename = f"inventory/FICHE_SORTIE_{movement_id:04d}_{datetime.now().strftime('%Y%m%d%H%M')}.pdf"
     builder = CoselecPdfBuilder(filename, topMargin=30, bottomMargin=30)
     
-    # Header
     header = _build_inventory_header("FICHE DE SORTIE MATÉRIEL", "COS-AA-FO-005-V00", f"N° FS-{movement_id:04d}")
     builder.add_custom_element(header)
     builder.add_custom_element(Spacer(1, 20))
     
-    # Table: Références | Désignations | Qtés demandées | Qtés livrées | Observations
     headers = ["Références", "Désignations", "Qtés demandées", "Qtés livrées", "Observations"]
     data = []
-    # Using generic movement_data mapping
     items = getattr(movement_data, 'items', [])
     for item in items:
         data.append([
@@ -637,7 +607,6 @@ def generate_stock_release_pdf(movement_id: int, movement_data: Any) -> str:
     builder.add_custom_element(t_data)
     builder.add_custom_element(Spacer(1, 30))
     
-    # Signatures: Visa du Magasinier (à gauche) | Visa du Chef de Projet (à droite)
     builder.add_signatures(["Visa du Magasinier", "Visa du Chef de Projet"], height=60)
     
     return builder.build_and_upload()
@@ -650,7 +619,6 @@ def generate_reception_control_pdf(reception_id: int, reception_data: Any) -> st
     builder.add_custom_element(header)
     builder.add_custom_element(Spacer(1, 15))
     
-    # Meta infos
     styles = getSampleStyleSheet()
     meta_text = (
         f"<b>Date de livraison :</b> {getattr(reception_data, 'date', '')} &nbsp;&nbsp;&nbsp; <b>Heure :</b> {getattr(reception_data, 'time', '')}<br/>"
@@ -661,7 +629,6 @@ def generate_reception_control_pdf(reception_id: int, reception_data: Any) -> st
     builder.add_custom_element(meta_p)
     builder.add_custom_element(Spacer(1, 15))
     
-    # Table: Références | Désignations | Qtés commandées | Qtés livrées | Conforme | Remarques
     headers = ["Références", "Désignations", "Qtés CMD", "Qtés Livrées", "Conforme", "Remarques"]
     data = []
     lines = getattr(reception_data, 'lines', [])
@@ -681,7 +648,6 @@ def generate_reception_control_pdf(reception_id: int, reception_data: Any) -> st
     builder.add_custom_element(t_data)
     builder.add_custom_element(Spacer(1, 30))
     
-    # Signatures
     builder.add_signatures(["Visa du Magasinier", "Visa du Chef de Projet"], height=60)
     
     return builder.build_and_upload()
@@ -694,7 +660,6 @@ def generate_material_request_pdf(request_id: int, request_data: Any) -> str:
     builder.add_custom_element(header)
     builder.add_custom_element(Spacer(1, 15))
     
-    # Meta infos
     styles = getSampleStyleSheet()
     meta_text = (
         f"<b>Date :</b> {getattr(request_data, 'date', '')}<br/>"
@@ -705,7 +670,6 @@ def generate_material_request_pdf(request_id: int, request_data: Any) -> str:
     builder.add_custom_element(meta_p)
     builder.add_custom_element(Spacer(1, 15))
     
-    # Table
     headers = ["Références", "Désignations", "Qtés demandées", "Qtés livrées", "Observations"]
     data = []
     items = getattr(request_data, 'items', [])
@@ -724,7 +688,6 @@ def generate_material_request_pdf(request_id: int, request_data: Any) -> str:
     builder.add_custom_element(t_data)
     builder.add_custom_element(Spacer(1, 30))
     
-    # Signatures
     builder.add_signatures(["Magasinier", "Demandeur", "Chef de Projet"], height=60)
     
     return builder.build_and_upload()

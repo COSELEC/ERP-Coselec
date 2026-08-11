@@ -18,7 +18,7 @@ class UserBase(BaseModel):
     manager_id: Optional[int] = None
 
 class UserCreate(UserBase):
-    role_name: str # Using role_name to easily assign a role (e.g., 'Admin', 'Employe')
+    role_name: str 
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None

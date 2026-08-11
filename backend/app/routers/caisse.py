@@ -139,7 +139,6 @@ def finalize_caisse(voucher_id: int, db: Session = Depends(get_db)):
     voucher.status = VoucherStatus.FINALIZED
     voucher.finalized_at = datetime.utcnow()
     
-    # Update linked ProjectExpense to deduct from Budget
     if voucher.expense_id:
         expense = db.query(ProjectExpense).filter(ProjectExpense.id == voucher.expense_id).first()
         if expense:
@@ -147,14 +146,11 @@ def finalize_caisse(voucher_id: int, db: Session = Depends(get_db)):
             total_expense = sum(float(l.amount) for l in voucher.lines if l.line_type.value == "EXPENSE")
             expense.amount = total_expense
             
-    # Workflow Automations for Requests
     if voucher.generic_request_id:
-        # 1. Update ProjectExpense status if it exists and linked by reference
         expense = db.query(ProjectExpense).filter(ProjectExpense.reference == f"REQ-{voucher.generic_request_id}").first()
         if expense:
             expense.status = "APPROVED"
             
-        # 2. Generate Purchase Order
         from app.models.procurement.purchase import PurchaseOrder, PurchaseOrderLine
         from app.modules.requests_unified.models.request import GenericRequest, RequestType
         import uuid
@@ -189,7 +185,6 @@ def finalize_caisse(voucher_id: int, db: Session = Depends(get_db)):
                     )
                     db.add(line)
                     
-            # 3. Generate Delivery Note (Bon de Livraison)
             from app.models.procurement.delivery import DeliveryNote, DeliveryNoteLine
             
             delivery_note = DeliveryNote(
@@ -210,7 +205,6 @@ def finalize_caisse(voucher_id: int, db: Session = Depends(get_db)):
                 )
                 db.add(dl)
                     
-            # 4. Notify RH to create a BankVoucher
             from app.models.notification import Notification, NotificationType
             from app.modules.users.models.user import User
             

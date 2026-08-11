@@ -41,11 +41,10 @@ def download_document(
 @router.get("/{user_id}/documents", response_model=list[DocumentResponse])
 def get_employee_documents(
     user_id: int,
-    _: None = Depends(check_permission("documents.read")), # Adapte la permission si besoin
+    _: None = Depends(check_permission("documents.read")), 
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Vérifier que l'employé existe
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Employé introuvable")
@@ -64,27 +63,23 @@ def upload_employee_document(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # 1. Vérifier que l'employé existe
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Employé introuvable")
 
-    # 2. Générer un nom de fichier unique pour éviter les écrasements
     file_extension = file.filename.split(".")[-1] if "." in file.filename else "bin"
     unique_filename = f"emp_{user_id}_{uuid.uuid4().hex[:8]}.{file_extension}"
 
-    # 3. Sauvegarde du fichier via le service de stockage
     try:
         storage_path = upload_file_to_minio(file, unique_filename)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de l'upload: {str(e)}")
 
-    # 4. Enregistrer dans la base de données
     new_doc = EmployeeDocument(
         user_id=user_id,
         category=category,
-        file_name=file.filename, # On garde le nom original pour l'affichage
-        storage_path=storage_path, # Le chemin de stockage
+        file_name=file.filename, 
+        storage_path=storage_path, 
         mime_type=file.content_type,
         numero=numero,
         expiry_date=expiry_date,
@@ -108,7 +103,6 @@ def delete_document(
     if not doc:
         raise HTTPException(status_code=404, detail="Document introuvable")
 
-    # Suppression physique du fichier sur Cloudflare R2 / MinIO
     delete_file_from_minio(doc.storage_path)
 
     db.delete(doc)

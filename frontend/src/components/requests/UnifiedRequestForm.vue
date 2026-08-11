@@ -120,27 +120,23 @@ import { ref, reactive, computed, watch } from 'vue'
 import ITRequestFields from './ITRequestFields.vue'
 import FacilityRequestFields from './FacilityRequestFields.vue'
 
-// --- State ---
-const mainCategory = ref('IT') // 'IT' or 'FACILITY'
+const mainCategory = ref('IT') 
 const isSubmitting = ref(false)
 const statusMessage = ref(null)
 
-// The generic request wrapper state
 const requestData = reactive({
   priority: 'NORMAL',
   description: '',
-  category: '', // Used for top-level category if needed
+  category: '', 
   project_id: null,
-  payload: {} // Handled by child components
+  payload: {} 
 })
 
-// --- Reset Payload when category changes ---
 watch(mainCategory, (newCat) => {
   requestData.payload = {}
-  requestData.category = newCat // e.g. IT or FACILITY
+  requestData.category = newCat 
 })
 
-// --- Computed ---
 const priorityBadgeClass = computed(() => {
   const map = {
     'LOW': 'bg-gray-100 text-gray-800',
@@ -151,12 +147,10 @@ const priorityBadgeClass = computed(() => {
   return map[requestData.priority] || map['NORMAL']
 })
 
-// --- Methods ---
 const submitRequest = async () => {
   isSubmitting.value = true
   statusMessage.value = null
 
-  // Ensure the top-level 'type' matches the payload's type for the backend
   const payloadType = requestData.payload.type
   if (!payloadType) {
     statusMessage.value = { type: 'error', text: 'Veuillez remplir les champs obligatoires.' }
@@ -164,9 +158,8 @@ const submitRequest = async () => {
     return
   }
 
-  // Format the full request body expected by backend `RequestCreate`
   const requestBody = {
-    type: payloadType, // e.g., 'IT_INCIDENT' or 'FACILITY_MAINTENANCE'
+    type: payloadType, 
     priority: requestData.priority,
     description: requestData.description,
     category: requestData.category,
@@ -175,14 +168,11 @@ const submitRequest = async () => {
   }
 
   try {
-    // --- MOCKED API CALL ---
     console.log('Submitting to API /api/v1/requests', requestBody)
-    await new Promise(resolve => setTimeout(resolve, 1500)) // Simulate network latency
+    await new Promise(resolve => setTimeout(resolve, 1500)) 
     
-    // Success
     statusMessage.value = { type: 'success', text: 'Votre demande a été soumise avec succès et est en attente de validation.' }
     
-    // Reset form
     requestData.description = ''
     requestData.priority = 'NORMAL'
     requestData.payload = {}
@@ -193,7 +183,6 @@ const submitRequest = async () => {
   } finally {
     isSubmitting.value = false
     
-    // Clear success message after 5 seconds
     if (statusMessage.value?.type === 'success') {
       setTimeout(() => {
         statusMessage.value = null

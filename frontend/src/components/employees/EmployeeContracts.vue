@@ -41,7 +41,6 @@ const sortedContracts = computed(() => {
   });
 });
 
-// Modèle pour le formulaire d'ajout
 const form = ref<Omit<ContractCreate, 'employee_id'>>({
   contract_type: 'CDI',
   start_date: '',
@@ -53,7 +52,6 @@ const loadEmployeeContracts = async () => {
   try {
     loading.value = true;
     const allContracts = await contractService.getAll();
-    // Filtrage pour n'avoir que les contrats de l'employé en cours
     contracts.value = allContracts.filter(c => c.user_id === props.employeeId);
   } catch (error) {
     errorMessage.value = "Erreur lors du chargement des contrats.";
@@ -62,7 +60,6 @@ const loadEmployeeContracts = async () => {
   }
 };
 
-// Recharger si l'ID de l'employé change sans recharger le composant
 watch(() => props.employeeId, () => {
   loadEmployeeContracts();
 }, { immediate: true });
@@ -76,7 +73,6 @@ const handleSubmit = async () => {
     };
     await contractService.create(payload);
     showForm.value = false;
-    // Réinitialisation du formulaire
     form.value = { contract_type: 'CDI', start_date: '', end_date: null, is_active: true };
     await loadEmployeeContracts();
   } catch (error) {

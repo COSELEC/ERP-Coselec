@@ -46,7 +46,6 @@ import TaskModal from './TaskModal.vue';
 
 const props = defineProps<{
   tasks: any[];
-  // Reçoit la liste globale pour alimenter les selects de la modale
   employeesList?: any[];
   projectsList?: any[];
   milestonesList?: any[];
@@ -57,7 +56,6 @@ const emit = defineEmits<{
   (e: 'delete-task', taskId: number): void;
 }>();
 
-// Listes pour alimenter les choix de l'utilisateur
 const employees = ref<any[]>(props.employeesList || []);
 const projects = ref<any[]>(props.projectsList || []);
 const milestones = ref<any[]>(props.milestonesList || []);
@@ -118,7 +116,6 @@ watch(
   { immediate: true, deep: true }
 );
 
-// Menu d'actions
 const toggleMenu = (taskId: number) => {
   activeMenuId.value = activeMenuId.value === taskId ? null : taskId;
 };
@@ -135,7 +132,6 @@ onUnmounted(() => {
   window.removeEventListener('click', closeAllMenus);
 });
 
-// Actions CRUD Émission
 const emitDelete = (taskId: number) => {
   if (confirm("Êtes-vous sûr de vouloir supprimer (archiver) cette tâche ?")) {
     emit('delete-task', taskId);
@@ -143,10 +139,7 @@ const emitDelete = (taskId: number) => {
   closeAllMenus();
 };
 
-// Gestion de la modale
 const openEditModal = (task: any) => {
-  // On crée l'objet en faisant correspondre les clés du backend 
-  // avec ce que les v-model de ton formulaire utilisent
   editingTask.value = { 
     id: task.id,
     title: task.title || '',
@@ -154,8 +147,6 @@ const openEditModal = (task: any) => {
     priority: task.priority || 'Moyenne',
     status: normalizeStatus(task.status),
     
-    // Correction des clés de dates :
-    // Si task.due_date existe (format YYYY-MM-DD), on le prend, sinon on regarde date_fin
     due_date: task.due_date || task.date_fin || '', 
     start_date: task.start_date || task.date_debut || '',
     
@@ -174,13 +165,11 @@ const closeModal = () => {
 };
 
 const saveTaskChanges = (eventData: { payload: any, files: File[] }) => {
-  // Transmet les modifications + fichiers au composant parent
   emit('update-task', editingTask.value.id, eventData);
   closeModal();
 };
 
 const onColumnChange = (event: any, targetStatus: string) => {
-  // On met à jour le statut uniquement quand une tâche est ajoutée à une nouvelle colonne.
   const movedTask = event?.added?.element;
   if (!movedTask) return;
 

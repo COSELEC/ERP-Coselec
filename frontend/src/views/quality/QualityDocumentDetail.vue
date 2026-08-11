@@ -96,13 +96,11 @@ const sortedVersions = computed(() => {
   return [...doc.value.versions].sort((a, b) => b.version_number - a.version_number);
 });
 
-// Roles the user can review for this document
 const pendingRolesForMe = computed(() => {
   if (!doc.value || !profile?.roles) return [];
   
   const normalizeStr = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   
-  // Find the IDs of the roles the user has by matching names (case insensitive & accent insensitive)
   const myRoleIds = availableRoles.value
     .filter(r => profile.roles.some(pr => normalizeStr(pr) === normalizeStr(r.name)))
     .map(r => Number(r.id));
@@ -208,15 +206,13 @@ const getReviewerDisplayName = (review: any) => {
   if (review.assigned_user) return review.assigned_user.name;
 
   if (review.assigned_user_id) {
-    // If we have users list from availableRoles
     for (const role of availableRoles.value) {
       const user = role.users?.find((u: any) => u.id === review.assigned_user_id);
       if (user) return user.name;
     }
-    return `Utilisateur #${review.assigned_user_id}`; // fallback
+    return `Utilisateur #${review.assigned_user_id}`; 
   }
   
-  // Otherwise find role name
   const role = availableRoles.value.find(r => r.id === review.role_id);
   return role ? role.name : `Rôle #${review.role_id}`;
 };

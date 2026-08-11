@@ -23,7 +23,6 @@ def get_norm_repository(db: Session = Depends(get_db)):
 
 @router.get("", response_model=List[NormResponse])
 def get_all_norms(repository: NormRepository = Depends(get_norm_repository)):
-    # Returns norms (their relationships will be loaded by SQLAlchemy if configured correctly)
     return repository.get_all_active_norms()
 
 @router.get("/categories", response_model=List[NormCategoryResponse])

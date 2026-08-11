@@ -57,7 +57,6 @@ const sortedEmployees = computed(() => {
   });
 });
 
-// Timeline Control States - Defaulting to current week base
 const getTodayString = (): string => {
   const today = new Date();
   const yyyy = today.getFullYear();
@@ -68,7 +67,6 @@ const getTodayString = (): string => {
 const currentDateCursor = ref<string>(getTodayString()); 
 const daysViewWindow = ref<number>(7); 
 
-// Modal Assignment State
 const showModal = ref<boolean>(false);
 const selectedEmployee = ref<EmployeeSchedule | null>(null);
 const selectedDate = ref<string>('');
@@ -129,10 +127,9 @@ const fetchHRData = async (): Promise<void> => {
   }
 };
 
-// Triggers when an HR admin clicks a grid slot
 const openAssignmentModal = (emp: EmployeeSchedule, dayIndex: number): void => {
   const targetDay = currentWeekDays.value[dayIndex];
-  if (!targetDay || emp.schedule[dayIndex] === 'NONE') return; // Skip weekends
+  if (!targetDay || emp.schedule[dayIndex] === 'NONE') return; 
 
   selectedEmployee.value = emp;
   selectedDate.value = targetDay.fullDate;
@@ -140,7 +137,6 @@ const openAssignmentModal = (emp: EmployeeSchedule, dayIndex: number): void => {
   showModal.value = true;
 };
 
-// Saves the slot override update back to the backend table configuration
 const submitAssignment = async (): Promise<void> => {
   if (!selectedEmployee.value) return;
   isSaving.value = true;
@@ -152,7 +148,7 @@ const submitAssignment = async (): Promise<void> => {
       status: selectedStatus.value
     });
     showModal.value = false;
-    await fetchHRData(); // Dynamic calendar live refresh loop
+    await fetchHRData(); 
   } catch (error) {
     console.error("Erreur lors de l'affectation", error);
     toast.error("Impossible de sauvegarder les modifications.");

@@ -11,13 +11,10 @@ def get_minio_client() -> Minio:
             "MINIO_ENDPOINT is not configured. Set it in .env to use Cloud Storage."
         )
 
-    # Cloudflare R2 endpoints usually require HTTPS (secure=True)
     is_secure = os.getenv("MINIO_SECURE", "true").lower() == "true"
     
-    # Optional region (often "auto" for Cloudflare R2)
     region = os.getenv("MINIO_REGION", "auto")
 
-    # If the endpoint starts with http:// or https://, we must strip it for the minio client
     if endpoint.startswith("http://"):
         endpoint = endpoint[7:]
         is_secure = False
@@ -52,8 +49,6 @@ def upload_file_to_minio(file, file_name: str) -> str:
         part_size=10*1024*1024,
         content_type=file.content_type
     )
-    # Return just the file_name, we don't need BUCKET_NAME in the path
-    # since we use BUCKET_NAME explicitly in other functions.
     return file_name
 
 def upload_buffer_to_minio(buffer, file_name: str, content_type: str = "application/pdf") -> str:

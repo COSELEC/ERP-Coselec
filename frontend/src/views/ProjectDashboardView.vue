@@ -78,7 +78,6 @@ const fetchDashboardData = async () => {
     };
     hrStats.value = res.data.hr_stats;
   } catch {
-    // KPI cards keep defaults
   } finally {
     loading.value = false;
   }

@@ -89,7 +89,6 @@ async function logout() {
     try {
         await logoutRequest();
     } catch {
-        // Keep local cleanup even if backend logout fails.
     } finally {
         localStorage.removeItem("access_token");
         sessionStorage.removeItem("access_token");

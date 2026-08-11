@@ -14,7 +14,6 @@ class WebSocketNotificationAdapter(INotificationService):
         self.db = db
 
     def notify_missing_report(self, user_id: int, project_id: int):
-        # We need to find the user_id for the user, and the project name
         user = self.db.query(User).filter(User.id == user_id).first()
         project = self.db.query(Project).filter(Project.id == project_id).first()
         

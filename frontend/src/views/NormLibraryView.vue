@@ -8,13 +8,11 @@ const categories = ref<NormCategory[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
 
-// Filters
 const searchQuery = ref("");
 const selectedCategoryId = ref<number | ''>('');
 const dateFrom = ref("");
 const dateTo = ref("");
 
-// Modal states
 const showCreateModal = ref(false);
 const showUploadModal = ref(false);
 const showHistoryModal = ref(false);
@@ -25,7 +23,6 @@ const normHistory = ref<NormVersion[]>([]);
 const previewUrl = ref("");
 const previewTitle = ref("");
 
-// Form models
 const newNorm = ref({ code: "", title: "", category_id: 1, file: null as File | null });
 const uploadData = ref({ version_number: 1, file: null as File | null });
 
@@ -64,14 +61,11 @@ const getCategoryName = (categoryId: number) => {
 
 const filteredNorms = computed(() => {
   return norms.value.filter((n) => {
-    // 1. Search (code or title)
     const q = searchQuery.value.toLowerCase();
     const matchesSearch = !q || n.title.toLowerCase().includes(q) || n.code.toLowerCase().includes(q);
     
-    // 2. Category
     const matchesCategory = selectedCategoryId.value === '' || n.category_id === selectedCategoryId.value;
     
-    // 3. Dates (using active version date)
     const activeV = activeVersion(n);
     let matchesDate = true;
     if (activeV && (dateFrom.value || dateTo.value)) {

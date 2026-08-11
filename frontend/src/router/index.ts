@@ -27,7 +27,6 @@ const routes = [
     name: "profile",
     component: () => import("../views/ProfileView.vue"),
   },
-  //rh
   {
     path: "/employees",
     component: EmployeesView,
@@ -54,7 +53,6 @@ const routes = [
       requiredRoles: ["Admin", "Direction", "RH / Comptabilité"],
     },
   },
-  // stock
   {
     path: "/stock/movement",
     component: () => import("../views/Stock/StockMovementView.vue"),
@@ -97,7 +95,6 @@ const routes = [
       requiredRoles: ["Admin", "Stock / Logistique", "Chef de Projet", "Direction"],
     },
   },
-  // requests boards
 
   {
     path: "/fuel-requests",
@@ -166,7 +163,6 @@ const routes = [
     props: true,
     meta: { requiredRoles: ["Admin", "Direction", "Chef de Projet", "Chef d'Equipe", "Commercial"] }
   },
-  // Admin Routes
   {
     path: "/admin/requests",
     name: "admin-requests",
@@ -179,7 +175,6 @@ const routes = [
     component: () => import("@/views/Admin/UsersView.vue"),
     meta: { requiredRoles: ["Admin"] }
   },
-  // Missing Task 2 Views
   {
     path: "/portfolio",
     name: "portfolio",

@@ -145,7 +145,6 @@ def finalize_bank_voucher(voucher_id: int, db: Session = Depends(get_db)):
     voucher.status = VoucherStatus.FINALIZED
     voucher.finalized_at = datetime.utcnow()
 
-    # Update linked ProjectExpense to deduct from Budget
     if voucher.expense_id:
         expense = db.query(ProjectExpense).filter(ProjectExpense.id == voucher.expense_id).first()
         if expense:

@@ -13,7 +13,6 @@ class DummyDailyReport:
             setattr(self, k, v)
 
 
-# --- Mock Implementations ---
 
 class MockDailyReportRepository(IDailyReportRepository):
     def __init__(self):
@@ -35,7 +34,7 @@ class MockDailyReportRepository(IDailyReportRepository):
 
 class MockProjectAssignmentRepository(IProjectAssignmentRepository):
     def __init__(self):
-        self.active_assignments = set() # Store tuples of (employee_id, project_id, date)
+        self.active_assignments = set() 
 
     def is_active_assignment(self, employee_id: int, project_id: int, check_date: date) -> bool:
         return (employee_id, project_id, check_date) in self.active_assignments
@@ -47,7 +46,6 @@ class MockNotificationService(INotificationService):
     def notify_missing_report(self, employee_id: int, project_id: int):
         self.notifications_sent.append((employee_id, project_id))
 
-# --- Tests ---
 
 def test_cannot_submit_if_no_active_assignment():
     report_repo = MockDailyReportRepository()
@@ -71,12 +69,10 @@ def test_cannot_submit_duplicate_report_same_day():
     
     use_case = SubmitDailyReportUseCase(report_repo, assignment_repo)
 
-    # First submission should succeed
     use_case.execute(
         employee_id, project_id, d, 8, 50, "Task A", "", ""
     )
 
-    # Second submission should fail
     with pytest.raises(DuplicateReportException):
         use_case.execute(
             employee_id, project_id, d, 8, 50, "Task B", "", ""
@@ -106,7 +102,6 @@ def test_missing_reports_identification():
     report_repo = MockDailyReportRepository()
     notification_service = MockNotificationService()
     
-    # We mock the repository to return 2 employees missing reports
     report_repo.missing_reports_mock_data = [
         {"employee_id": 1, "project_id": 10},
         {"employee_id": 2, "project_id": 10},

@@ -35,7 +35,6 @@ class QualityDocument(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
     created_by = relationship("User", foreign_keys=[created_by_id])
     versions = relationship("DocumentVersion", back_populates="document", cascade="all, delete-orphan", order_by="desc(DocumentVersion.version_number)")
     role_reviews = relationship("DocumentRoleReview", back_populates="document", cascade="all, delete-orphan")
@@ -47,7 +46,7 @@ class DocumentVersion(Base):
     id = Column(Integer, primary_key=True, index=True)
     document_id = Column(Integer, ForeignKey("quality_documents.id"), nullable=False)
     version_number = Column(Integer, nullable=False)
-    r2_file_key = Column(String, nullable=False) # Key in R2
+    r2_file_key = Column(String, nullable=False) 
     original_filename = Column(String, nullable=False)
     
     uploaded_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)

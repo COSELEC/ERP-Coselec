@@ -121,7 +121,7 @@ const submitTransfer = async () => {
     })
     toast.success("Transfert réussi")
     isTransferModalOpen.value = false
-    await loadData() // Refresh stock
+    await loadData() 
   } catch (error: any) {
     console.error(error)
     toast.error(error.response?.data?.detail || "Erreur lors du transfert")

@@ -14,7 +14,6 @@ from sqlalchemy import or_
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
-# POST
 @router.post("", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 def create_project(project_data : ProjectCreate, db: Session= Depends(get_db), user_permissions= Depends(check_permission("projects.create"))):
     existing_project = db.query(Project).filter(Project.code == project_data.code).first()
@@ -84,7 +83,6 @@ def add_partner_to_project(
     }
 
 
-# GET
 @router.get("", response_model=List[ProjectResponse], status_code=status.HTTP_200_OK)
 def get_projects(
     db:Session = Depends(get_db),
@@ -141,7 +139,6 @@ def get_project(
     return project
 
 
-# PATCH
 @router.patch("/{project_id}")
 def update_project(
     project_id: int,
@@ -159,7 +156,6 @@ def update_project(
     return project
 
 
-#DELETE
 @router.delete("/{project_id}", status_code=status.HTTP_200_OK)
 def delete_project(project_id: int, db : Session= Depends(get_db), user_permissions = Depends(check_permission("projects.delete"))):
     project = db.query(Project).filter(Project.id == project_id).first()
@@ -216,26 +212,21 @@ def get_project_dashboard(project_id: int, db: Session = Depends(get_db)):
     if not project:
         raise HTTPException(status_code=404, detail="Projet non trouvé")
 
-    # 1. Budget Consommé
     total_budget = float(sum(b.allocated_amount for b in project.budgets)) if project.budgets else float(project.budget_estime or 0.0)
     total_expenses = float(sum(e.amount for e in project.expenses)) if project.expenses else 0.0
     budget_consumed_percent = round((total_expenses / total_budget * 100), 2) if total_budget > 0 else 0.0
 
-    # 2. Jalons Terminés
     total_milestones = len(project.milestones)
     completed_milestones = len([m for m in project.milestones if m.status == MilestoneStatus.ACHIEVED])
     milestones_str = f"{completed_milestones}/{total_milestones}"
 
-    # 3. Progression Globale (Poids des tâches)
     tasks = db.query(Task).filter(Task.project_id == project_id).all()
     total_weight = sum(t.weight for t in tasks)
     completed_weight = sum(t.weight for t in tasks if t.status == TaskStatus.DONE)
     progression_percent = round((completed_weight / total_weight * 100), 2) if total_weight > 0 else 0.0
 
-    # 4. Tâches Ouvertes
     open_tasks = len([t for t in tasks if t.status != TaskStatus.DONE and t.status != TaskStatus.ARCHIVED])
 
-    # 5. Financial Data
     today = date.today()
     current_year = today.year
     expenses_this_year = [e for e in project.expenses if e.date_incurred and e.date_incurred.year == current_year]
@@ -251,7 +242,6 @@ def get_project_dashboard(project_id: int, db: Session = Depends(get_db)):
         chart_labels.append(french_months[month-1])
         chart_data.append(monthly_expenses[month])
 
-    # 6. HR Data
     active_assignments = [a for a in getattr(project, "assignments", []) if getattr(a, "current_status", "Active") == "Active"]
     num_assigned_employees = len(set(a.user_id for a in active_assignments))
     avg_allocation = sum(a.allocation for a in active_assignments) / len(active_assignments) if active_assignments else 0.0

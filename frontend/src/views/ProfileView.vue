@@ -47,7 +47,7 @@ const handleFileUpload = async (event: Event) => {
         alert("Erreur lors de l'upload de la signature.");
     } finally {
         isUploading.value = false;
-        target.value = ''; // reset input
+        target.value = ''; 
     }
 };
 

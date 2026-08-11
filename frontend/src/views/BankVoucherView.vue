@@ -455,17 +455,15 @@ const submitVoucher = async () => {
     if (response.data && response.data.pdf_url) {
       const url = response.data.pdf_url.startsWith('http') 
         ? response.data.pdf_url 
-        : `${api.defaults.baseURL || 'http://localhost:8000'}/${response.data.pdf_url}`;
+        : `${api.defaults.baseURL || 'http:
       window.open(url, '_blank');
     }
     
-    // Open the attachment modal for the newly created voucher
     if (response.data && response.data.id) {
       selectedVoucherId.value = response.data.id;
       isAttachmentModalOpen.value = true;
     }
     
-    // Reset form for next use
     form.bank_name = '';
     form.check_number = '';
     form.description = '';
@@ -476,7 +474,6 @@ const submitVoucher = async () => {
       { cost_center_code: '', cost_center_name: '', client: '', analytical_account: '', amount: 0 }
     ];
     
-    // Fetch next ID for new voucher
     await fetchNextId();
     await fetchHistory();
   } catch (error) {

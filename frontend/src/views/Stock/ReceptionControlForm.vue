@@ -126,7 +126,6 @@ onMounted(async () => {
     console.error(e)
   }
   
-  // Résoudre l'ID employé du user connecté
   try {
     const profile = getStoredProfile()
     if (profile?.email) {
@@ -155,7 +154,7 @@ const submitReception = async () => {
     const payload = {
       po_id: form.po_id,
       supplier_id: form.supplier_id,
-      created_by: currentEmployeeId.value, // dynamique via session
+      created_by: currentEmployeeId.value, 
       stock_type: form.stock_type,
       project_id: form.stock_type === 'PROJECT' ? form.project_id : null,
       lines: form.lines
@@ -164,7 +163,6 @@ const submitReception = async () => {
     await api.post('/receptions/', payload)
     toast.success("Contrôle de réception enregistré et PDF généré.")
     
-    // Reset form
     form.po_id = null
     form.supplier_id = ''
     form.stock_type = 'GENERAL'

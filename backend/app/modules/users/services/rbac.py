@@ -271,7 +271,6 @@ def ensure_admin_role_for_email(db: Session, email: str | None = None) -> None:
     if not user:
         from app.core.security.auth import hash_password
 
-        # Use env-provided password or generate a secure random one
         password = ADMIN_BOOTSTRAP_PASSWORD or secrets.token_urlsafe(16)
         if not ADMIN_BOOTSTRAP_PASSWORD:
             logger.warning(

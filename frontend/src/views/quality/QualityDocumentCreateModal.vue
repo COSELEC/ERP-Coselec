@@ -17,11 +17,9 @@ const loading = ref(false);
 
 const availableRoles = ref<{id: number, name: string, users: {id: number, name: string}[]}[]>([]);
 
-// Selection state
 const selectedRoles = ref<number[]>([]);
 const selectedUsersByRole = ref<Record<number, number[]>>({});
 
-// UI state for expanding/collapsing roles in the tree
 const expandedRoles = ref<number[]>([]);
 
 onMounted(async () => {
@@ -42,19 +40,16 @@ const toggleRoleExpand = (roleId: number) => {
 
 const toggleRoleSelection = (roleId: number) => {
   if (selectedRoles.value.includes(roleId)) {
-    // Deselect role and all its users
     selectedRoles.value = selectedRoles.value.filter(id => id !== roleId);
     selectedUsersByRole.value[roleId] = [];
   } else {
-    // Select role (which implies any user can validate)
     selectedRoles.value.push(roleId);
-    selectedUsersByRole.value[roleId] = []; // clear specific users
+    selectedUsersByRole.value[roleId] = []; 
   }
 };
 
 const toggleUserSelection = (roleId: number, userId: number) => {
   if (selectedRoles.value.includes(roleId)) {
-    // If the whole role was selected, deselect the role, and only select this user
     selectedRoles.value = selectedRoles.value.filter(id => id !== roleId);
     selectedUsersByRole.value[roleId] = [userId];
     return;

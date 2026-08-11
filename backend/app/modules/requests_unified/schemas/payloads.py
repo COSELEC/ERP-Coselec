@@ -29,8 +29,8 @@ class ITEquipmentPayload(BaseModel):
 
 class ITAccessPayload(BaseModel):
     type: Literal["IT_ACCESS"] = "IT_ACCESS"
-    system_name: str  # e.g. "VPN", "ERP", "Active Directory"
-    access_level: str = "standard"  # "standard", "admin"
+    system_name: str  
+    access_level: str = "standard"  
     justification: str
 
 
@@ -38,7 +38,7 @@ class ITIncidentPayload(BaseModel):
     type: Literal["IT_INCIDENT"] = "IT_INCIDENT"
     affected_system: str
     error_message: Optional[str] = None
-    impact_level: str = "medium"  # "low", "medium", "high", "critical"
+    impact_level: str = "medium"  
     steps_to_reproduce: Optional[str] = None
 
 
@@ -46,13 +46,13 @@ class FacilityMaintenancePayload(BaseModel):
     type: Literal["FACILITY_MAINTENANCE"] = "FACILITY_MAINTENANCE"
     location: str
     building: Optional[str] = None
-    urgency: str = "routine"  # "routine", "urgent", "emergency"
+    urgency: str = "routine"  
     description: str
 
 
 class FacilityBadgePayload(BaseModel):
     type: Literal["FACILITY_BADGE"] = "FACILITY_BADGE"
-    badge_type: str = "access"  # "access", "parking", "visitor"
+    badge_type: str = "access"  
     target_user_name: Optional[str] = None
     target_user_id: Optional[int] = None
     zone: Optional[str] = None
@@ -81,7 +81,7 @@ class FuelPayload(BaseModel):
 
 class DocumentPayload(BaseModel):
     type: Literal["DOCUMENT"] = "DOCUMENT"
-    document_type: str  # e.g. "attestation_travail", "fiche_paie", "certificat"
+    document_type: str  
     user_id: Optional[int] = None
     notes: Optional[str] = None
 
@@ -92,7 +92,6 @@ class GenericPayload(BaseModel):
     details: Optional[str] = None
 
 
-# Discriminated union — Pydantic will auto-select the right model based on `payload.type`
 RequestPayload = Annotated[
     Union[
         LeavePayload,

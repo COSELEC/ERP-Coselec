@@ -16,8 +16,6 @@ def check_missing_daily_reports():
     leur rapport pour la semaine en cours.
     """
     today = date.today()
-    # Ne s'exécute utilement que le vendredi (weekday == 4)
-    # mais peut être appelé manuellement pour des tests.
     monday_of_week = today - timedelta(days=today.weekday())
 
     logger.info(f"Vérification des rapports hebdomadaires manquants pour la semaine du {monday_of_week}...")

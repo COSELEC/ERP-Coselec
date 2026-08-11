@@ -105,7 +105,6 @@ const getStatusBadgeClass = (status: string) => {
 const fetchRequests = async () => {
   try {
     const res = await api.get('/requests/');
-    // Triez par ID decroissant pour avoir les plus récents en premier
     requests.value = res.data.sort((a: any, b: any) => b.id - a.id);
   } catch (error) {
     console.error("Error fetching requests", error);

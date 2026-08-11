@@ -62,7 +62,6 @@ async function loadData() {
     todayRecords.value = todayRes.data
     historyRecords.value = histRes.data
   } catch {
-    // silently fail
   } finally {
     loading.value = false
   }

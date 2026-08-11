@@ -13,7 +13,7 @@ const profile = getStoredProfile();
 
 const documents = ref<QualityDocument[]>([]);
 const loading = ref(true);
-const activeTab = ref("ALL"); // 'ALL' or 'PENDING_ME'
+const activeTab = ref("ALL"); 
 const showCreateModal = ref(false);
 
 const canCreate = computed(() => {
@@ -32,7 +32,6 @@ const loadDocuments = async () => {
 };
 
 const openDocument = (doc: QualityDocument) => {
-  // We'll create a detail page for this soon
   router.push(`/quality/${doc.id}`);
 };
 

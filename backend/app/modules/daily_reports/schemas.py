@@ -14,7 +14,7 @@ def _get_week_bounds(ref_date: date):
 class WeeklyReportCreate(BaseModel):
     project_id: int
     report_date: date = Field(default_factory=date.today)
-    week_start: Optional[date] = None   # Si None, calculé depuis report_date
+    week_start: Optional[date] = None   
     week_end: Optional[date] = None
     hours_worked: float
     progress_percentage: Optional[int] = None
@@ -23,7 +23,6 @@ class WeeklyReportCreate(BaseModel):
     plan_next_week: Optional[str] = None
 
 
-# Alias rétrocompatibilité
 DailyReportCreate = WeeklyReportCreate
 
 
@@ -47,7 +46,6 @@ class WeeklyReportResponse(BaseModel):
         from_attributes = True
 
 
-# Alias rétrocompatibilité
 DailyReportResponse = WeeklyReportResponse
 
 
@@ -55,5 +53,4 @@ class WeeklyReportStatusUpdate(BaseModel):
     status: ReportStatus
 
 
-# Alias rétrocompatibilité
 DailyReportStatusUpdate = WeeklyReportStatusUpdate

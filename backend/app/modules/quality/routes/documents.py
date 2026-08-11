@@ -87,7 +87,6 @@ def api_get_documents(
         if not user_role_ids:
             return []
             
-        # Documents that have a pending review for me specifically OR for one of my roles
         query = query.join(QualityDocument.role_reviews).filter(
             DocumentRoleReview.status == "PENDING",
             or_(
@@ -105,7 +104,7 @@ def api_get_documents(
 def api_create_document(
     title: str = Form(...),
     description: str = Form(None),
-    reviewers_json: str = Form(...), # JSON string of list of dicts: [{"role_id": 1, "user_id": null}, ...]
+    reviewers_json: str = Form(...), 
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)

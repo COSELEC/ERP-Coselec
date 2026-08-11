@@ -39,7 +39,7 @@ class Stock(Base):
     partner_id = Column(
         Integer,
         ForeignKey("partners.id"),
-        nullable=True  # nullable pour stocks sans partenaire associé
+        nullable=True  
     )
 
     stock_type = Column(

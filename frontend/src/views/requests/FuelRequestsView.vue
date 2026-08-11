@@ -310,7 +310,6 @@ async function submitRequest() {
       }
     });
     showCreateModal.value = false;
-    // Reset form
     form.value.affaire_no = '';
     form.value.dossier_no = '';
     form.value.vehicule_matricule = '';

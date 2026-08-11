@@ -166,7 +166,6 @@ onMounted(() => {
 
 const openApproveModal = async (order: any) => {
   orderToApprove.value = order;
-  // Initialize approve lines matching order lines
   approveLines.value = (order.lines || []).map((l: any) => ({
     line_id: l.id,
     budget_id: '',
@@ -176,7 +175,6 @@ const openApproveModal = async (order: any) => {
     product_id: l.product_id
   }));
   
-  // Find project id
   let projId = order.project_id;
   if (!projId && order.purchase_request_id) {
      const req = purchaseRequests.value.find(r => r.id === order.purchase_request_id);

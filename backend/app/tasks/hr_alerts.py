@@ -1,17 +1,17 @@
 from datetime import date, timedelta
-from app.core.database import SessionLocal #
+from app.core.database import SessionLocal 
 from app.models.hr.document import EmployeeDocument
-from app.services.notification import create_notification #
+from app.services.notification import create_notification 
 from app.models.notification import NotificationType
 from app.modules.users.models.user import User
 from app.modules.users.models.role import Role
 
 def check_document_expirations():
-    db = SessionLocal() #
+    db = SessionLocal() 
     try:
         today = date.today()
-        warning_6m = today + timedelta(days=180) # Pastille Orange
-        warning_3m = today + timedelta(days=90)  # Pastille Rouge
+        warning_6m = today + timedelta(days=180) 
+        warning_3m = today + timedelta(days=90)  
 
         expiring_docs = db.query(EmployeeDocument).filter(
             EmployeeDocument.expiry_date <= warning_6m,
@@ -33,7 +33,7 @@ def check_document_expirations():
                         user_id=rh_user.id, 
                         message=message,
                         type=NotificationType.WARNING,
-                        reference_id=doc.id #
+                        reference_id=doc.id 
                     )
     finally:
-        db.close() #
+        db.close() 

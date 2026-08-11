@@ -17,7 +17,6 @@ def get_dashboard_kpis(db: Session = Depends(get_db)):
     active_projects = db.query(Project).filter(Project.status == ProjectStatus.ONGOING).count()
     total_employees = db.query(User).count()
     
-    # Calculate total pending requests across all types
     pending_statuses = [
         RequestStatus.PENDING,
         RequestStatus.PENDING_MANAGER_APPROVAL,
@@ -25,7 +24,6 @@ def get_dashboard_kpis(db: Session = Depends(get_db)):
     ]
     total_pending_requests = db.query(GenericRequest).filter(GenericRequest.status.in_(pending_statuses)).count()
     
-    # Stock alerts (quantity <= 10)
     stock_alerts = db.query(Stock).filter(Stock.quantity <= 10).count()
 
     return {
@@ -39,27 +37,24 @@ def get_dashboard_kpis(db: Session = Depends(get_db)):
 def get_recent_activity(db: Session = Depends(get_db)):
     activities = []
     
-    # Get latest 2 projects
     latest_projects = db.query(Project).order_by(Project.id.desc()).limit(2).all()
     for p in latest_projects:
         activities.append({
             "action": f"Nouveau projet '{p.nom}' créé",
             "time": "Récemment",
             "icon": "work_outline",
-            "sort_key": p.id # Proxy for date
+            "sort_key": p.id 
         })
 
-    # Get latest 2 requests
     latest_requests = db.query(GenericRequest).order_by(GenericRequest.created_at.desc()).limit(2).all()
     for r in latest_requests:
         activities.append({
             "action": f"Nouvelle demande {r.type.value}",
             "time": r.created_at.strftime("%d/%m/%Y") if r.created_at else "Récemment",
             "icon": "assignment",
-            "sort_key": r.id + 1000 # Offset to mix somewhat properly
+            "sort_key": r.id + 1000 
         })
 
-    # Get latest 2 stock movements
     latest_movements = db.query(StockMovement).order_by(StockMovement.created_at.desc()).limit(2).all()
     for mov in latest_movements:
         activities.append({
@@ -69,10 +64,8 @@ def get_recent_activity(db: Session = Depends(get_db)):
             "sort_key": mov.id + 2000
         })
 
-    # Sort descending by sort_key (rough approximation of recent since we mix IDs)
     activities.sort(key=lambda x: x["sort_key"], reverse=True)
     
-    # Format IDs for frontend
     for i, act in enumerate(activities):
         act["id"] = i + 1
         del act["sort_key"]

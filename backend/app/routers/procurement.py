@@ -126,7 +126,7 @@ def create_purchase_order(
     db.add(db_order)
     
     try:
-        db.flush() # Flush to get db_order.id
+        db.flush() 
         
         total = 0.0
         for line in order.lines:
@@ -194,7 +194,6 @@ def approve_purchase_order(
         
     line_map = {line.id: line for line in db_order.lines}
     
-    # Identify project_id
     proj_id = db_order.project_id
     if not proj_id and db_order.purchase_request:
         proj_id = db_order.purchase_request.project_id
@@ -207,7 +206,6 @@ def approve_purchase_order(
         if db_line:
             db_line.budget_id = approve_line.budget_id
             
-            # Create ProjectExpense for this line
             expense = ProjectExpense(
                 project_id=proj_id,
                 budget_id=approve_line.budget_id,
@@ -251,7 +249,7 @@ class DeliveryNoteLineUpdate(BaseModel):
 class DeliveryNoteApproveRequest(BaseModel):
     lines: List[DeliveryNoteLineUpdate]
     comments: Optional[str] = None
-    action: str # 'magasinier' or 'manager'
+    action: str 
 
 class DeliveryNoteLineResponse(BaseModel):
     id: int
@@ -298,7 +296,6 @@ def validate_delivery_note(
     if not note:
         raise HTTPException(status_code=404, detail="Delivery Note not found")
         
-    # Update lines
     for line_req in req.lines:
         line = db.query(DeliveryNoteLine).filter(DeliveryNoteLine.id == line_req.id, DeliveryNoteLine.delivery_note_id == note.id).first()
         if line:

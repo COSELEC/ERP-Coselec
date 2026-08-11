@@ -284,10 +284,8 @@ async function generateCaissePdf() {
     const res = await api.post('/caisse/generate', form.value);
     toast.success("Pièce de caisse générée et enregistrée avec succès !");
     
-    // Refresh history
     await fetchHistory();
 
-    // Reset form for next use
     form.value = {
       num: '',
       affaire: '',

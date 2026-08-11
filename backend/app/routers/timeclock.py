@@ -21,10 +21,6 @@ def _get_today_record(db: Session, user_id: int) -> Attendance | None:
     ).first()
 
 
-# ────────────────────────────────────────────
-# GET /hr/timeclock/today
-# Retourne le pointage du jour de l'utilisateur connecté
-# ────────────────────────────────────────────
 @router.get("/today", response_model=TimeclockResponse | None)
 def get_today_timeclock(
     current_user: User = Depends(get_current_user),
@@ -34,19 +30,14 @@ def get_today_timeclock(
     return record
 
 
-# ────────────────────────────────────────────
-# POST /hr/timeclock/checkin
-# Enregistre l'heure d'arrivée (UTC) de l'utilisateur connecté
-# ────────────────────────────────────────────
 @router.post("/checkin", response_model=TimeclockResponse)
 def clock_in(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)  # stocké naïf UTC
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)  
     today = now_utc.date()
 
-    # Anti-doublon : un seul check_in par jour
     existing = _get_today_record(db, current_user.id)
     if existing:
         if existing.check_in is not None:
@@ -54,13 +45,11 @@ def clock_in(
                 status_code=400,
                 detail="Vous avez déjà pointé votre arrivée aujourd'hui."
             )
-        # Le record existe (planning RH) mais pas encore de check_in
         existing.check_in = now_utc
         db.commit()
         db.refresh(existing)
         return existing
 
-    # Créer un nouvel enregistrement
     new_record = Attendance(
         user_id=current_user.id,
         date=datetime.combine(today, time.min),
@@ -73,10 +62,6 @@ def clock_in(
     return new_record
 
 
-# ────────────────────────────────────────────
-# POST /hr/timeclock/checkout
-# Enregistre l'heure de sortie (UTC) de l'utilisateur connecté
-# ────────────────────────────────────────────
 @router.post("/checkout", response_model=TimeclockResponse)
 def clock_out(
     current_user: User = Depends(get_current_user),
@@ -102,10 +87,6 @@ def clock_out(
     return record
 
 
-# ────────────────────────────────────────────
-# GET /hr/timeclock/history
-# Retourne l'historique des pointages (Admin/RH) – 30 derniers jours
-# ────────────────────────────────────────────
 @router.get("/history", response_model=list[TimeclockHistoryItem])
 def get_timeclock_history(
     days: int = 30,
@@ -145,10 +126,6 @@ def get_timeclock_history(
     return result
 
 
-# ────────────────────────────────────────────
-# GET /hr/timeclock/today-all
-# Retourne les pointages de TOUS les employés pour aujourd'hui (Admin/RH)
-# ────────────────────────────────────────────
 @router.get("/today-all", response_model=list[TimeclockHistoryItem])
 def get_all_today_timeclocks(
     current_user: User = Depends(get_current_user),

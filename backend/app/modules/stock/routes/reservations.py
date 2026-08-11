@@ -74,7 +74,6 @@ def create_reservation(res: ReservationCreate, db: Session = Depends(get_db)):
     )
     db.add(db_res)
     
-    # Deduct available stock
     stock.quantity -= res.quantity
     
     try:
@@ -128,7 +127,6 @@ def reject_reservation(reservation_id: int, db: Session = Depends(get_db)):
     if db_res.status != ReservationStatus.PENDING:
         raise HTTPException(status_code=400, detail="Only PENDING reservations can be rejected")
         
-    # Restore stock
     stock = db.query(Stock).with_for_update().filter(Stock.product_id == db_res.product_id).first()
     if stock:
         stock.quantity += db_res.quantity

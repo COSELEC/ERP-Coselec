@@ -14,7 +14,6 @@ const targetConfig = computed(() => {
   return props.indicator.yearly_targets.find(t => t.year === props.year);
 });
 
-// Prepare data for the 12 months
 const chartSeries = computed(() => {
   const data = new Array(12).fill(null);
   
@@ -35,11 +34,11 @@ const getColors = computed(() => {
   const target = targetConfig.value;
   
   if (!target || target.target_numeric === null || target.operator === null) {
-    return data.map(() => '#3b82f6'); // Default blue if no target
+    return data.map(() => '#3b82f6'); 
   }
 
   return data.map(val => {
-    if (val === null) return '#d1d5db'; // gray
+    if (val === null) return '#d1d5db'; 
     
     let isSuccess = false;
     
@@ -60,7 +59,7 @@ const getColors = computed(() => {
         break;
     }
     
-    return isSuccess ? '#10b981' : '#ef4444'; // green or red
+    return isSuccess ? '#10b981' : '#ef4444'; 
   });
 });
 
@@ -69,10 +68,9 @@ const chartOptions = computed(() => {
   const target = targetConfig.value;
   
   if (target && target.target_numeric !== null) {
-    // Add target line
     annotations.yaxis.push({
       y: target.target_numeric,
-      y2: target.target_numeric_max, // If BETWEEN, it makes a band
+      y2: target.target_numeric_max, 
       borderColor: '#d10f2f',
       fillColor: target.operator === 'BETWEEN' ? '#d10f2f' : undefined,
       opacity: 0.2,
@@ -98,7 +96,7 @@ const chartOptions = computed(() => {
       bar: {
         borderRadius: 4,
         columnWidth: '60%',
-        distributed: true // allows different color per bar
+        distributed: true 
       }
     },
     colors: getColors.value,
@@ -106,8 +104,6 @@ const chartOptions = computed(() => {
       enabled: true,
       formatter: function (val: number) {
         if (val === null) return '';
-        // Find if original was a percentage to format back? 
-        // Actually, let's just show the number, or if target_raw has %, add it.
         const hasPercent = target?.target_raw?.includes('%');
         return hasPercent ? `${val}%` : val;
       },

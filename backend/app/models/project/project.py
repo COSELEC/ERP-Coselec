@@ -21,7 +21,6 @@ class ProjectStatus(enum.Enum):
 class Project(Base):
     __tablename__ = "projects"
 
-    #champs de base
     id = Column(Integer, primary_key=True, nullable=False)
     code = Column(String(10), nullable=False, unique=True)
     nom = Column(String(255), nullable=False)
@@ -33,23 +32,19 @@ class Project(Base):
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=True)
     chef_projet_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     
-    #champs de dates
     date_debut_estimee = Column(Date, nullable=False)
     date_debut_reelle = Column(Date, nullable=True)
     date_fin_estimee = Column(Date, nullable=False)
     date_fin_prevue = Column(Date, nullable=False)
     date_fin_reelle= Column(Date, nullable=True)
 
-    #champs de coûts
     budget_estime = Column(Numeric(14, 2), default=0.0, nullable=True)
     budget_engage = Column(Numeric(14, 2), default=0.0, nullable=True)
 
-    #géolocalisation
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
     address = Column(String(255), nullable=True)
 
-    #relationships
     partners = relationship(
         "Partner", 
         secondary=project_partners, 

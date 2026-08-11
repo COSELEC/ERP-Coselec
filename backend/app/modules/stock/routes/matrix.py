@@ -20,13 +20,9 @@ def get_stock_matrix(db: Session = Depends(get_db)):
     Values: Net quantity currently at the project site (OUT - RETURN)
     """
     
-    # 1. Fetch all products and projects to build the structure
     products = db.query(Product).all()
     projects = db.query(Project).all()
     
-    # 2. Fetch stock movements linked to projects
-    # OUT means sent to project (+ to project inventory)
-    # RETURN or IN might mean returned from project (- to project inventory)
     movements = (
         db.query(
             StockMovement.product_id,
@@ -39,8 +35,6 @@ def get_stock_matrix(db: Session = Depends(get_db)):
         .all()
     )
     
-    # Process movements into a lookup dictionary
-    # dict[product_id][project_id] = net_qty
     matrix_data: Dict[int, Dict[int, int]] = {}
     
     for mov in movements:
@@ -55,11 +49,8 @@ def get_stock_matrix(db: Session = Depends(get_db)):
         if mov.type == MovementType.OUT:
             matrix_data[pid][proj_id] += mov.total_qty
         elif mov.type == MovementType.IN:
-            # Assuming IN with a project_id means returned from project
             matrix_data[pid][proj_id] -= mov.total_qty
             
-    # Build final response
-    # We want a format easy to parse for the frontend table
     
     response = {
         "columns": [{"id": p.id, "name": p.name} for p in projects],
@@ -83,7 +74,6 @@ def get_stock_matrix(db: Session = Depends(get_db)):
             
         row["total_expected"] = prod_total
         
-        # Only include products that actually have some stock in projects
         if prod_total > 0:
             response["rows"].append(row)
             

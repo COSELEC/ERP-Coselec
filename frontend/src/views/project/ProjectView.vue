@@ -271,12 +271,10 @@ const createProject = async () => {
       payload.address = payload.location.address;
     }
     delete payload.location;
-    // Backend requires date_fin_prevue
     payload.date_fin_prevue = payload.date_fin_estimee;
     await projectService.createProject(payload);
     toast.success("Projet créé avec succès");
     
-    // Refresh list
     const projectResponse = await projectService.getAllProjects();
     projects.value = projectResponse.data;
     selectedProject.value = payload.nom;
@@ -317,7 +315,6 @@ const updateProjectInfo = async () => {
     await projectService.updateProject(p.id, payload);
     toast.success("Projet mis à jour avec succès");
     
-    // Update local data
     Object.assign(p, payload);
     selectedProject.value = p.nom;
     isProjectEditModalOpen.value = false;
@@ -338,7 +335,6 @@ const closeTaskCreateModal = () => {
 
 const onReportSubmitted = () => {
   if (currentView.value === 'Rapports') {
-    // We could potentially trigger a refresh if we wanted to
   }
 };
 
@@ -400,7 +396,6 @@ const handleTaskCreate = async (rawData: any) => {
 
     isTaskCreateModalOpen.value = false;
     
-    // Refresh milestones in case one was completed (although creation shouldn't complete one, it's safer)
     await onProjectChange(); 
   } catch (error: any) {
     console.error('Erreur lors de la creation de la tache', error);
@@ -412,7 +407,6 @@ const loadTasks = async () => {
   const project = projects.value.find(p => p.nom === selectedProject.value);
   if (project) {
         try {
-            // Only fetch tasks for the selected milestone
             const response = await taskService.getTasksByProject(project.id, selectedMilestone.value || undefined);
             tasks.value = response.data || [];
         } catch (error) {
@@ -428,13 +422,11 @@ const toIsoDateOnly = (value: unknown): string | null => {
   if (!value) return null;
 
   if (typeof value === 'string') {
-    // Accept values like "YYYY-MM-DD 00:00" and keep only the date part.
     const trimmed = value.trim();
     if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
       return trimmed.slice(0, 10);
     }
 
-    // Accept values like DD/MM/YYYY from localized pickers.
     const ddmmyyyy = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
     if (ddmmyyyy) {
       const [, dd, mm, yyyy] = ddmmyyyy;
@@ -453,7 +445,6 @@ const toIsoDateOnly = (value: unknown): string | null => {
     return value.toISOString().slice(0, 10);
   }
 
-  // Dayjs-like objects returned by gantt libs.
   if (typeof value === 'object' && value !== null) {
     const maybeAny = value as any;
 
@@ -538,7 +529,6 @@ const handleTaskUpdate = async (taskId: number, rawData: any) => {
       await taskService.uploadTaskDocuments(Number(projectId), taskId, files);
     }
 
-    // Refresh milestones in case this update changed the active milestone
     await onProjectChange();
     
   } catch (error: any) {

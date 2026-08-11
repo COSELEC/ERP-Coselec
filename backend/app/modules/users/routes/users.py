@@ -31,12 +31,9 @@ def create_user(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin_role)
 ):
-    # Check if email exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
         if not existing_user.is_active:
-            # If the user was soft-deleted, we permanently delete the old record
-            # to allow recreating a new user with the same email.
             db.delete(existing_user)
             db.commit()
         else:
@@ -56,7 +53,6 @@ def update_user(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin_role)
 ):
-    # If updating email, check for conflicts
     if user_data.email:
         existing = db.query(User).filter(User.email == user_data.email, User.id != user_id).first()
         if existing:

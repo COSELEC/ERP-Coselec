@@ -9,7 +9,6 @@ const record = ref<TimeclockRecord | null>(null)
 const loading = ref(false)
 const loadingAction = ref<'in' | 'out' | null>(null)
 
-// Timer en direct
 const elapsed = ref(0)
 let timerInterval: ReturnType<typeof setInterval> | null = null
 
@@ -18,7 +17,6 @@ const hasCheckedOut = computed(() => !!record.value?.check_out)
 
 function formatTime(isoStr: string | null | undefined): string {
   if (!isoStr) return '--:--'
-  // UTC → local
   const d = new Date(isoStr + 'Z')
   return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
@@ -49,7 +47,6 @@ async function loadToday() {
     record.value = res.data
     startTimer()
   } catch {
-    // silently fail
   } finally {
     loading.value = false
   }
@@ -63,7 +60,6 @@ async function clockIn() {
     toast.success('Arrivée enregistrée ! Bonne journée 👋')
     startTimer()
   } catch (e: any) {
-    // toast already shown by api interceptor
   } finally {
     loadingAction.value = null
   }
@@ -77,7 +73,6 @@ async function clockOut() {
     if (timerInterval) clearInterval(timerInterval)
     toast.success('Sortie enregistrée ! Bonne fin de journée 🏁')
   } catch (e: any) {
-    // toast already shown by api interceptor
   } finally {
     loadingAction.value = null
   }

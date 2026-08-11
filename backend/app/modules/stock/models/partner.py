@@ -22,5 +22,4 @@ class Partner(Base):
         onupdate=datetime.utcnow
     )
 
-    #relationships
     projects = relationship("Project",secondary=project_partners, back_populates="partners")

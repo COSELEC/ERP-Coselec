@@ -24,7 +24,6 @@ def get_employee_active_allocation(db: Session, user_id: int, exclude_assignment
     for a in assignments:
         if exclude_assignment_id and a.id == exclude_assignment_id:
             continue
-        # Check if active
         if a.start_date <= today and (a.end_date is None or a.end_date >= today):
             total += a.allocation
             
@@ -39,21 +38,17 @@ def get_project_assignments(project_id: int, db: Session = Depends(get_db)):
 
 @router.post("/projects/{project_id}/assignments", response_model=AssignmentResponse, status_code=status.HTTP_201_CREATED)
 def create_project_assignment(project_id: int, assignment: AssignmentCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
-    # Check if project exists
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    # Check if user exists
     user = db.query(User).filter(User.id == assignment.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Check leave status
     if is_employee_on_leave(db, assignment.user_id, assignment.start_date, assignment.end_date):
         raise HTTPException(status_code=400, detail="Employé en congé sur cette période")
 
-    # Check duplicate
     existing = db.query(ProjectAssignment).filter(
         ProjectAssignment.project_id == project_id,
         ProjectAssignment.user_id == assignment.user_id
@@ -61,7 +56,6 @@ def create_project_assignment(project_id: int, assignment: AssignmentCreate, bac
     if existing:
         raise HTTPException(status_code=400, detail="User is already assigned to this project")
 
-    # Check allocation
     today = date.today()
     is_active = assignment.start_date <= today and (assignment.end_date is None or assignment.end_date >= today)
     if is_active:
@@ -80,7 +74,6 @@ def create_project_assignment(project_id: int, assignment: AssignmentCreate, bac
     db.commit()
     db.refresh(db_assignment)
     
-    # Reload with user
     db_assignment = db.query(ProjectAssignment).options(
         joinedload(ProjectAssignment.user)
     ).filter(ProjectAssignment.id == db_assignment.id).first()
@@ -106,13 +99,11 @@ def update_project_assignment(assignment_id: int, assignment_update: AssignmentU
 
     update_data = assignment_update.model_dump(exclude_unset=True)
     
-    # Check allocation if changing dates or allocation
     if "allocation" in update_data or "start_date" in update_data or "end_date" in update_data:
         new_alloc = update_data.get("allocation", db_assignment.allocation)
         new_start = update_data.get("start_date", db_assignment.start_date)
         new_end = update_data.get("end_date", db_assignment.end_date)
         
-        # Check leave status
         if is_employee_on_leave(db, db_assignment.user_id, new_start, new_end):
             raise HTTPException(status_code=400, detail="Employé en congé sur cette période")
         

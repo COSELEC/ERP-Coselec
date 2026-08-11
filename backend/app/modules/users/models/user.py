@@ -16,7 +16,6 @@ class User(Base):
     locked_until = Column(DateTime, nullable=True)
     requires_password_change = Column(Boolean, default=False)
 
-    # Nouveaux champs RH provenant d'User
     matricule = Column(String, unique=True, nullable=True)
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
@@ -27,7 +26,6 @@ class User(Base):
     manager_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     signature_url = Column(String, nullable=True)
 
-    # Relations RH
     department = relationship("Department")
     manager = relationship("User", remote_side=[id], back_populates="subordinates")
     subordinates = relationship("User", back_populates="manager")

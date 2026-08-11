@@ -43,7 +43,7 @@ class ProjectResponse(ProjectBase):
     def current_phase(self) -> Optional[str]:
         if getattr(self, "phases", None):
             for phase in self.phases:
-                if getattr(phase, "status", None) == "In Progress": # Checking based on assumed phase status
+                if getattr(phase, "status", None) == "In Progress": 
                     return phase.nom
         return None
 

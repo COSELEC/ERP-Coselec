@@ -21,7 +21,6 @@ def create_notification(
     db.commit()
     db.refresh(new_notification)
 
-    # Broadcast real-time event to the connected user
     payload = {
         "event_type": "NEW_NOTIFICATION",
         "data": {

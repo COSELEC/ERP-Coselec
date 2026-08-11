@@ -39,7 +39,6 @@ async def notify_request_status_change(request_id: int, request_category: str, n
         creator_email = None
         creator_id = None
         
-        # We need to fetch the request to get creator_id / user_id
         request_obj = None
         if request_category == "Generic":
             from app.modules.requests_unified.models.request import GenericRequest
@@ -53,7 +52,6 @@ async def notify_request_status_change(request_id: int, request_category: str, n
         if not creator_email and not creator_id:
             return
 
-        # Add DB Notification
         if creator_id:
             message = f"Votre demande {request_category} #{request_id} a changé de statut: {new_status}."
             if rejection_comment:
@@ -67,7 +65,6 @@ async def notify_request_status_change(request_id: int, request_category: str, n
             ))
             db.commit()
 
-        # Send Email
         if creator_email:
             subject = f"Mise à jour de votre demande {request_category} #{request_id}"
             body = f"<h2>Mise à jour du statut</h2><p>Le statut est maintenant: <b>{new_status}</b>.</p>"

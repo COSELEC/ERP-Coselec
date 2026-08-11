@@ -331,7 +331,6 @@ import { useToast } from '@/composables/useToast';
 
 const toast = useToast();
 
-// Composants enfants
 import EmployeeContracts from "@/components/employees/EmployeeContracts.vue";
 import EmployeeDocuments from "@/components/employees/EmployeeDocuments.vue";
 import EmployeeLeaves from "@/components/employees/EmployeeLeaves.vue";
@@ -373,7 +372,6 @@ const openCreateModal = () => {
   showCreateModal.value = true;
 };
 
-// Tri
 const sortColumn = ref('');
 const sortOrder = ref<'asc' | 'desc'>('asc');
 
@@ -426,7 +424,6 @@ async function submitEmployee() {
     };
     await api.post('/employees/', payload);
     showCreateModal.value = false;
-    // Reset form
     form.value = {
       first_name: '',
       last_name: '',
@@ -440,7 +437,6 @@ async function submitEmployee() {
       supervised_employee_ids: [] as number[]
     };
     
-    // Refresh list
     const response = await employeeService.getAllEmployees();
     employees.value = response.data;
   } catch (e) {
@@ -449,13 +445,11 @@ async function submitEmployee() {
   }
 }
 
-// Volet latéral
 const isSlideOverOpen = ref(false);
 const selectedEmployee = ref<Employee | null>(null);
 
 const openEmployeeDetails = (employee: Employee) => {
   selectedEmployee.value = employee;
-  // Délai d'animation
   setTimeout(() => {
     isSlideOverOpen.value = true;
   }, 10);
@@ -463,7 +457,6 @@ const openEmployeeDetails = (employee: Employee) => {
 
 const closeSlideOver = () => {
   isSlideOverOpen.value = false;
-  // Attend l'animation CSS
   setTimeout(() => {
     selectedEmployee.value = null;
   }, 300);
@@ -480,7 +473,6 @@ const confirmDeleteEmployee = async () => {
     await employeeService.deleteEmployee(selectedEmployee.value.id);
     toast.success("Employé supprimé avec succès");
     
-    // Refresh list
     const response = await employeeService.getAllEmployees();
     employees.value = response.data;
     
@@ -491,7 +483,6 @@ const confirmDeleteEmployee = async () => {
     toast.error(errorMsg);
   }
 };
-// Helpers
 
 const getStatusClass = (status: string) => {
   if (!status) return "bg-slate-100 text-slate-700";

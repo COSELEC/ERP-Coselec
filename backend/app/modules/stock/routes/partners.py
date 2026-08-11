@@ -155,7 +155,6 @@ def delete_partner(
             detail="Partenaire non trouvé"
         )
 
-    # VERROU DE SÉCURITÉ : On bloque la suppression si le partenaire est lié à des projets
     if hasattr(partner, 'projects') and partner.projects:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

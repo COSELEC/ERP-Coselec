@@ -60,34 +60,27 @@ class GenericRequest(Base):
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
 
     description = Column(String, nullable=True)
-    category = Column(String, nullable=True)  # Sub-category (e.g., "Laptop", "VPN Access")
+    category = Column(String, nullable=True)  
     rejection_comment = Column(String, nullable=True)
 
-    # Payload JSON — stores type-specific fields
-    # e.g. {"start_date": "2026-07-21", "end_date": "2026-07-25"} for LEAVE
-    # e.g. {"equipment_type": "laptop", "specifications": "16GB RAM"} for IT_EQUIPMENT
     payload = Column(JSON, default=dict)
 
     attachment_url = Column(String, nullable=True)
 
-    # SLA Tracking
     sla_deadline = Column(DateTime, nullable=True)
     resolved_at = Column(DateTime, nullable=True)
 
-    # Multi-step Approval
     manager_validator_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     manager_validated_at = Column(DateTime, nullable=True)
     finance_validator_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     finance_validated_at = Column(DateTime, nullable=True)
 
-    # Asset/Stock Linkage
     linked_product_id = Column(Integer, ForeignKey("products.id"), nullable=True)
     linked_purchase_request_id = Column(Integer, ForeignKey("purchase_requests.id"), nullable=True)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
     requester = relationship("User", foreign_keys=[requester_id])
     validator = relationship("User", foreign_keys=[validator_id])
     manager_validator = relationship("User", foreign_keys=[manager_validator_id])
@@ -111,6 +104,5 @@ class RequestHistory(Base):
     comment = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
     request = relationship("GenericRequest", back_populates="history")
     changed_by = relationship("User", foreign_keys=[changed_by_id])

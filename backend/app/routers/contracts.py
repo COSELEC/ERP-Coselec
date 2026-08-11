@@ -29,7 +29,6 @@ def create_contract(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Vérification de l'existence de l'employé
     user = db.query(User).filter(User.id == contract_data.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

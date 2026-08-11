@@ -10,11 +10,10 @@ class DeliveryNote(Base):
     reference = Column(String, unique=True, index=True)
     purchase_order_id = Column(Integer, ForeignKey("purchase_orders.id"), nullable=True)
     supplier_name = Column(String, nullable=True)
-    supplier_reference = Column(String, nullable=True) # N° BL ou facture fournisseur
+    supplier_reference = Column(String, nullable=True) 
     
     delivery_date = Column(DateTime, default=datetime.utcnow)
     
-    # Signatures / Validations
     storekeeper_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     storekeeper_validated_at = Column(DateTime, nullable=True)
     
@@ -24,7 +23,6 @@ class DeliveryNote(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relations
     purchase_order = relationship("PurchaseOrder", back_populates="delivery_notes")
     storekeeper = relationship("User", foreign_keys=[storekeeper_id])
     project_manager = relationship("User", foreign_keys=[project_manager_id])

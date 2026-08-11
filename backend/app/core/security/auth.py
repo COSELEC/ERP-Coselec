@@ -36,7 +36,6 @@ def _require_secret_key() -> str:
     )
 
 
-# Cookie settings (default to False/lax for local HTTP development)
 COOKIE_SECURE = os.getenv("COOKIE_SECURE", "False").lower() in ("true", "1", "yes")
 COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE", "lax")
 
@@ -83,11 +82,9 @@ def get_current_user(
 
     token = access_token
 
-    # Backward compatibility: older cookies may store "Bearer <token>".
     if token and token.lower().startswith("bearer "):
         token = token.split(" ", 1)[1].strip()
 
-    # Also accept Authorization: Bearer <token> for non-cookie clients.
     if not token and credentials is not None:
         token = credentials.credentials
 
@@ -155,7 +152,6 @@ async def get_current_user_ws(token: str, db: Session) -> User | None:
         return None
 
     try:
-        # Uses your existing SECRET_KEY and ALGORITHM settings
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
         
@@ -165,7 +161,6 @@ async def get_current_user_ws(token: str, db: Session) -> User | None:
     except JWTError:
         return None
 
-    # Eagerly load roles if your permission system relies on them
     user = (
         db.query(User)
         .options(joinedload(User.roles))

@@ -253,7 +253,6 @@ def stock_transfer_to_project(
     
     internal_partner_id = get_or_create_internal_partner(db).id
     
-    # 1. Deduct from General stock
     general_stock = db.query(Stock).with_for_update().filter(
         Stock.product_id == product_id,
         Stock.warehouse_id == from_warehouse_id,
@@ -265,7 +264,6 @@ def stock_transfer_to_project(
 
     general_stock.quantity -= quantity
 
-    # 2. Add to Project stock
     project_stock = db.query(Stock).with_for_update().filter(
         Stock.product_id == product_id,
         Stock.warehouse_id == from_warehouse_id,

@@ -24,8 +24,7 @@ function normalizeApiUrl(url?: string): string | undefined {
     return url;
   }
 
-  // Skip absolute URLs and auth endpoints.
-  if (/^https?:\/\//i.test(url) || url.startsWith("/login") || url.startsWith("/register")) {
+  if (/^https?:\/\
     return url;
   }
 
@@ -75,7 +74,6 @@ api.interceptors.response.use(
         window.location.href = "/login";
       }
     } else {
-      // Display global error toast
       const { error: showErrorToast } = useToast();
       const errorMessage = error?.response?.data?.detail || "Une erreur est survenue";
       showErrorToast(typeof errorMessage === 'string' ? errorMessage : "Erreur inattendue");

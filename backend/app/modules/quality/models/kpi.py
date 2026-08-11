@@ -4,10 +4,10 @@ import enum
 from app.core.database.session import Base
 
 class KPIOperator(str, enum.Enum):
-    GTE = "GTE"        # >=
-    LTE = "LTE"        # <=
+    GTE = "GTE"        
+    LTE = "LTE"        
     BETWEEN = "BETWEEN"
-    EQ = "EQ"          # ==
+    EQ = "EQ"          
 
 class KPIProcessus(Base):
     __tablename__ = "quality_kpi_processus"

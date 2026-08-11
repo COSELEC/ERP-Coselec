@@ -108,7 +108,6 @@ onMounted(() => {
     }
   }
 
-  // Fix Leaflet sizing issue in modals
   setTimeout(() => {
     if (map.value && map.value.leafletObject) {
       map.value.leafletObject.invalidateSize();

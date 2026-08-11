@@ -323,7 +323,6 @@ const submitITRequest = async () => {
 
     const projectId = requestPayload.category === 'HARDWARE' ? requestPayload.hardware.project_id : null;
 
-    // Vrai appel API (similaire à RequestFormView.vue)
     await api.post('/requests/', {
       type: backendRequestType,
       priority: requestPayload.category === 'INCIDENT' ? 'HIGH' : 'NORMAL',

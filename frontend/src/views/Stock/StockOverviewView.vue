@@ -82,7 +82,6 @@ const enforcedTableMinWidth = computed(() => {
   return Math.max(tableMinWidth.value, 1100);
 });
 
-// Data stores
 const categories = ref<Category[]>([]);
 const products = ref<Product[]>([]);
 const warehouses = ref<Warehouse[]>([]);
@@ -406,7 +405,6 @@ const getWarehouseQty = (productId: number, warehouseId: number) => {
     .reduce((sum, item) => sum + item.quantity, 0);
 };
 
-// Unique products row matrix builder
 const structuredInventory = computed<StructuredInventoryItem[]>(() => {
   const uniqueProductIds = [...new Set(inventoryRaw.value.map(item => item.product_id))];
   
@@ -418,7 +416,6 @@ const structuredInventory = computed<StructuredInventoryItem[]>(() => {
     return {
       name: productName,
       sku: productSku,
-      // Computes column metrics dynamically
       magasinQty: getMagasinQty(productId),
       localWhQuantities: displayedWarehouses.value.map(wh => ({
         id: wh.id,

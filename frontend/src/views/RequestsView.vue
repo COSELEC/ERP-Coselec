@@ -111,7 +111,6 @@ onMounted(async () => {
     const res = await api.get('/requests/');
     const allRequests = res.data || [];
     
-    // Distribute into categories
     const hr = allRequests.filter((r: any) => ['LEAVE', 'DOCUMENT'].includes(r.type));
     const it = allRequests.filter((r: any) => r.type && r.type.startsWith('IT_'));
     const facilities = allRequests.filter((r: any) => r.type && r.type.startsWith('FACILITY_'));

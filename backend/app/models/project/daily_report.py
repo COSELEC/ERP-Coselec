@@ -20,24 +20,22 @@ class DailyReport(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
 
-    # Semaine couverte par ce rapport
-    week_start = Column(Date, nullable=False)   # Lundi de la semaine
-    week_end = Column(Date, nullable=False)     # Vendredi de la semaine
-    report_date = Column(Date, nullable=False, default=date.today)  # Date de soumission effective
+    week_start = Column(Date, nullable=False)   
+    week_end = Column(Date, nullable=False)     
+    report_date = Column(Date, nullable=False, default=date.today)  
 
     hours_worked = Column(Float, nullable=False)
     progress_percentage = Column(Integer, nullable=True)
 
     tasks_completed = Column(Text, nullable=False)
     issues_encountered = Column(Text, nullable=True)
-    plan_next_week = Column(Text, nullable=True)   # Remplace plan_for_tomorrow
+    plan_next_week = Column(Text, nullable=True)   
 
     status = Column(SQLEnum(ReportStatus), default=ReportStatus.SUBMITTED)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Un rapport unique par employé, par projet, par semaine (clé = lundi de la semaine)
     __table_args__ = (
         UniqueConstraint('user_id', 'project_id', 'week_start', name='uq_employee_project_week'),
     )

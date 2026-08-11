@@ -100,7 +100,6 @@ const fetchUsers = async (page = 1) => {
     currentPage.value = page;
   } catch (error) {
     console.error('Failed to fetch users:', error);
-    // You might want to add a toast notification here
   } finally {
     loading.value = false;
   }

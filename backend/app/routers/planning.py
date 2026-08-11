@@ -24,7 +24,6 @@ def _normalize_status_token(value: str) -> str:
 def _parse_attendance_status(value: str) -> AttendanceStatus:
     token = _normalize_status_token(value)
 
-    # Accept both API tokens (CHANTIER/SITE/CONGE) and display labels (Chantier/Site/Congé).
     for status in AttendanceStatus:
         if token == _normalize_status_token(status.name) or token == _normalize_status_token(status.value):
             return status
@@ -41,7 +40,6 @@ def _status_to_frontend_token(value: str) -> str:
     except ValueError:
         return "SITE"
 
-# --- Endpoint 1: Fetch the Dynamic Schedule Matrix Grid ---
 @router.get("/schedule-matrix")
 @router.get("/schedule-matrix", include_in_schema=False)
 def get_schedule_matrix(
@@ -59,7 +57,6 @@ def get_schedule_matrix(
     date_range = [start + timedelta(days=i) for i in range(days_count)]
     users = db.query(User).all()
     
-    # Pre-fetch overrides for the date range to avoid N+1 query performance hits
     end_date = date_range[-1]
     start_dt = datetime.combine(start, time.min)
     end_dt = datetime.combine(end_date, time.max)
@@ -76,12 +73,10 @@ def get_schedule_matrix(
         schedule_days = []
         for current_date in date_range:
             
-            # RULE 1: Weekends default to NONE (Off-duty)
             if current_date.weekday() >= 5: 
                 current_status = "NONE"
             
             else:
-                # RULE 2: Read HR override from DB if it exists, otherwise default strictly to "SITE"
                 db_lookup_key = (emp.id, current_date)
                 if db_lookup_key in override_map:
                     current_status = _status_to_frontend_token(override_map[db_lookup_key])
@@ -101,28 +96,24 @@ def get_schedule_matrix(
     return response_matrix
 
 
-# --- Endpoint 2: HR Save / Override a Specific Slot ---
 @router.post("/assignment")
 @router.post("/assignment", include_in_schema=False)
 def update_attendance_slot(
     payload: AttendanceUpdate,
-    background_tasks: BackgroundTasks, # <-- Ajout requis pour l'asynchrone
+    background_tasks: BackgroundTasks, 
     _: None = Depends(check_permission("hr.update")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Verify the target user profile exists
     emp_exists = db.query(User).filter(User.id == payload.user_id).first()
     if not emp_exists:
         raise HTTPException(status_code=404, detail="Collaborateur introuvable.")
         
-    # Validate the status string matches our exact backend ENUM constraints
     try:
         status_enum = _parse_attendance_status(payload.status)
     except ValueError:
         raise HTTPException(status_code=400, detail="Statut invalide. Choisissez parmi: CHANTIER, SITE, CONGE, TELETRAVAIL")
 
-    # Check if a log entry already exists
     existing_record = db.query(Attendance).filter(
         Attendance.user_id == payload.user_id,
         func.date(Attendance.date) == payload.date
@@ -148,41 +139,33 @@ def update_attendance_slot(
             
     db.commit()
 
-    # ==========================================
-    # NOUVEAU : Envoi de l'e-mail à l'employé
-    # ==========================================
     if emp_exists.email:
         date_formatee = payload.date.strftime("%d/%m/%Y")
         sujet_mail = f"Mise à jour de votre planning : {date_formatee}"
         
-        # Le contenu HTML du mail
         corps_mail = f"""
         <p>Bonjour {emp_exists.first_name or ''},</p>
         <p>Le service RH a mis à jour votre planning pour la journée du <strong>{date_formatee}</strong>.</p>
         <p>Votre nouveau statut est : <span style="color: #2563eb; font-weight: bold;">{status_enum.value}</span>.</p>
         """
         
-        # Ajout de la note du manager s'il y en a une (ex: nom du chantier)
         if payload.notes:
             corps_mail += f"<p><em>Note du service RH : {payload.notes}</em></p>"
             
         corps_mail += "<p>Cordialement,<br>L'équipe Coselec</p>"
 
-        # Envoi en arrière-plan
         background_tasks.add_task(
             send_ticket_email,
             email_to=emp_exists.email,
             subject=sujet_mail,
             body=corps_mail
         )
-    # ==========================================
 
     employee_label = (
         f"{emp_exists.first_name or ''} {emp_exists.last_name or ''}".strip()
         or f"Employe #{emp_exists.id}"
     )
 
-    # Notification in-app pour le manager RH qui a fait l'action
     create_notification(
         db=db,
         user_id=current_user.id,

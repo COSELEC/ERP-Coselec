@@ -212,7 +212,7 @@ const submitTaskCreate = () => {
             />
 
             <p class="mt-1 text-xs text-gray-500">
-              Astuce: utilise #, ##, -, **gras**, *italique*, [lien](https://...).
+              Astuce: utilise #, ##, -, **gras**, *italique*, [lien](https:
             </p>
           </div>
 

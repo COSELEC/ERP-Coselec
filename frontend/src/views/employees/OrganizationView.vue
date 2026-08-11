@@ -36,7 +36,6 @@ const fetchOrgChart = async () => {
     
     const { newNodes, newEdges } = buildGraph(rawData);
     
-    // Apply Dagre layout
     const layouted = getLayoutedElements(newNodes, newEdges);
     nodes.value = layouted.nodes;
     edges.value = layouted.edges;
@@ -65,7 +64,7 @@ const buildGraph = (rootNodes: any[]) => {
       id: current.id.toString(),
       label: current.name,
       position: { x: 0, y: 0 },
-      type: 'customNode', // We will use a custom node template
+      type: 'customNode', 
       data: { 
         name: current.name,
         position: current.position,
@@ -97,11 +96,9 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-  // Direction: TB (Top-to-Bottom) or LR (Left-to-Right)
   dagreGraph.setGraph({ rankdir: direction, nodesep: 100, ranksep: 120 });
 
   nodes.forEach((node) => {
-    // Assuming approx width and height for our custom node
     dagreGraph.setNode(node.id, { width: 250, height: 100 });
   });
 
@@ -116,8 +113,6 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
     node.targetPosition = direction === 'LR' ? Position.Left : Position.Top;
     node.sourcePosition = direction === 'LR' ? Position.Right : Position.Bottom;
 
-    // We are shifting the dagre node position (anchor=center) to the top left
-    // so it matches the Vue Flow node anchor point (top left).
     node.position = {
       x: nodeWithPosition.x - 250 / 2,
       y: nodeWithPosition.y - 100 / 2,
@@ -128,25 +123,20 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
 };
 
 const exportChart = async (format: 'png' | 'pdf') => {
-  // Use the viewport which contains the actual nodes instead of the transformation pane
   const element = document.querySelector('.vue-flow__viewport') as HTMLElement;
   if (!element) return;
   
-  // Fit view before exporting to make sure everything is visible
   fitView({ padding: 0.1 });
-  // Wait for animation and rendering
   await new Promise(r => setTimeout(r, 600));
 
   try {
-    // Get the bounding box of the actual graph to crop the image perfectly
     const bounds = element.getBoundingClientRect();
     
-    // Use high pixel ratio for maximum sharpness
     const imgData = await toPng(element, { 
-      pixelRatio: 4, // Higher resolution for crisp text
-      backgroundColor: '#f9fafb', // Lighter background (gray-50)
+      pixelRatio: 4, 
+      backgroundColor: '#f9fafb', 
       style: {
-        transform: 'translate(0, 0)', // Reset transform to avoid offset bugs
+        transform: 'translate(0, 0)', 
       }
     });
     

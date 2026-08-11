@@ -14,9 +14,6 @@ from app.modules.requests_unified.models.request import (
 
 from app.modules.requests_unified.schemas.payloads import RequestPayload
 
-# ---------------------------------------------------------------------------
-# Request CRUD schemas
-# ---------------------------------------------------------------------------
 
 
 class RequestBase(BaseModel):
@@ -60,7 +57,7 @@ class RequestResponse(RequestBase):
     validator_id: Optional[int] = None
     department_id: Optional[int] = None
     rejection_comment: Optional[str] = None
-    payload: dict  # Return as raw dict so any payload type works
+    payload: dict  
     attachment_url: Optional[str] = None
     sla_deadline: Optional[datetime] = None
     resolved_at: Optional[datetime] = None

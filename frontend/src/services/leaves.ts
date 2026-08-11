@@ -21,7 +21,6 @@ export interface LeaveRequestCreate {
 }
 
 export const leaveService = {
-  // Récupérer les congés (on filtre côté front pour le MVP)
   async getByEmployee(employeeId: number): Promise<LeaveRequest[]> {
     const response = await api.get<any[]>("/requests/?type=LEAVE");
     const mapped = response.data.map((req: any) => ({
@@ -38,7 +37,6 @@ export const leaveService = {
     return mapped.filter((leave: LeaveRequest) => leave.employee_id === employeeId);
   },
 
-  // Créer une nouvelle demande
   async create(leaveData: LeaveRequestCreate): Promise<LeaveRequest> {
     const payload = {
       type: "LEAVE",
@@ -68,19 +66,16 @@ export const leaveService = {
     };
   },
 
-  // Supprimer une demande
   async delete(id: number): Promise<void> {
     await api.delete(`/requests/${id}`);
   },
 
-  // Télécharger l'attestation
   async downloadCertificate(id: number): Promise<void> {
     const response = await api.get<Blob>(
       `/requests/${id}/download-pdf`,
       { responseType: 'blob' }
     );
 
-    // Essayer de lire le nom du fichier depuis les headers, sinon fallback générique
     let fileName = `conge_${id}.pdf`;
     const contentDisposition = response.headers['content-disposition'];
     if (contentDisposition) {

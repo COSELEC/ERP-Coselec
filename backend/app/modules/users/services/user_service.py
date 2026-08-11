@@ -68,7 +68,7 @@ def create_user(db: Session, user_data: UserCreate, current_user: User) -> Tuple
         hashed_password=hashed_pwd,
         department_id=user_data.department_id,
         manager_id=user_data.manager_id,
-        requires_password_change=True # Forcer changement MDP
+        requires_password_change=True 
     )
     
     db.add(new_user)
@@ -87,12 +87,10 @@ def update_user(db: Session, user_id: int, user_data: UserUpdate, current_user: 
     if not user:
         return None
     
-    # Sécurité: seuls les admins peuvent assigner des rôles (vérifié via les routes)
     
     old_values = {"name": user.name, "email": user.email, "role": user.roles[0].name if user.roles else None}
     new_values = {}
     
-    # Vérification des changements
     if user_data.name is not None and user.name != user_data.name:
         log_audit(db, current_user.id, user_id, "UPDATE_NAME", user.name, user_data.name)
         user.name = user_data.name
@@ -114,7 +112,6 @@ def update_user(db: Session, user_id: int, user_data: UserUpdate, current_user: 
         user.manager_id = user_data.manager_id
         new_values["manager_id"] = user.manager_id
         
-    # Autocomplétion du nom complet
     if user.first_name and not user_data.name:
         user.name = f"{user.first_name} {user.last_name or ''}".strip()
         new_values["name"] = user.name
@@ -143,7 +140,6 @@ def delete_user(db: Session, user_id: int, current_user: User) -> bool:
     if not user:
         return False
         
-    # Suppression logique (soft delete)
     user.is_active = False
     log_audit(db, current_user.id, user.id, "DELETE", old_value="active", new_value="inactive")
     db.commit()

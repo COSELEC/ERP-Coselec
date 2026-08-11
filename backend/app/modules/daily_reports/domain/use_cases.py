@@ -32,11 +32,9 @@ class SubmitDailyReportUseCase:
         plan_next_week: str,
     ) -> DailyReport:
 
-        # Règle 1 : L'utilisateur doit être assigné au projet pendant cette semaine
         if not self.assignment_repo.is_active_assignment(user_id, project_id, report_date):
             raise NotAssignedException()
 
-        # Règle 2 : Un seul rapport par semaine par projet
         existing = self.report_repo.get_by_employee_project_week(user_id, project_id, week_start)
         if existing:
             raise DuplicateReportException()

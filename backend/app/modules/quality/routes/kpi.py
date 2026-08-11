@@ -51,6 +51,5 @@ def api_get_kpi_dashboard(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Any authenticated user can see the KPIs? Assuming yes, or restrict it.
     data = get_kpi_dashboard_data(db, year)
     return data

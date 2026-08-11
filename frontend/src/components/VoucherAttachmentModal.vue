@@ -175,7 +175,6 @@ const uploadFiles = async (files) => {
     }
   }
   
-  // Refresh gallery
   await fetchAttachments();
   
   if (fileInput.value) {

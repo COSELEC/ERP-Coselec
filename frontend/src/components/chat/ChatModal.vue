@@ -118,7 +118,6 @@ const initWebSocket = (roomId: string) => {
   socket.onmessage = (event) => {
     const newMsg: Message = JSON.parse(event.data);
     messages.value.push(newMsg);
-    // Reload rooms to update last message locally (simple approach)
     loadRooms();
   };
 

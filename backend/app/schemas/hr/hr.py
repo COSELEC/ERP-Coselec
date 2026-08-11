@@ -12,7 +12,6 @@ class AttendanceUpdate(BaseModel):
     class Config:
         from_attributes = True
 
-# --- Schémas Timeclock (Pointage) --- #
 class TimeclockResponse(BaseModel):
     id: int
     user_id: int
@@ -37,7 +36,6 @@ class TimeclockHistoryItem(BaseModel):
     class Config:
         from_attributes = True
 
-# --- Schémas Contrat --- #
 class ContractBase(BaseModel):
     user_id: int
     contract_type: str
@@ -60,7 +58,6 @@ class ContractResponse(ContractBase):
     class Config:
         from_attributes = True
 
-# --- Documents --- #
 class DocumentResponse(BaseModel):
     id: int
     user_id: int

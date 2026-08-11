@@ -82,12 +82,11 @@ export const ChatService = {
    * Create a new WebSocket instance pointing to the backend chat endpoint
    */
   createWebSocket(roomId: string): WebSocket {
-  // Le backend tourne en HTTP simple (pas de TLS), on force ws:// même si la page est en https://
   const token = '';
 
   const isSecure = window.location.protocol === 'https:';
   const wsProtocol = isSecure ? 'wss:' : 'ws:';
-  const host = window.location.host; // Use Vite's host and port
+  const host = window.location.host; 
   const wsUrl = `${wsProtocol}//${host}/api/chat/ws/${roomId}?token=${encodeURIComponent(token)}`;
   return new WebSocket(wsUrl);
 },

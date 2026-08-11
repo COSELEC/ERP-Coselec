@@ -30,7 +30,6 @@ def submit_weekly_report(
     if not user:
         raise HTTPException(status_code=400, detail="L'utilisateur n'est pas un employé valide.")
 
-    # Calcul automatique de la semaine si non fourni
     ref_date = payload.report_date or date.today()
     week_start = payload.week_start or (ref_date - timedelta(days=ref_date.weekday()))
     week_end = payload.week_end or (week_start + timedelta(days=4))
@@ -78,7 +77,6 @@ def list_weekly_reports(
         from app.models.project.project import Project
         managed_projects = [p.id for p in db.query(Project).filter(Project.manager_id == user.id).all()]
 
-        # Mes rapports OU les rapports des projets que je manage
         query = query.filter(
             (DailyReport.user_id == user.id) | (DailyReport.project_id.in_(managed_projects))
         )

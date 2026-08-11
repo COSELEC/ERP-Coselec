@@ -13,13 +13,11 @@ export interface EmployeeDocument {
 }
 
 export const documentService = {
-  // Récupérer les documents d'un employé spécifique
   async getByEmployee(employeeId: number): Promise<EmployeeDocument[]> {
     const response = await api.get<EmployeeDocument[]>(`/users/${employeeId}/documents`);
     return response.data;
   },
 
-  // Uploader un nouveau document (utilisation de FormData)
   async upload(employeeId: number, file: File, category: string, numero?: string, expiryDate?: string): Promise<EmployeeDocument> {
     const formData = new FormData();
     formData.append('file', file);
@@ -63,7 +61,6 @@ export const documentService = {
     window.URL.revokeObjectURL(url);
   },
 
-  // Supprimer un document
   async delete(documentId: number): Promise<void> {
     await api.delete(`/users/documents/${documentId}`);
   }

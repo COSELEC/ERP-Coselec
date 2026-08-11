@@ -11,7 +11,7 @@ class ProjectAssignment(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     
     role = Column(String(100), nullable=False)
-    allocation = Column(Float, nullable=False, default=100.0) # 0 to 100 percentage
+    allocation = Column(Float, nullable=False, default=100.0) 
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=True)
     notes = Column(Text, nullable=True)

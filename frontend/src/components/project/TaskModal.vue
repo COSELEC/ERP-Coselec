@@ -36,7 +36,6 @@ const documentError = ref('')
 const descriptionMode = ref<'edit' | 'preview'>('edit')
 const renderedDescription = computed(() => marked.parse(localTask.value.description || '') as string)
 
-// Fonctions pour le drag & drop
 const onDragOver = (e: DragEvent) => {
   isDragging.value = true
 }
@@ -51,7 +50,6 @@ const onDrop = (e: DragEvent) => {
     uploadedFiles.value.push(...Array.from(e.dataTransfer.files))
   }
 }
-// On crée une copie locale. Pour la métadonnée JSON, on la convertit en chaîne pour le textarea.
 const localTask = ref({
   ...props.task,
   task_metadata: props.task.task_metadata ? JSON.stringify(props.task.task_metadata, null, 2) : ''
@@ -68,7 +66,6 @@ watch(() => props.task, (newTask) => {
   void loadTaskDocuments()
 }, { deep: true })
 
-// Gestion des documents (simili-MinIO)
 const uploadedFiles = ref<File[]>([])
 
 const handleFileUpload = (event: Event) => {
@@ -181,7 +178,6 @@ const deleteTaskDocument = async (doc: TaskDocument) => {
 void loadTaskDocuments()
 
 const handleSave = () => {
-  // On prépare le payload propre pour éviter les erreurs 422
   const payload = {
     title: localTask.value.title,
     description: localTask.value.description,
@@ -191,11 +187,9 @@ const handleSave = () => {
     assignee_id: localTask.value.assignee_id,
     milestone_id: localTask.value.milestone_id,
     weight: Number(localTask.value.weight || 1),
-    // On essaie de parser le JSON, sinon on l'envoie en null ou on gère l'erreur
     task_metadata: localTask.value.task_metadata ? JSON.parse(localTask.value.task_metadata) : null,
   }
   
-  // Tu pourras ajouter la logique d'upload MinIO ici ou dans le parent via `uploadedFiles.value`
   emit('save', { payload, files: uploadedFiles.value })
 }
 </script>

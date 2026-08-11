@@ -62,7 +62,5 @@ async def send_ticket_email(
         logger.info(f"[EMAIL] ✅ Successfully sent to {email_to!r}")
     except Exception as exc:
         logger.error(f"[EMAIL] ❌ Failed to send email to {email_to!r}: {exc}", exc_info=True)
-        # We swallow the exception to prevent the application from returning a 500 error
-        # due to unverified domains or other SMTP issues.
 
 

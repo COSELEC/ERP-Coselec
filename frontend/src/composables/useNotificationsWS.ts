@@ -35,7 +35,7 @@ function connectWS() {
 
   const isSecure = window.location.protocol === 'https:';
   const wsProtocol = isSecure ? 'wss:' : 'ws:';
-  const host = window.location.host; // Use Vite's host and port
+  const host = window.location.host; 
   const wsUrl = `${wsProtocol}//${host}/api/notifications/ws?token=${encodeURIComponent(token)}`;
 
   socket = new WebSocket(wsUrl);
@@ -52,10 +52,8 @@ function connectWS() {
     try {
       const data = JSON.parse(event.data);
       if (data.event_type === 'NEW_NOTIFICATION') {
-        // Prepend new notification
         notifications.value.unshift(data.data);
         
-        // Show toast
         const { info } = useToast();
         info(`Nouvelle notification: ${data.data.message}`);
       }
@@ -67,7 +65,6 @@ function connectWS() {
   socket.onclose = () => {
     isConnected.value = false;
     socket = null;
-    // Auto-reconnect after 3 seconds
     reconnectTimeout = setTimeout(() => {
       connectWS();
     }, 3000);

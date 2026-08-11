@@ -64,7 +64,6 @@ async function handleSubmit() {
 			await changePassword(username.value, password.value, newPassword.value);
 			successMessage.value = "Mot de passe modifié avec succès ! Connexion en cours...";
 			
-			// Auto-login after password change
 			await login(username.value, newPassword.value);
 			await refreshCurrentUserProfile();
 			router.push("/home");

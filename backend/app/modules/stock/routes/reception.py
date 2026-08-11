@@ -33,7 +33,6 @@ class ReceptionPayload(BaseModel):
 
 @router.post("")
 def create_reception(payload: ReceptionPayload, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
-    # 1. Create Reception
     reception = ReceptionControl(
         po_id=payload.po_id,
         supplier_id=payload.supplier_id,
@@ -48,7 +47,6 @@ def create_reception(payload: ReceptionPayload, background_tasks: BackgroundTask
     
     total_expense = 0.0
     
-    # 2. Add Lines
     for line_payload in payload.lines:
         line = ReceptionControlLine(
             reception_id=reception.id,
@@ -61,23 +59,15 @@ def create_reception(payload: ReceptionPayload, background_tasks: BackgroundTask
         )
         db.add(line)
         
-        # Calculate expense if there is a PO
         if payload.po_id and line_payload.is_compliant:
-            # We don't have unit prices mapped easily here unless we query PO lines, 
-            # but for simplicity, we assume an expense will be logged if project is tied.
-            # In a real scenario, we'd lookup unit price from PO.
             pass
             
     db.commit()
     
-    # 3. Handle Project Expense if PO exists
     if payload.po_id:
         po = db.query(PurchaseOrder).filter(PurchaseOrder.id == payload.po_id).first()
         if po and po.project_id:
-            # Calculate total cost from PO lines
-            # This is simplified; ideally it's based on actual delivered qty * unit_price
             for po_line in po.lines:
-                # Find matching reception line
                 rec_line = next((rl for rl in payload.lines if rl.designation == po_line.designation), None)
                 if rec_line and rec_line.is_compliant:
                     total_expense += (rec_line.qty_delivered * po_line.unit_price)
@@ -92,10 +82,6 @@ def create_reception(payload: ReceptionPayload, background_tasks: BackgroundTask
                 db.add(expense)
                 db.commit()
     
-    # 4. Generate PDF
-    # pdf_url = generate_reception_control_pdf(reception.id, db)
-    # reception.pdf_url = pdf_url
-    # db.commit()
     
     background_tasks.add_task(
         notify_users_by_role,

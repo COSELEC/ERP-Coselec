@@ -45,7 +45,6 @@ from app.modules.daily_reports.routes import router as daily_reports_router
 from app.modules.quality.routes.documents import router as quality_router
 from app.modules.quality.routes.kpi import router as kpi_router
 
-# Import models so SQLAlchemy can resolve all relationships
 from app.models.project.client import Client 
 from app.models.procurement.delivery import DeliveryNote
 
@@ -53,7 +52,6 @@ from app.models.procurement.delivery import DeliveryNote
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Migrations automatiques de la base de données (Alembic)
     try:
         print("Lancement des migrations Alembic...")
         alembic_cfg = Config("alembic.ini")
@@ -62,7 +60,6 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"Erreur lors des migrations Alembic : {e}")
 
-    #  Initialisation des rôles et de l'admin
     db = SessionLocal()
     try:
         ensure_rbac_setup(db)
@@ -70,20 +67,16 @@ async def lifespan(app: FastAPI):
     finally:
         db.close()
 
-    # Démarrage du planificateur de tâches
     scheduler = BackgroundScheduler()
     scheduler.add_job(check_document_expirations, "cron", hour=8, minute=0)
-    # Alerte hebdomadaire : tous les vendredis à 16h si rapport non soumis
     scheduler.add_job(check_missing_daily_reports, "cron", day_of_week="fri", hour=16, minute=0)
     scheduler.start()
 
     yield
 
-    # Arrêt du planificateur à l'extinction
     scheduler.shutdown()
 
 
-# Inactivation des redirections strictes de slashes pour corriger les erreurs CORS/307
 app = FastAPI(lifespan=lifespan, redirect_slashes=False)
 
 
@@ -101,7 +94,6 @@ class StripTrailingSlashASGIMiddleware:
 
 app.add_middleware(StripTrailingSlashASGIMiddleware)
 
-# Configuration CORS
 raw_origins = os.getenv("CORS_ALLOW_ORIGINS", "")
 default_origins = [
     "http://localhost:5173",
@@ -127,7 +119,6 @@ app.add_middleware(
 
 app.add_middleware(SlidingSessionMiddleware)
 
-# Enregistrement des routeurs
 app.include_router(employees_router)
 app.include_router(stock_router)
 app.include_router(app_dashboard_router)
@@ -154,7 +145,6 @@ app.include_router(quality_router)
 app.include_router(kpi_router)
 app.include_router(timeclock_router)
 
-# Gestion du dossier des uploads
 os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 

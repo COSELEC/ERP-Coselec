@@ -70,22 +70,18 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         print(f"DEBUG: user {email} not found in DB")
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    # Check active status
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Compte inactif ou supprimé")
 
-    # Check 90 days inactivity
     now = datetime.utcnow()
     if user.last_login and user.last_login < now - timedelta(days=90):
         user.is_active = False
         db.commit()
         raise HTTPException(status_code=403, detail="Compte désactivé pour inactivité prolongée (> 90 jours)")
 
-    # Check lockout
     if user.locked_until and user.locked_until > now:
         raise HTTPException(status_code=403, detail="Compte temporairement verrouillé. Veuillez réessayer plus tard.")
 
-    # Check password
     if not verify_password(payload.password, user.hashed_password):
         print(f"DEBUG: password verification failed for {email}")
         user.failed_login_attempts += 1
@@ -95,13 +91,11 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
 
-    # Reset lockout and set last_login
     user.failed_login_attempts = 0
     user.locked_until = None
     user.last_login = now
     db.commit()
 
-    # Check onboarding password change
     if user.requires_password_change:
         return JSONResponse(
             status_code=403, 
@@ -151,11 +145,9 @@ def change_password(payload: ChangePasswordRequest, db: Session = Depends(get_db
     if not verify_password(payload.old_password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Ancien mot de passe incorrect")
 
-    # Update password and reset flag
     user.hashed_password = hash_password(payload.new_password)
     user.requires_password_change = False
     
-    # Audit log
     from app.modules.users.models.audit_log import AuditLog
     audit = AuditLog(
         actor_id=user.id,

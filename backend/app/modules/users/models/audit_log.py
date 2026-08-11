@@ -8,7 +8,7 @@ class AuditLog(Base):
     id = Column(Integer, primary_key=True, index=True)
     actor_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     target_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    action_type = Column(String, index=True) # CREATE, UPDATE, LOCK, DELETE
-    old_value = Column(String, nullable=True) # JSON string
-    new_value = Column(String, nullable=True) # JSON string
+    action_type = Column(String, index=True) 
+    old_value = Column(String, nullable=True) 
+    new_value = Column(String, nullable=True) 
     timestamp = Column(DateTime, default=datetime.utcnow)

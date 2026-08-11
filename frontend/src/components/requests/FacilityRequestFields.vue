@@ -140,7 +140,6 @@ const interventionCategory = ref('maintenance')
 const useStockLink = ref(false)
 const stockType = ref('general')
 
-// Default initialization
 if (!props.modelValue.type) {
   emit('update:modelValue', { 
     type: 'FACILITY_MAINTENANCE',
@@ -164,9 +163,6 @@ const updateType = (selectedType) => {
       urgency: 'routine' 
     })
   } else {
-    // We prepend the intervention category to the description so we don't lose it 
-    // since the backend model doesn't explicitly store 'security' vs 'layout' in payload.
-    // (Alternatively, the parent component could store this in the generic `category` field).
     emit('update:modelValue', { 
       ...base, 
       location: 'bureau', 

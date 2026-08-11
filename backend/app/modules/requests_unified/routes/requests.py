@@ -44,9 +44,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/requests", tags=["Requests Unified"])
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 def _compute_sla_deadline(priority: RequestPriority) -> datetime:
     hours = SLA_HOURS.get(priority.value, SLA_HOURS["NORMAL"])
@@ -90,7 +87,6 @@ def _notify_creation_targets(db: Session, request: GenericRequest, requester: Us
 
         recipient_user_ids: set[int] = set()
 
-        # Check direct manager
         requester_emp = db.query(User).filter(User.email == requester.email).first()
         if requester_emp and requester_emp.manager:
             mgr_emp = requester_emp.manager
@@ -98,7 +94,6 @@ def _notify_creation_targets(db: Session, request: GenericRequest, requester: Us
             if mgr_user and mgr_user.id != requester.id:
                 recipient_user_ids.add(mgr_user.id)
 
-        # Add users matching target roles
         role_users = db.query(User).filter(User.roles.any(Role.name.in_(target_roles))).all()
         for u in role_users:
             if u.id != requester.id:
@@ -155,7 +150,6 @@ def _apply_row_level_filter(query, current_user: User):
 
     conditions = []
 
-    # Always allow users to see their own requests
     conditions.append(GenericRequest.requester_id == current_user.id)
 
     if roles & {"RH"}:
@@ -182,15 +176,11 @@ def _apply_row_level_filter(query, current_user: User):
         ]))
 
     if roles & {"Direction"}:
-        # Direction can view all but not necessarily act
         return query
 
     return query.filter(or_(*conditions))
 
 
-# ---------------------------------------------------------------------------
-# GET /requests/
-# ---------------------------------------------------------------------------
 
 @router.get("", response_model=list[RequestResponse])
 def get_requests(
@@ -202,7 +192,6 @@ def get_requests(
 ):
     query = db.query(GenericRequest)
 
-    # Row-level security
     query = _apply_row_level_filter(query, current_user)
 
     if type:
@@ -215,9 +204,6 @@ def get_requests(
     return query.order_by(GenericRequest.created_at.desc()).all()
 
 
-# ---------------------------------------------------------------------------
-# GET /requests/{request_id}
-# ---------------------------------------------------------------------------
 
 @router.get("/{request_id}", response_model=RequestResponse)
 def get_request(
@@ -229,7 +215,6 @@ def get_request(
     if not request:
         raise HTTPException(status_code=404, detail="Request not found")
 
-    # Row-level security check: user must own the request or have a qualifying role
     roles = _user_roles(current_user)
     if (
         request.requester_id != current_user.id
@@ -242,9 +227,6 @@ def get_request(
     return request
 
 
-# ---------------------------------------------------------------------------
-# POST /requests/
-# ---------------------------------------------------------------------------
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=RequestResponse)
 def create_request(
@@ -268,22 +250,18 @@ def create_request(
     db.add(new_request)
     db.flush()
 
-    # Immediate Budget Impact
     if new_request.project_id and new_request.type in (RequestType.FUEL, RequestType.IT_EQUIPMENT, RequestType.FACILITY_SUPPLIES):
         from app.models.project.expense import ProjectExpense
         from app.models.project.budget import ProjectBudget
         
         estimated_amount = 0.0
         if new_request.type == RequestType.FUEL:
-            # Prix fixe pour le carburant: 1000 XOF le litre (ou selon la logique métier)
             qty = float(new_request.payload.get("quantity_liters") or new_request.payload.get("quantity") or 0)
             estimated_amount = qty * 1000.0
         else:
-            # Pour le matériel, s'il y a un estimated_cost dans le payload
             estimated_amount = float(new_request.payload.get("estimated_cost") or 0.0)
             
         if estimated_amount > 0:
-            # Trouver le budget approprié pour le projet (ex: le premier budget de la catégorie correspondante, ou le budget global)
             budget = db.query(ProjectBudget).filter(ProjectBudget.project_id == new_request.project_id).first()
             if budget:
                 expense = ProjectExpense(
@@ -294,16 +272,14 @@ def create_request(
                     currency=budget.currency or "XOF",
                     category="Achat/Carburant" if new_request.type == RequestType.FUEL else "Achat Matériel",
                     description=f"Demande {new_request.type.value} #{new_request.id}",
-                    status="PENDING", # PENDING means it's an engagement, not yet paid
+                    status="PENDING", 
                     reference=f"REQ-{new_request.id}",
                 )
                 db.add(expense)
                 db.flush()
 
-    # Record creation in audit log
     _record_history(db, new_request, None, initial.value, current_user.id, "Request created")
 
-    # Notify managers and target administrators
     _notify_creation_targets(db, new_request, current_user)
 
     db.commit()
@@ -311,9 +287,6 @@ def create_request(
     return new_request
 
 
-# ---------------------------------------------------------------------------
-# PATCH /requests/{request_id}/status
-# ---------------------------------------------------------------------------
 
 @router.patch("/{request_id}/status", response_model=RequestResponse)
 def update_request_status(
@@ -355,7 +328,6 @@ def update_request_status(
                 if not (role_names & facility_roles or any(term in r for r in role_names for term in ["FACILITY", "FINANCE", "ACHAT"])):
                     raise HTTPException(status_code=403, detail="Finance/Achat/Facility approval required")
 
-    # Enforce state machine
     if not validate_transition(request.status, payload.status):
         raise HTTPException(
             status_code=400,
@@ -379,24 +351,20 @@ def update_request_status(
     if payload.rejection_comment:
         request.rejection_comment = payload.rejection_comment
 
-    # Cancel Budget Impact if Rejected/Cancelled
     if payload.status in {RequestStatus.REJECTED, RequestStatus.CANCELLED}:
         from app.models.project.expense import ProjectExpense
         expense = db.query(ProjectExpense).filter(ProjectExpense.reference == f"REQ-{request.id}").first()
         if expense:
             db.delete(expense)
 
-    # Mark resolution timestamp for terminal states
     if payload.status in {RequestStatus.COMPLETED, RequestStatus.REJECTED}:
         request.resolved_at = datetime.utcnow()
 
-    # Record audit history
     _record_history(
         db, request, old_status, payload.status.value,
         current_user.id, payload.rejection_comment,
     )
     
-    # Notify user on approval or rejection
     if payload.status in {RequestStatus.APPROVED, RequestStatus.REJECTED}:
         if payload.status == RequestStatus.REJECTED:
             reason_str = f" (Motif : {payload.rejection_comment})" if payload.rejection_comment else ""
@@ -413,7 +381,6 @@ def update_request_status(
         db.add(new_notification)
         db.flush()
         
-        # Broadcast via WebSockets
         try:
             broadcast_notification_sync(request.requester_id, {
                 "event_type": "NEW_NOTIFICATION",
@@ -432,7 +399,6 @@ def update_request_status(
     db.commit()
     db.refresh(request)
 
-    # --- Post-approval workflows (run asynchronously) ---
     if request.status == RequestStatus.APPROVED and request.type == RequestType.FUEL:
         def _generate_fuel_pdf():
             with SessionLocal() as bg_db:
@@ -461,7 +427,6 @@ def update_request_status(
 
             target_user_id = request.payload.get("user_id") or request.requester_id
 
-            # Use a NEW session for the background task to avoid session lifecycle issues
             def _process_leave():
                 with SessionLocal() as bg_db:
                     try:
@@ -504,9 +469,6 @@ def update_request_status(
     return request
 
 
-# ---------------------------------------------------------------------------
-# DELETE /requests/{request_id}
-# ---------------------------------------------------------------------------
 
 @router.delete("/{request_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_request(
@@ -518,12 +480,10 @@ def delete_request(
     if not request:
         raise HTTPException(status_code=404, detail="Request not found")
 
-    # Ownership check: only the requester or an admin can delete
     roles = _user_roles(current_user)
     if request.requester_id != current_user.id and "Admin" not in roles:
         raise HTTPException(status_code=403, detail="Not authorized to delete this request")
 
-    # Can only delete non-terminal requests
     if request.status in {RequestStatus.COMPLETED, RequestStatus.APPROVED}:
         raise HTTPException(
             status_code=400,
@@ -535,9 +495,6 @@ def delete_request(
     return None
 
 
-# ---------------------------------------------------------------------------
-# GET /requests/{request_id}/history
-# ---------------------------------------------------------------------------
 
 @router.get("/{request_id}/history")
 def get_request_history(
@@ -561,9 +518,6 @@ def get_request_history(
         for h in request.history
     ]
 
-# ---------------------------------------------------------------------------
-# GET /requests/{request_id}/download-pdf
-# ---------------------------------------------------------------------------
 
 @router.get("/{request_id}/download-pdf")
 def download_request_pdf(

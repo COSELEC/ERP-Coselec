@@ -11,7 +11,6 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-# revision identifiers, used by Alembic.
 revision: str = '72820418a087'
 down_revision: Union[str, Sequence[str], None] = 'd13b7859cf30'
 branch_labels: Union[str, Sequence[str], None] = None
@@ -22,7 +21,6 @@ def upgrade() -> None:
     """Remplace la table daily_reports par weekly_reports.
     Le type ENUM reportstatus existe déjà en DB — on le réutilise via SQL brut.
     """
-    # Créer la nouvelle table avec SQL brut pour éviter toute tentative de CREATE TYPE
     op.execute("""
         CREATE TABLE weekly_reports (
             id SERIAL PRIMARY KEY,
@@ -44,10 +42,8 @@ def upgrade() -> None:
     """)
     op.create_index('ix_weekly_reports_id', 'weekly_reports', ['id'], unique=False)
 
-    # Supprimer l'ancienne table
     op.drop_index('ix_daily_reports_id', table_name='daily_reports')
     op.drop_table('daily_reports')
-    # Le type ENUM reportstatus est conservé (toujours utilisé par weekly_reports)
 
 
 def downgrade() -> None:

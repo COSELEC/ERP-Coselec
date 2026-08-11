@@ -110,7 +110,6 @@ const itRequestTypes = [
   { value: 'IT_INCIDENT', label: 'Support Technique' }
 ]
 
-// Default initialization if empty
 if (!props.modelValue.type) {
   emit('update:modelValue', { 
     type: 'IT_INCIDENT',
@@ -120,7 +119,6 @@ if (!props.modelValue.type) {
   })
 }
 
-// Handle type switching to reset/setup proper fields
 const updateType = () => {
   const base = { type: props.modelValue.type }
   if (base.type === 'IT_EQUIPMENT') {
@@ -132,7 +130,6 @@ const updateType = () => {
   }
 }
 
-// Computed for the shared text area which maps to different backend fields based on type
 const sharedDescription = computed({
   get() {
     return props.modelValue.type === 'IT_INCIDENT' ? props.modelValue.error_message : props.modelValue.justification

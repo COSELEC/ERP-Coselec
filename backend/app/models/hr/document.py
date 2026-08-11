@@ -27,15 +27,12 @@ class EmployeeDocument(Base):
 
 class TaskDocument(Base):
     __tablename__ = "task_documents"
-    #champs de base
     id = Column(Integer, primary_key=True, nullable=False)
     task_id = Column(Integer,ForeignKey("tasks.id"), nullable=False)
     file_name = Column(String, nullable=False)
     storage_path = Column(String, nullable=False)
     mime_type = Column(String, nullable=True)
 
-    #champs temporels
     uploaded_at = Column(DateTime, default = datetime.now)
 
-    #relationships
     task = relationship("Task", back_populates="documents")

@@ -13,10 +13,8 @@ const downloadingDocumentId = ref<number | null>(null);
 const errorMessage = ref('');
 const showForm = ref(false);
 
-// Référence vers l'input type="file"
 const fileInput = ref<HTMLInputElement | null>(null);
 
-// État du formulaire
 const form = ref({
   category: 'Identité',
   numero: '',
@@ -24,7 +22,6 @@ const form = ref({
 });
 const selectedFile = ref<File | null>(null);
 
-// Charger les documents
 const loadDocuments = async () => {
   if (!props.employeeId) return;
   try {
@@ -41,7 +38,6 @@ watch(() => props.employeeId, () => {
   loadDocuments();
 }, { immediate: true });
 
-// Gestion de la sélection du fichier
 const handleFileChange = (event: Event) => {
   const target = event.target as HTMLInputElement;
   if (target.files && target.files.length > 0) {
@@ -51,7 +47,6 @@ const handleFileChange = (event: Event) => {
   }
 };
 
-// Soumission du formulaire
 const handleSubmit = async () => {
   if (!selectedFile.value) {
     errorMessage.value = "Veuillez sélectionner un fichier.";
@@ -70,13 +65,11 @@ const handleSubmit = async () => {
       form.value.expiry_date || undefined
     );
 
-    // Réinitialiser le formulaire
     showForm.value = false;
     form.value = { category: 'Identité', numero: '', expiry_date: '' };
     selectedFile.value = null;
-    if (fileInput.value) fileInput.value.value = ''; // Vider l'input visuel
+    if (fileInput.value) fileInput.value.value = ''; 
     
-    // Recharger la liste
     await loadDocuments();
   } catch (error) {
     errorMessage.value = "Échec de l'upload du document.";
@@ -99,7 +92,6 @@ const handleDownload = async (doc: EmployeeDocument) => {
   }
 };
 
-// Suppression
 const handleDelete = async (id: number) => {
   if (confirm('Voulez-vous vraiment supprimer ce document ?')) {
     try {
@@ -111,7 +103,6 @@ const handleDelete = async (id: number) => {
   }
 };
 
-// Petit helper pour les icônes en fonction de la catégorie
 const getCategoryIcon = (category: string) => {
   switch (category) {
     case 'Identité': return 'badge';
