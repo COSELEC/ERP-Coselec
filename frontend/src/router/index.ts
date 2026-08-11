@@ -141,7 +141,7 @@ const routes = [
     path: "/caisse",
     name: "caisse",
     component: () => import("../views/CaisseView.vue"),
-    meta: { requiredRoles: ["RH", "RH / Comptabilité"] }
+    meta: { requiredRoles: ["RH", "RH / Comptabilité", "Admin"] }
   },
   {
     path: "/bank-voucher",
