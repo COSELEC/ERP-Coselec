@@ -7,23 +7,34 @@
           <span class="material-symbols-outlined text-xl">calendar_month</span>
         </div>
         <div>
-          <h2 class="text-lg font-bold text-gray-800">Rapports Hebdomadaires</h2>
-          <p class="text-sm text-gray-500">Avancement de l'équipe semaine par semaine</p>
+          <h2 class="text-lg font-bold text-gray-800">Rapports du Projet</h2>
+          <div class="flex gap-4 mt-2">
+            <button @click="activeTab = 'weekly'" :class="{'text-red-600 font-bold border-b-2 border-red-600': activeTab === 'weekly', 'text-gray-500 hover:text-gray-700': activeTab !== 'weekly'}" class="pb-1 transition">Hebdomadaires</button>
+            <button @click="activeTab = 'daily'" :class="{'text-red-600 font-bold border-b-2 border-red-600': activeTab === 'daily', 'text-gray-500 hover:text-gray-700': activeTab !== 'daily'}" class="pb-1 transition">Journaliers</button>
+          </div>
         </div>
       </div>
 
-      <!-- Filtre par semaine -->
+      <!-- Filtre -->
       <div class="flex items-center gap-2">
-        <label class="text-xs font-medium text-gray-500">Semaine :</label>
+        <label class="text-xs font-medium text-gray-500">{{ activeTab === 'weekly' ? 'Semaine :' : 'Date :' }}</label>
         <input
+          v-if="activeTab === 'weekly'"
           type="week"
           v-model="filterWeek"
           class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-red-400 focus:border-red-400 outline-none"
           @change="fetchReports"
         />
+        <input
+          v-else
+          type="date"
+          v-model="filterDate"
+          class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-red-400 focus:border-red-400 outline-none"
+          @change="fetchReports"
+        />
         <button
-          v-if="filterWeek"
-          @click="filterWeek = ''; fetchReports()"
+          v-if="(activeTab === 'weekly' && filterWeek) || (activeTab === 'daily' && filterDate)"
+          @click="clearFilters"
           class="text-xs text-gray-400 hover:text-gray-600"
           title="Effacer le filtre"
         >
@@ -41,8 +52,8 @@
     <!-- Vide -->
     <div v-else-if="reports.length === 0" class="p-12 text-center">
       <span class="material-symbols-outlined text-5xl text-gray-300 block mb-3">inbox</span>
-      <p class="text-gray-500 font-medium">Aucun rapport hebdomadaire</p>
-      <p class="text-gray-400 text-sm mt-1">Les chefs d'équipe n'ont pas encore soumis de rapport pour cette période.</p>
+      <p class="text-gray-500 font-medium">Aucun rapport {{ activeTab === 'weekly' ? 'hebdomadaire' : 'journalier' }}</p>
+      <p class="text-gray-400 text-sm mt-1">Aucun rapport n'a été soumis pour cette période.</p>
     </div>
 
     <!-- Liste des rapports -->
@@ -74,7 +85,8 @@
               </div>
               <p class="text-sm text-gray-500 mt-0.5">
                 <span class="material-symbols-outlined text-xs align-middle mr-0.5">date_range</span>
-                Semaine du {{ fmt(report.week_start) }} au {{ fmt(report.week_end) }}
+                <span v-if="activeTab === 'weekly'">Semaine du {{ fmt(report.week_start) }} au {{ fmt(report.week_end) }}</span>
+                <span v-else>Le {{ fmt(report.report_date) }}</span>
                 &nbsp;•&nbsp; {{ report.hours_worked }}h travaillées
               </p>
             </div>
@@ -133,13 +145,27 @@
             </p>
           </div>
 
-          <div v-if="report.plan_next_week" class="md:col-span-2 bg-blue-50 rounded-xl p-4 border border-blue-100">
+          <div v-if="report.plan_next_week || report.plan_next_day" class="md:col-span-2 bg-blue-50 rounded-xl p-4 border border-blue-100">
             <h5 class="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2 flex items-center gap-1">
               <span class="material-symbols-outlined text-sm">arrow_forward</span>
-              Plan semaine prochaine
+              Plan pour la suite
             </h5>
-            <p class="text-blue-900 whitespace-pre-wrap text-sm leading-relaxed">{{ report.plan_next_week }}</p>
+            <p class="text-blue-900 whitespace-pre-wrap text-sm leading-relaxed">{{ report.plan_next_week || report.plan_next_day }}</p>
           </div>
+
+          <!-- Photos -->
+          <div v-if="report.photos_urls && report.photos_urls.length > 0" class="md:col-span-2 mt-2">
+            <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">image</span>
+              Photos jointes
+            </h5>
+            <div class="flex flex-wrap gap-4 mt-2">
+              <a v-for="(url, idx) in report.photos_urls" :key="idx" :href="'http://192.190.100.41:8000' + url" target="_blank" class="block w-24 h-24 rounded-lg overflow-hidden border border-gray-200 hover:opacity-80 transition cursor-pointer">
+                <img :src="'http://192.190.100.41:8000' + url" class="w-full h-full object-cover" />
+              </a>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -148,14 +174,17 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
-import { dailyReportsService, type WeeklyReportResponse } from '@/services/daily_reports';
+import { dailyReportsService } from '@/services/daily_reports';
 import { useToast } from '@/composables/useToast';
 
 const props = defineProps<{ projectId?: number | null }>();
 const toast = useToast();
-const reports = ref<WeeklyReportResponse[]>([]);
+const reports = ref<any[]>([]);
 const loading = ref(false);
+
+const activeTab = ref<'weekly' | 'daily'>('weekly');
 const filterWeek = ref('');
+const filterDate = ref('');
 
 function fmt(dateStr: string): string {
   if (!dateStr) return '';
@@ -179,14 +208,24 @@ function weekStartFromIso(isoWeek: string): string | undefined {
   return monday.toISOString().split('T')[0];
 }
 
+function clearFilters() {
+  filterWeek.value = '';
+  filterDate.value = '';
+  fetchReports();
+}
+
 async function fetchReports() {
   if (!props.projectId) return;
   loading.value = true;
   try {
-    const weekStart = weekStartFromIso(filterWeek.value);
-    reports.value = await dailyReportsService.getReports(props.projectId, weekStart);
+    if (activeTab.value === 'weekly') {
+      const weekStart = weekStartFromIso(filterWeek.value);
+      reports.value = await dailyReportsService.getReports(props.projectId, weekStart);
+    } else {
+      reports.value = await dailyReportsService.getDailyReports(props.projectId, filterDate.value || undefined);
+    }
   } catch {
-    toast.error('Impossible de charger les rapports hebdomadaires.');
+    toast.error('Impossible de charger les rapports.');
   } finally {
     loading.value = false;
   }
@@ -194,7 +233,11 @@ async function fetchReports() {
 
 async function updateStatus(reportId: number, status: 'DRAFT' | 'SUBMITTED' | 'APPROVED') {
   try {
-    await dailyReportsService.updateStatus(reportId, status);
+    if (activeTab.value === 'weekly') {
+      await dailyReportsService.updateStatus(reportId, status);
+    } else {
+      await dailyReportsService.updateDailyStatus(reportId, status);
+    }
     toast.success('Rapport approuvé ✅');
     fetchReports();
   } catch {
@@ -204,4 +247,5 @@ async function updateStatus(reportId: number, status: 'DRAFT' | 'SUBMITTED' | 'A
 
 onMounted(fetchReports);
 watch(() => props.projectId, fetchReports);
+watch(activeTab, fetchReports);
 </script>

@@ -189,12 +189,6 @@ onMounted(async () => {
           :collapsed="collapsed"
         />
 
-        <SidebarItem
-          to="/attendance"
-          icon="fingerprint"
-          label="Pointages"
-          :collapsed="collapsed"
-        />
       </div>
 
       <!-- Demandes -->

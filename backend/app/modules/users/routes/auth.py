@@ -37,7 +37,7 @@ def register_user(payload: RegisterRequest, db: Session = Depends(get_db)):
     user = User(name=payload.full_name, email=payload.email, hashed_password=hashed_password)
     existing_user = db.query(User).filter(User.email == payload.email).first()
     if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="Email déjà utilisé")
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -63,12 +63,12 @@ from datetime import datetime, timedelta
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     email = payload.email or payload.username
     if not email:
-        raise HTTPException(status_code=422, detail="email or username is required")
+        raise HTTPException(status_code=422, detail="email ou nom d'utilisateur requis")
 
     user = db.query(User).filter(User.email == email).first()
     if not user:
         print(f"DEBUG: user {email} not found in DB")
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(status_code=401, detail="Identifiants invalides")
 
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Compte inactif ou supprimé")
@@ -88,7 +88,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         if user.failed_login_attempts >= 5:
             user.locked_until = now + timedelta(minutes=15)
         db.commit()
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(status_code=401, detail="Identifiants invalides")
 
 
     user.failed_login_attempts = 0

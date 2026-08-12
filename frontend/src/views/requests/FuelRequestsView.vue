@@ -48,8 +48,8 @@
                 <th @click="sortBy('employee_name')" class="px-6 py-4 text-sm font-semibold text-[#7f071c] cursor-pointer hover:bg-red-50 transition group">
                   <div class="flex items-center gap-2">Employé / Véhicule <span class="material-symbols-outlined text-sm text-red-300 opacity-0 group-hover:opacity-100 transition-opacity" :class="{'opacity-100 text-red-500': sortColumn === 'employee_name'}">{{ sortColumn === 'employee_name' && sortOrder === 'desc' ? 'arrow_downward' : 'arrow_upward' }}</span></div>
                 </th>
-                <th @click="sortBy('quantite_carburant')" class="px-6 py-4 text-sm font-semibold text-[#7f071c] cursor-pointer hover:bg-red-50 transition group">
-                  <div class="flex items-center gap-2">Quantité <span class="material-symbols-outlined text-sm text-red-300 opacity-0 group-hover:opacity-100 transition-opacity" :class="{'opacity-100 text-red-500': sortColumn === 'quantite_carburant'}">{{ sortColumn === 'quantite_carburant' && sortOrder === 'desc' ? 'arrow_downward' : 'arrow_upward' }}</span></div>
+                <th @click="sortBy('fuel_quantity')" class="px-6 py-4 text-sm font-semibold text-[#7f071c] cursor-pointer hover:bg-red-50 transition group">
+                  <div class="flex items-center gap-2">Quantité <span class="material-symbols-outlined text-sm text-red-300 opacity-0 group-hover:opacity-100 transition-opacity" :class="{'opacity-100 text-red-500': sortColumn === 'fuel_quantity'}">{{ sortColumn === 'fuel_quantity' && sortOrder === 'desc' ? 'arrow_downward' : 'arrow_upward' }}</span></div>
                 </th>
                 <th @click="sortBy('status')" class="px-6 py-4 text-sm font-semibold text-[#7f071c] cursor-pointer hover:bg-red-50 transition group">
                   <div class="flex items-center gap-2">Statut <span class="material-symbols-outlined text-sm text-red-300 opacity-0 group-hover:opacity-100 transition-opacity" :class="{'opacity-100 text-red-500': sortColumn === 'status'}">{{ sortColumn === 'status' && sortOrder === 'desc' ? 'arrow_downward' : 'arrow_upward' }}</span></div>
@@ -67,7 +67,10 @@
                   <div class="text-sm font-medium text-gray-900">{{ req.employee_name || 'N/A' }}</div>
                   <div class="text-xs text-gray-500">{{ req.vehicule_matricule }}</div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ req.quantite_carburant }} L</td>
+                <td class="px-6 py-4 whitespace-nowrap text-gray-700">
+                  <span class="font-bold">{{ req.fuel_quantity }} L</span>
+                  <span v-if="req.original_fuel_quantity" class="ml-2 text-xs text-red-500 line-through">({{ req.original_fuel_quantity }} L)</span>
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span class="px-3 py-1 rounded-full text-xs font-medium uppercase bg-amber-100 text-amber-700">
                     {{ req.status }}
@@ -100,7 +103,27 @@
                       @click="validateFinance(req.id)"
                       class="text-emerald-600 hover:text-emerald-900"
                     >
-                      Valider Finance
+                      Valider
+                    </button>
+                    <button 
+                      @click="compromiseFinance(req.id)"
+                      class="text-amber-600 hover:text-amber-900"
+                    >
+                      Modifier Qté
+                    </button>
+                    <button 
+                      @click="rejectRequest(req.id)"
+                      class="text-red-600 hover:text-red-900"
+                    >
+                      Rejeter
+                    </button>
+                  </div>
+                  <div v-else-if="req.status === 'COMPROMISE_PENDING'" class="flex gap-2">
+                    <button 
+                      @click="acceptCompromise(req.id)"
+                      class="text-emerald-600 hover:text-emerald-900"
+                    >
+                      Accepter Compromis
                     </button>
                     <button 
                       @click="rejectRequest(req.id)"
@@ -348,6 +371,44 @@ async function validateFinance(id: number) {
   } catch (e) {
     console.error("Error validating finance", e);
     toast.error("Erreur lors de la validation. Vérifiez vos permissions.");
+  }
+}
+
+async function compromiseFinance(id: number) {
+  const amount = prompt("Nouvelle quantité de carburant accordée (en Litres) :");
+  if (amount === null || amount.trim() === '') return;
+  
+  const parsed = parseFloat(amount);
+  if (isNaN(parsed) || parsed <= 0) {
+    toast.error("Quantité invalide");
+    return;
+  }
+  
+  try {
+    await api.patch(`/requests/${id}/status`, {
+      status: 'APPROVED',
+      updated_payload: {
+        fuel_quantity: parsed
+      }
+    });
+    await fetchRequests();
+    toast.success("Compromis proposé ! En attente du supérieur direct.");
+  } catch (e) {
+    console.error("Error proposing compromise", e);
+    toast.error("Erreur lors de la proposition du compromis.");
+  }
+}
+
+async function acceptCompromise(id: number) {
+  try {
+    await api.patch(`/requests/${id}/status`, {
+      status: 'APPROVED'
+    });
+    await fetchRequests();
+    toast.success("Compromis accepté ! La demande est validée.");
+  } catch (e) {
+    console.error("Error accepting compromise", e);
+    toast.error("Erreur lors de l'acceptation du compromis.");
   }
 }
 

@@ -92,7 +92,7 @@ async def upload_employee_signature(
     
     employee = db.query(User).filter(User.id == user_id).first()
     if not employee:
-        raise HTTPException(status_code=404, detail="Employee not found")
+        raise HTTPException(status_code=404, detail="Employé introuvable")
         
     ext = file.filename.split('.')[-1]
     filename = f"signatures/{user_id}_{uuid.uuid4().hex}.{ext}"

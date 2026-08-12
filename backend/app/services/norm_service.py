@@ -13,7 +13,7 @@ class NormService:
     def upload_new_version(self, norm_id: int, file: UploadFile, version_number: int) -> NormVersion:
         norm = self.repository.get_norm_by_id(norm_id)
         if not norm:
-            raise HTTPException(status_code=404, detail="Norm not found")
+            raise HTTPException(status_code=404, detail="Norme introuvable")
 
         try:
             file_path = self.storage_service.save_file(file, path="norms")

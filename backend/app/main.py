@@ -26,7 +26,6 @@ from app.routers.dashboard import router as app_dashboard_router
 from app.routers.departments import router as departments_router
 from app.routers.documents import router as documents_router
 from app.routers.notifications import router as notifications_router
-from app.routers.planning import router as planning_router
 from app.routers.portfolio import router as portfolio_router
 from app.routers.norms import router as norms_router
 from app.routers.procurement import router as procurement_router
@@ -38,7 +37,7 @@ from app.modules.stock.routes import stock_router
 
 from app.tasks.hr_alerts import check_document_expirations
 from app.tasks.daily_reports_alerts import check_missing_daily_reports
-from app.routers.timeclock import router as timeclock_router
+from app.tasks.stale_requests import notify_stale_requests
 
 from app.modules.chat.routes.chat import router as chat_router
 from app.modules.daily_reports.routes import router as daily_reports_router
@@ -70,6 +69,7 @@ async def lifespan(app: FastAPI):
     scheduler = BackgroundScheduler()
     scheduler.add_job(check_document_expirations, "cron", hour=8, minute=0)
     scheduler.add_job(check_missing_daily_reports, "cron", day_of_week="fri", hour=16, minute=0)
+    scheduler.add_job(notify_stale_requests, "cron", hour=7, minute=0)
     scheduler.start()
 
     yield
@@ -122,7 +122,6 @@ app.add_middleware(SlidingSessionMiddleware)
 app.include_router(employees_router)
 app.include_router(stock_router)
 app.include_router(app_dashboard_router)
-app.include_router(planning_router)
 app.include_router(notifications_router)
 app.include_router(contracts_router)
 app.include_router(documents_router)
@@ -143,7 +142,6 @@ app.include_router(chat_router)
 app.include_router(daily_reports_router)
 app.include_router(quality_router)
 app.include_router(kpi_router)
-app.include_router(timeclock_router)
 
 os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")

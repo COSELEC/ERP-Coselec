@@ -10,7 +10,7 @@ def get_excel_preview(file_bytes: bytes) -> list[str]:
         xls = pd.ExcelFile(io.BytesIO(file_bytes))
         return xls.sheet_names
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid Excel file: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Fichier Excel invalide : {str(e)}")
 
 def parse_target(target_str: str):
     if not isinstance(target_str, str):
@@ -66,7 +66,7 @@ def parse_and_import_kpi(db: Session, file_bytes: bytes, sheet_name: str, year: 
     try:
         df = pd.read_excel(io.BytesIO(file_bytes), sheet_name=sheet_name, header=None)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to read sheet {sheet_name}: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Erreur lors de la lecture de la feuille {sheet_name} : {str(e)}")
 
     col_map = {
         "processus": -1,

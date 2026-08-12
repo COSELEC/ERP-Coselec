@@ -102,7 +102,9 @@ watch(
     });
 
     columns.value.forEach(col => {
-      col.tasks = grouped[col.status] || [];
+      let colTasks = grouped[col.status] || [];
+      colTasks.sort((a, b) => (a.id || 0) - (b.id || 0));
+      col.tasks = colTasks;
     });
   },
   { immediate: true, deep: true }

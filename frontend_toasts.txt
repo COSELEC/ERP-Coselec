@@ -1,0 +1,154 @@
+﻿
+components\project\ProjectResources.vue:309:      toast.success("Affectation modifiée avec succès.");
+components\project\ProjectResources.vue:312:      toast.success("Employé affecté avec succès.");
+components\project\ProjectResources.vue:318:    toast.error(errorDetail || "Erreur lors de l'enregistrement de 
+l'affectation.");
+components\project\ProjectResources.vue:328:    toast.success("Employé retiré du projet.");
+components\project\ProjectResources.vue:331:    toast.error("Erreur lors de la suppression de l'affectation.");
+components\project\ProjectStockView.vue:122:    toast.success("Transfert réussi")
+components\project\ProjectStockView.vue:127:    toast.error(error.response?.data?.detail || "Erreur lors du transfert")
+components\projects\DailyReportForm.vue:197:      toast.success('Rapport hebdomadaire soumis avec succès ! ✅');
+components\projects\DailyReportForm.vue:200:      toast.success('Rapport journalier soumis avec succès ! ✅');
+components\projects\ProjectDailyReportsList.vue:228:    toast.error('Impossible de charger les rapports.');
+components\projects\ProjectDailyReportsList.vue:241:    toast.success('Rapport approuvé ✅');
+components\projects\ProjectDailyReportsList.vue:244:    toast.error('Erreur lors de la mise à jour du statut.');
+components\requests\FacilityRequestForm.vue:339:    toast.success("Demande Facility envoyée avec succès.");
+components\requests\FacilityRequestForm.vue:344:    toast.error("Erreur lors de l'envoi de la demande.");
+components\requests\ITRequestForm.vue:336:    toast.success("Demande IT envoyée avec succès.");
+components\requests\ITRequestForm.vue:343:    toast.error(error.message || "Impossible de créer la demande.");
+components\ToastContainer.vue:29:          :key="toast.id"
+components\ToastContainer.vue:30:          :class="bgClass(toast.type)"
+components\ToastContainer.vue:32:          @click="dismiss(toast.id)"
+components\ToastContainer.vue:34:          <span class="material-symbols-outlined text-xl shrink-0">{{ 
+iconName(toast.type) }}</span>
+components\ToastContainer.vue:35:          <span class="text-sm font-medium leading-snug">{{ toast.message }}</span>
+components\VoucherAttachmentModal.vue:138:    toast.error("Erreur lors de la récupération des pièces jointes");
+components\VoucherAttachmentModal.vue:171:      toast.success(`Fichier ${file.name} envoyé !`);
+components\VoucherAttachmentModal.vue:174:      toast.error(`Erreur lors de l'envoi de ${file.name}`);
+views\Admin\AdminRequestsView.vue:123:    toast.error("Erreur lors de la mise à jour du statut.");
+views\Admin\UsersView.vue:148:      toast.error("Erreur lors de la suppression de l'utilisateur.");
+views\employees\DepartmentView.vue:154:    toast.error("Impossible de sauvegarder les modifications.");
+views\project\ProjectView.vue:289:    toast.success("Projet créé avec succès");
+views\project\ProjectView.vue:298:    toast.error("Erreur lors de la création du projet");
+views\project\ProjectView.vue:329:    toast.success("Projet mis à jour avec succès");
+views\project\ProjectView.vue:336:    toast.error("Erreur lors de la mise à jour");
+views\quality\KpiDashboardView.vue:23:    toast.error("Erreur lors du chargement des KPI");
+views\quality\KpiUploadModal.vue:80:    toast.error(error.response?.data?.detail || "Erreur lors de la lecture du 
+fichier Excel");
+views\quality\KpiUploadModal.vue:101:    toast.success(res.message);
+views\quality\KpiUploadModal.vue:104:    toast.error(error.response?.data?.detail || "Erreur lors de l'importation");
+views\quality\QualityDashboardView.vue:28:    toast.error("Erreur lors du chargement des documents");
+views\quality\QualityDocumentCreateModal.vue:29:    toast.error("Erreur lors du chargement des rôles");
+views\quality\QualityDocumentCreateModal.vue:101:    toast.error("Veuillez remplir tous les champs obligatoires 
+(Titre, Fichier, Rôles)");
+views\quality\QualityDocumentCreateModal.vue:113:    toast.success("Document créé avec succès");
+views\quality\QualityDocumentCreateModal.vue:116:    toast.error(err.response?.data?.detail || "Erreur lors de la 
+création");
+views\quality\QualityDocumentDetail.vue:41:    toast.error("Document introuvable");
+views\quality\QualityDocumentDetail.vue:53:    toast.success("Accès mis à jour avec succès");
+views\quality\QualityDocumentDetail.vue:56:    toast.error(error.response?.data?.detail || "Erreur lors de la mise à 
+jour des accès");
+views\quality\QualityDocumentDetail.vue:151:    toast.error("Un commentaire est obligatoire pour un rejet.");
+views\quality\QualityDocumentDetail.vue:163:    toast.success("Avis enregistré avec succès");
+views\quality\QualityDocumentDetail.vue:167:    toast.error(error.response?.data?.detail || "Erreur lors de la 
+validation");
+views\quality\QualityDocumentDetail.vue:186:    toast.success("Nouvelle version téléchargée avec succès");
+views\quality\QualityDocumentDetail.vue:189:    toast.error(error.response?.data?.detail || "Erreur lors du 
+téléchargement");
+views\quality\QualityDocumentDetail.vue:202:    toast.error("Impossible de télécharger le fichier");
+views\quality\QualityDocumentDetail.vue:233:    toast.success("Document supprimé avec succès");
+views\quality\QualityDocumentDetail.vue:236:    toast.error(error.response?.data?.detail || "Erreur lors de la 
+suppression");
+views\quality\QualityLibraryView.vue:30:    toast.error("Erreur lors du chargement de la bibliothèque");
+views\quality\QualityLibraryView.vue:55:    toast.error("Erreur lors du téléchargement");
+views\requests\FuelRequestsView.vue:347:    toast.error("Erreur lors de la création de la demande");
+views\requests\FuelRequestsView.vue:357:    toast.success("Demande validée par le supérieur !");
+views\requests\FuelRequestsView.vue:360:    toast.error("Erreur lors de la validation. Êtes-vous le supérieur direct 
+ou un membre de la direction ?");
+views\requests\FuelRequestsView.vue:370:    toast.success("Demande validée par la finance ! Le PDF a été généré dans 
+MinIO.");
+views\requests\FuelRequestsView.vue:373:    toast.error("Erreur lors de la validation. Vérifiez vos permissions.");
+views\requests\FuelRequestsView.vue:383:    toast.error("Quantité invalide");
+views\requests\FuelRequestsView.vue:395:    toast.success("Compromis proposé ! En attente du supérieur direct.");
+views\requests\FuelRequestsView.vue:398:    toast.error("Erreur lors de la proposition du compromis.");
+views\requests\FuelRequestsView.vue:408:    toast.success("Compromis accepté ! La demande est validée.");
+views\requests\FuelRequestsView.vue:411:    toast.error("Erreur lors de l'acceptation du compromis.");
+views\requests\FuelRequestsView.vue:424:    toast.success("Demande rejetée.");
+views\requests\FuelRequestsView.vue:427:    toast.error("Erreur lors du rejet.");
+views\requests\FuelRequestsView.vue:438:    toast.error("Erreur lors de la suppression. Vérifiez vos permissions.");
+views\Stock\DeliveryNoteView.vue:148:        toast.error('Erreur lors du chargement des bons de livraison');
+views\Stock\DeliveryNoteView.vue:194:        toast.success('Bon de livraison mis à jour avec succès');
+views\Stock\DeliveryNoteView.vue:199:        toast.error('Erreur lors de la validation');
+views\Stock\ReceptionControlForm.vue:164:    toast.success("Contrôle de réception enregistré et PDF généré.")
+views\Stock\ReceptionControlForm.vue:174:    toast.error("Erreur lors de l'enregistrement.")
+views\Stock\StockCanvasView.vue:86:    toast.success('Catégorie créée avec succès.');
+views\Stock\StockCanvasView.vue:87:  } catch { toast.error("Erreur lors de la création de la catégorie."); }
+views\Stock\StockCanvasView.vue:107:    toast.success('Article ajouté au catalogue.');
+views\Stock\StockCanvasView.vue:108:  } catch { toast.error("Erreur lors de la création de l'article."); }
+views\Stock\StockCanvasView.vue:126:    toast.success('Catégorie modifiée.');
+views\Stock\StockCanvasView.vue:128:    toast.error('Erreur lors de la modification de la catégorie.');
+views\Stock\StockCanvasView.vue:144:    toast.success('Catégorie supprimée.');
+views\Stock\StockCanvasView.vue:146:    toast.error('Impossible de supprimer la catégorie (elle contient peut-être des 
+produits).');
+views\Stock\StockCanvasView.vue:167:    toast.error('Seuil invalide.');
+views\Stock\StockCanvasView.vue:179:    toast.success('Article modifié.');
+views\Stock\StockCanvasView.vue:181:    toast.error("Erreur lors de la modification de l'article.");
+views\Stock\StockCanvasView.vue:197:    toast.success('Article supprimé.');
+views\Stock\StockCanvasView.vue:199:    toast.error("Erreur lors de la suppression de l'article.");
+views\Stock\StockMatrixView.vue:91:    toast.error("Erreur lors du chargement de la matrice.")
+views\Stock\StockMatrixView.vue:119:  toast.success("Fiche d'inventaire téléchargée.");
+views\Stock\StockMovementView.vue:405:    toast.error("Erreur lors du chargement des produits.");
+views\Stock\StockMovementView.vue:468:    toast.error("Veuillez remplir correctement tous les champs obligatoires.");
+views\Stock\StockMovementView.vue:473:    toast.error("Veuillez sélectionner une entreprise partenaire.");
+views\Stock\StockMovementView.vue:504:    toast.success("Le mouvement de stock a bien été enregistré !");
+views\Stock\StockMovementView.vue:511:      toast.error(backendMessage);
+views\Stock\StockMovementView.vue:515:    toast.error("Impossible d'enregistrer l'opération.");
+views\CaisseView.vue:281:    toast.success("Pièce de caisse générée et enregistrée avec succès !");
+views\CaisseView.vue:299:    toast.error("Une erreur est survenue lors de la génération du PDF.");
+views\EmployeesView.vue:511:    toast.success("Employé créé avec succès");
+views\EmployeesView.vue:531:    toast.error(errorMsg);
+views\EmployeesView.vue:553:    toast.success("Employé mis à jour avec succès");
+views\EmployeesView.vue:565:    toast.error(errorMsg);
+views\EmployeesView.vue:597:    toast.success("Employé supprimé avec succès");
+views\EmployeesView.vue:606:    toast.error(errorMsg);
+views\HomeView.vue:66:    toast.success("Projet créé avec succès");
+views\HomeView.vue:71:    toast.error("Erreur lors de la création du projet");
+views\HomeView.vue:89:    toast.success('Demande RH créée !');
+views\HomeView.vue:93:    toast.error('Erreur lors de la création de la demande RH.');
+views\HomeView.vue:118:    toast.success('Demande Carburant créée !');
+views\HomeView.vue:133:    toast.error('Erreur lors de la création de la demande carburant.');
+views\ProcurementView.vue:115:    toast.error("Veuillez sélectionner un projet.");
+views\ProcurementView.vue:128:    toast.success("Demande d'achat créée avec succès !");
+views\ProcurementView.vue:133:    toast.error("Erreur lors de la création de la demande d'achat.");
+views\ProcurementView.vue:152:    toast.success("Bon de commande créé avec succès !");
+views\ProcurementView.vue:157:    toast.error("Erreur lors de la création du bon de commande.");
+views\ProcurementView.vue:209:    toast.success("Bon de commande approuvé !");
+views\ProcurementView.vue:213:    toast.error(err.response?.data?.detail || "Erreur lors de l'approbation.");
+views\ProcurementView.vue:221:    toast.success("Génération du PDF en cours...");
+views\ProcurementView.vue:227:    toast.error("Erreur lors de la génération du PDF du Bon de Commande.");
+views\ProjectBudgetView.vue:60:    toast.error("Veuillez remplir tous les champs.");
+views\ProjectBudgetView.vue:70:      toast.success('Budget modifié avec succès.');
+views\ProjectBudgetView.vue:78:      toast.success('Budget créé avec succès.');
+views\ProjectBudgetView.vue:84:    toast.error('Erreur lors de la sauvegarde du budget.');
+views\ProjectBudgetView.vue:103:    toast.success('Budget supprimé avec succès.');
+views\ProjectBudgetView.vue:107:    toast.error(errorDetail || "Erreur lors de la suppression du budget.");
+views\ProjectBudgetView.vue:113:    toast.error("Veuillez remplir les champs obligatoires.");
+views\ProjectBudgetView.vue:120:    toast.success('Dépense enregistrée.');
+views\ProjectBudgetView.vue:124:    toast.error(errorDetail || "Erreur lors de l'enregistrement de la dépense.");
+views\ProjectBudgetView.vue:132:    toast.success(`Dépense ${status === 'Approved' ? 'approuvée' : 'rejetée'}.`);
+views\ProjectBudgetView.vue:135:    toast.error("Erreur lors de la mise à jour du statut.");
+views\ProjectDashboardView.vue:97:    toast.success("Génération du rapport en cours...");
+views\ProjectDashboardView.vue:103:    toast.error("Erreur lors de la génération du rapport.");
+views\RequestFormView.vue:251:    toast.success('Demande envoyée.');
+views\RequestFormView.vue:254:    toast.error('Impossible de créer la demande pour le moment.');
+views\StockReservationView.vue:107:    toast.error("Veuillez remplir tous les champs correctement.");
+views\StockReservationView.vue:121:    toast.success("Réservation créée avec succès !");
+views\StockReservationView.vue:127:    toast.error(msg);
+views\StockReservationView.vue:136:    toast.success("Réservation consommée !");
+views\StockReservationView.vue:140:    toast.error(msg);
+views\StockReservationView.vue:147:    toast.success("Réservation approuvée avec succès !");
+views\StockReservationView.vue:151:    toast.error(msg);
+views\StockReservationView.vue:158:    toast.success("Réservation rejetée et stock restitué !");
+views\StockReservationView.vue:162:    toast.error(msg);
+
+

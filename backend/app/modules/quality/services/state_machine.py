@@ -77,7 +77,7 @@ def submit_review(
 ):
     doc = db.query(QualityDocument).filter(QualityDocument.id == document_id).first()
     if not doc:
-        raise HTTPException(status_code=404, detail="Document not found")
+        raise HTTPException(status_code=404, detail="Document introuvable")
         
     review = db.query(DocumentRoleReview).filter(
         DocumentRoleReview.id == review_id,
@@ -85,20 +85,20 @@ def submit_review(
     ).first()
     
     if not review:
-        raise HTTPException(status_code=404, detail="Review not found")
+        raise HTTPException(status_code=404, detail="Revue introuvable")
         
     if doc.created_by_id == current_user.id:
         raise HTTPException(status_code=403, detail="Le créateur du document ne peut pas valider sa propre version")
         
     if review.assigned_user_id:
         if review.assigned_user_id != current_user.id:
-            raise HTTPException(status_code=403, detail="You are not specifically assigned to validate this step")
+            raise HTTPException(status_code=403, detail="Vous n'êtes pas assigné pour valider cette étape")
     else:
         if not any(r.id == review.role_id for r in current_user.roles):
-            raise HTTPException(status_code=403, detail="You do not have the required role to submit this review")
+            raise HTTPException(status_code=403, detail="Vous n'avez pas le rôle requis pour soumettre cette revue")
             
     if review.status != ReviewStatus.PENDING:
-        raise HTTPException(status_code=400, detail="Already reviewed")
+        raise HTTPException(status_code=400, detail="Déjà revu")
         
     review.status = status
     review.comment = comment
@@ -135,10 +135,10 @@ def upload_new_version(
 ):
     doc = db.query(QualityDocument).filter(QualityDocument.id == document_id).first()
     if not doc:
-        raise HTTPException(status_code=404, detail="Document not found")
+        raise HTTPException(status_code=404, detail="Document introuvable")
         
     if doc.status != QualityDocStatus.REJECTED:
-        raise HTTPException(status_code=400, detail="Can only upload new version if rejected")
+        raise HTTPException(status_code=400, detail="Nouvelle version possible uniquement si rejetée")
         
     is_admin = any(r.name in ["Admin", "Qualité", "Qualite"] for r in current_user.roles)
     is_creator = doc.created_by_id == current_user.id
@@ -153,7 +153,7 @@ def upload_new_version(
             break
 
     if not (is_admin or is_creator or is_reviewer):
-        raise HTTPException(status_code=403, detail="You do not have permission to upload a new version")
+        raise HTTPException(status_code=403, detail="Vous n'avez pas l'autorisation de télécharger une nouvelle version")
         
     doc.status = QualityDocStatus.IN_REVIEW
     
@@ -203,11 +203,11 @@ def upload_new_version(
 def delete_document(db: Session, document_id: int, current_user: User):
     doc = db.query(QualityDocument).filter(QualityDocument.id == document_id).first()
     if not doc:
-        raise HTTPException(status_code=404, detail="Document not found")
+        raise HTTPException(status_code=404, detail="Document introuvable")
         
     is_admin = any(r.name in ["Admin", "Qualité"] for r in current_user.roles)
     if doc.created_by_id != current_user.id and not is_admin:
-        raise HTTPException(status_code=403, detail="You don't have permission to delete this document")
+        raise HTTPException(status_code=403, detail="Vous n'avez pas la permission de supprimer ce document")
         
     for version in doc.versions:
         try:

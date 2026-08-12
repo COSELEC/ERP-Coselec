@@ -31,6 +31,7 @@ class RequestCreate(RequestBase):
 class RequestUpdateStatus(BaseModel):
     status: RequestStatus
     rejection_comment: Optional[str] = None
+    updated_payload: Optional[dict] = None
 
 
 class RequestHistoryResponse(BaseModel):

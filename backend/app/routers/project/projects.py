@@ -46,7 +46,7 @@ def download_project_report(project_id: int, db: Session = Depends(get_db)):
         
     pdf_path = generate_project_report_pdf(db_project)
     if not pdf_path:
-        raise HTTPException(status_code=500, detail="Failed to generate PDF")
+        raise HTTPException(status_code=500, detail="Échec de la génération du PDF")
             
     url = get_file_url_from_minio(pdf_path)
     return {"pdf_url": url}
@@ -104,8 +104,7 @@ def get_projects(
     return query.options(
         joinedload(Project.client),
         joinedload(Project.expenses),
-        joinedload(Project.phases),
-        joinedload(Project.attendances)
+        joinedload(Project.phases)
     ).all()
  
 @router.get("/{project_id}", response_model=ProjectResponse, status_code=status.HTTP_200_OK)
@@ -130,12 +129,11 @@ def get_project(
     project = query.options(
         joinedload(Project.client),
         joinedload(Project.expenses),
-        joinedload(Project.phases),
-        joinedload(Project.attendances)
+        joinedload(Project.phases)
     ).filter(Project.id == project_id).first()
     
     if project is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project non trouvé ou accès refusé")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Projet non trouvé ou accès refusé")
     return project
 
 

@@ -63,7 +63,7 @@ def create_reservation(res: ReservationCreate, db: Session = Depends(get_db)):
     stock = db.query(Stock).with_for_update().filter(Stock.product_id == res.product_id).first()
     
     if not stock or stock.quantity < res.quantity:
-        raise HTTPException(status_code=400, detail="Insufficient stock available for reservation")
+        raise HTTPException(status_code=400, detail="Stock insuffisant pour la réservation")
         
     db_res = ProjectStockReservation(
         project_id=res.project_id,
@@ -88,10 +88,10 @@ def create_reservation(res: ReservationCreate, db: Session = Depends(get_db)):
 def consume_reservation(reservation_id: int, db: Session = Depends(get_db)):
     db_res = db.query(ProjectStockReservation).filter(ProjectStockReservation.id == reservation_id).first()
     if not db_res:
-        raise HTTPException(status_code=404, detail="Reservation not found")
+        raise HTTPException(status_code=404, detail="Réservation introuvable")
         
     if db_res.status != ReservationStatus.APPROVED:
-        raise HTTPException(status_code=400, detail="Reservation must be APPROVED to be consumed")
+        raise HTTPException(status_code=400, detail="La réservation doit être APPROUVÉE pour être consommée")
         
     db_res.status = ReservationStatus.CONSUMED
     db_res.consumed_at = datetime.utcnow()
@@ -108,10 +108,10 @@ def consume_reservation(reservation_id: int, db: Session = Depends(get_db)):
 def approve_reservation(reservation_id: int, db: Session = Depends(get_db)):
     db_res = db.query(ProjectStockReservation).filter(ProjectStockReservation.id == reservation_id).first()
     if not db_res:
-        raise HTTPException(status_code=404, detail="Reservation not found")
+        raise HTTPException(status_code=404, detail="Réservation introuvable")
         
     if db_res.status != ReservationStatus.PENDING:
-        raise HTTPException(status_code=400, detail="Only PENDING reservations can be approved")
+        raise HTTPException(status_code=400, detail="Seules les réservations EN ATTENTE peuvent être approuvées")
         
     db_res.status = ReservationStatus.APPROVED
     db.commit()
@@ -122,10 +122,10 @@ def approve_reservation(reservation_id: int, db: Session = Depends(get_db)):
 def reject_reservation(reservation_id: int, db: Session = Depends(get_db)):
     db_res = db.query(ProjectStockReservation).filter(ProjectStockReservation.id == reservation_id).first()
     if not db_res:
-        raise HTTPException(status_code=404, detail="Reservation not found")
+        raise HTTPException(status_code=404, detail="Réservation introuvable")
         
     if db_res.status != ReservationStatus.PENDING:
-        raise HTTPException(status_code=400, detail="Only PENDING reservations can be rejected")
+        raise HTTPException(status_code=400, detail="Seules les réservations EN ATTENTE peuvent être rejetées")
         
     stock = db.query(Stock).with_for_update().filter(Stock.product_id == db_res.product_id).first()
     if stock:

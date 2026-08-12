@@ -17,7 +17,7 @@ async def api_kpi_upload_preview(
     current_user: User = Depends(get_current_user)
 ):
     if not any(r.name in ["Admin", "Qualité", "Qualite"] for r in current_user.roles):
-        raise HTTPException(status_code=403, detail="Permission denied")
+        raise HTTPException(status_code=403, detail="Permission refusée")
         
     contents = await file.read()
     sheet_names = get_excel_preview(contents)
@@ -34,7 +34,7 @@ async def api_kpi_upload_parse(
     db: Session = Depends(get_db)
 ):
     if not any(r.name in ["Admin", "Qualité"] for r in current_user.roles):
-        raise HTTPException(status_code=403, detail="Permission denied")
+        raise HTTPException(status_code=403, detail="Permission refusée")
         
     contents = await file.read()
     imported, updated = parse_and_import_kpi(db, contents, sheet_name, year, month_name, month_index)

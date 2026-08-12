@@ -3,8 +3,12 @@ import { ref, onMounted, watch } from 'vue';
 import AppLayout from "@/layouts/AppLayout.vue";
 import api from "@/services/api";
 import { useToast } from '@/composables/useToast';
+import { getStoredProfile, hasAnyRole } from '@/services/session';
 
 const toast = useToast();
+
+const currentUser = getStoredProfile();
+const canManageBudget = ref(true);
 
 const projects = ref<any[]>([]);
 const selectedProjectId = ref<number | null>(null);
@@ -15,7 +19,7 @@ const error = ref<string | null>(null);
 
 const showBudgetModal = ref(false);
 const showExpenseModal = ref(false);
-const budgetForm = ref({ category: '', allocated_amount: 0, currency: 'XOF' });
+const budgetForm = ref({ id: null as number | null, category: '', allocated_amount: 0, currency: 'XOF' });
 const expenseForm = ref({ budget_id: null as number | null, amount: 0, date_incurred: '', description: '' });
 
 const fetchProjects = async () => {
@@ -51,19 +55,56 @@ const fetchBudgetData = async () => {
   }
 };
 
-const createBudget = async () => {
+const saveBudget = async () => {
   if (!selectedProjectId.value || !budgetForm.value.category || budgetForm.value.allocated_amount <= 0) {
     toast.error("Veuillez remplir tous les champs.");
     return;
   }
   try {
-    await api.post(`/projects/${selectedProjectId.value}/budgets/`, budgetForm.value);
+    if (budgetForm.value.id) {
+      // Update
+      await api.put(`/projects/${selectedProjectId.value}/budgets/${budgetForm.value.id}`, {
+        category: budgetForm.value.category,
+        allocated_amount: budgetForm.value.allocated_amount
+      });
+      toast.success('Budget modifié avec succès.');
+    } else {
+      // Create
+      await api.post(`/projects/${selectedProjectId.value}/budgets/`, {
+        category: budgetForm.value.category,
+        allocated_amount: budgetForm.value.allocated_amount,
+        currency: budgetForm.value.currency
+      });
+      toast.success('Budget créé avec succès.');
+    }
     showBudgetModal.value = false;
-    budgetForm.value = { category: '', allocated_amount: 0, currency: 'XOF' };
-    toast.success('Budget créé avec succès.');
+    budgetForm.value = { id: null, category: '', allocated_amount: 0, currency: 'XOF' };
     await fetchBudgetData();
   } catch {
-    toast.error('Erreur lors de la création du budget.');
+    toast.error('Erreur lors de la sauvegarde du budget.');
+  }
+};
+
+const editBudget = (b: any) => {
+  budgetForm.value = {
+    id: b.id,
+    category: b.category,
+    allocated_amount: b.allocated_amount,
+    currency: b.currency
+  };
+  showBudgetModal.value = true;
+};
+
+const deleteBudget = async (b: any) => {
+  if (!selectedProjectId.value) return;
+  if (!confirm(`Voulez-vous vraiment supprimer le budget "${b.category}" ?`)) return;
+  try {
+    await api.delete(`/projects/${selectedProjectId.value}/budgets/${b.id}`);
+    toast.success('Budget supprimé avec succès.');
+    await fetchBudgetData();
+  } catch (error: any) {
+    const errorDetail = error.response?.data?.detail;
+    toast.error(errorDetail || "Erreur lors de la suppression du budget.");
   }
 };
 
@@ -79,7 +120,7 @@ const createExpense = async () => {
     toast.success('Dépense enregistrée.');
     await fetchBudgetData();
   } catch (error:any) {
-    const errorDetail = error.response?.data.detail;
+    const errorDetail = error.response?.data?.detail;
     toast.error(errorDetail || "Erreur lors de l'enregistrement de la dépense.");
   }
 };
@@ -123,7 +164,7 @@ onMounted(async () => {
           <button @click="showExpenseModal = true" :disabled="!selectedProjectId" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             Nouvelle Dépense
           </button>
-          <button @click="showBudgetModal = true" :disabled="!selectedProjectId" class="bg-[#d10f2f] hover:bg-[#97091f] text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          <button v-if="canManageBudget" @click="budgetForm = { id: null, category: '', allocated_amount: 0, currency: 'XOF' }; showBudgetModal = true" :disabled="!selectedProjectId" class="bg-[#d10f2f] hover:bg-[#97091f] text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             Ajouter un Budget
           </button>
         </div>
@@ -141,7 +182,7 @@ onMounted(async () => {
 
       <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Budgets Table -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden h-max">
           <div class="p-6 border-b border-gray-100">
             <h2 class="text-xl font-bold text-gray-900">Lignes Budgétaires</h2>
           </div>
@@ -153,6 +194,7 @@ onMounted(async () => {
                   <th class="px-6 py-4 font-medium">Alloué</th>
                   <th class="px-6 py-4 font-medium">Consommé</th>
                   <th class="px-6 py-4 font-medium">Restant</th>
+                  <th v-if="canManageBudget" class="px-6 py-4 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
@@ -161,9 +203,15 @@ onMounted(async () => {
                   <td class="px-6 py-4 text-sm text-gray-500">{{ b.allocated_amount }} {{ b.currency }}</td>
                   <td class="px-6 py-4 text-sm text-red-600">{{ b.consumed }} {{ b.currency }}</td>
                   <td class="px-6 py-4 text-sm font-bold text-green-600">{{ b.allocated_amount - b.consumed }} {{ b.currency }}</td>
+                  <td v-if="canManageBudget" class="px-6 py-4 text-sm">
+                    <div class="flex gap-2">
+                      <button @click="editBudget(b)" class="text-blue-600 hover:text-blue-800" title="Modifier"><span class="material-symbols-outlined text-lg">edit</span></button>
+                      <button @click="deleteBudget(b)" class="text-red-600 hover:text-red-800" title="Supprimer"><span class="material-symbols-outlined text-lg">delete</span></button>
+                    </div>
+                  </td>
                 </tr>
                 <tr v-if="budgets.length === 0">
-                  <td colspan="4" class="px-6 py-8 text-center text-gray-500">Aucun budget défini.</td>
+                  <td :colspan="canManageBudget ? 5 : 4" class="px-6 py-8 text-center text-gray-500">Aucun budget défini.</td>
                 </tr>
               </tbody>
             </table>
@@ -212,16 +260,16 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- Budget Creation Modal -->
+      <!-- Budget Creation/Edit Modal -->
       <div v-if="showBudgetModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div class="bg-white p-6 rounded-xl w-96 shadow-xl">
-          <h2 class="text-xl font-bold mb-4 text-gray-900">Ajouter un Budget</h2>
-          <form @submit.prevent="createBudget" class="space-y-3">
+          <h2 class="text-xl font-bold mb-4 text-gray-900">{{ budgetForm.id ? 'Modifier le Budget' : 'Ajouter un Budget' }}</h2>
+          <form @submit.prevent="saveBudget" class="space-y-3">
             <input v-model="budgetForm.category" placeholder="Catégorie (ex: Main d'oeuvre)" required class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500" />
             <input type="number" v-model.number="budgetForm.allocated_amount" min="1" placeholder="Montant alloué (XOF)" required class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500" />
             <div class="flex justify-end gap-2 mt-4">
               <button type="button" @click="showBudgetModal = false" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Annuler</button>
-              <button type="submit" class="bg-[#d10f2f] hover:bg-[#97091f] text-white px-4 py-2 rounded-lg">Créer</button>
+              <button type="submit" class="bg-[#d10f2f] hover:bg-[#97091f] text-white px-4 py-2 rounded-lg">Enregistrer</button>
             </div>
           </form>
         </div>

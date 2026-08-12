@@ -13,7 +13,8 @@ from app.modules.requests_unified.models.request import RequestStatus, RequestTy
 VALID_TRANSITIONS: dict[RequestStatus, set[RequestStatus]] = {
     RequestStatus.DRAFT:            {RequestStatus.PENDING},
     RequestStatus.PENDING:          {RequestStatus.APPROVED, RequestStatus.REJECTED},
-    RequestStatus.PENDING_MANAGER_APPROVAL: {RequestStatus.PENDING_FINANCE_APPROVAL, RequestStatus.REJECTED},
+    RequestStatus.PENDING_MANAGER_APPROVAL: {RequestStatus.PENDING_FINANCE_APPROVAL, RequestStatus.REJECTED, RequestStatus.COMPROMISE_PENDING},
+    RequestStatus.COMPROMISE_PENDING: {RequestStatus.PENDING_FINANCE_APPROVAL, RequestStatus.APPROVED, RequestStatus.REJECTED},
     RequestStatus.PENDING_FINANCE_APPROVAL: {RequestStatus.APPROVED, RequestStatus.REJECTED},
     RequestStatus.APPROVED:         {RequestStatus.IN_PROGRESS, RequestStatus.COMPLETED},
     RequestStatus.IN_PROGRESS:      {RequestStatus.ON_HOLD, RequestStatus.COMPLETED},

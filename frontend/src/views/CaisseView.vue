@@ -18,9 +18,7 @@
             </button>
           </div>
 
-          <!-- Formulaire de saisie -->
           <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-8">
-            <!-- Entête -->
             <div class="grid grid-cols-4 gap-6">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">NUM</label>
@@ -46,7 +44,6 @@
               </div>
             </div>
 
-            <!-- Dépenses -->
             <div>
               <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold text-gray-800">Dépenses</h3>
@@ -78,7 +75,6 @@
 
             <hr class="border-gray-100" />
 
-            <!-- Recettes -->
             <div>
               <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold text-gray-800">Recettes</h3>

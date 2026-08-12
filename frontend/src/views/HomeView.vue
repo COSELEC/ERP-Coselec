@@ -2,7 +2,6 @@
 import { ref, onMounted } from "vue";
 import AppLayout from "@/layouts/AppLayout.vue";
 import MapLocationPicker from "@/components/project/MapLocationPicker.vue";
-import AttendanceClockWidget from "@/components/AttendanceClockWidget.vue";
 import api from '../services/api';
 import { getStoredProfile } from '@/services/session';
 import { useToast } from '@/composables/useToast';
@@ -194,16 +193,11 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- Attendance Clock Widget + Recent Activity -->
+      <!-- Recent Activity -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <!-- Attendance Clock Widget -->
-        <div>
-          <AttendanceClockWidget />
-        </div>
-
         <!-- Recent Activity -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:col-span-2">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:col-span-3">
           <h2 class="text-lg font-bold text-gray-900 mb-4">Activité Récente</h2>
           <ul class="space-y-4">
             <li v-for="act in recentActivity" :key="act.id" class="flex items-start gap-3">

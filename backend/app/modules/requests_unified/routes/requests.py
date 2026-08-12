@@ -213,7 +213,7 @@ def get_request(
 ):
     request = db.get(GenericRequest, request_id)
     if not request:
-        raise HTTPException(status_code=404, detail="Request not found")
+        raise HTTPException(status_code=404, detail="Requête introuvable")
 
     roles = _user_roles(current_user)
     if (
@@ -222,7 +222,7 @@ def get_request(
         and "Direction" not in roles
         and "RH" not in roles
     ):
-        raise HTTPException(status_code=403, detail="Not authorized to view this request")
+        raise HTTPException(status_code=403, detail="Non autorisé à consulter cette requête")
 
     return request
 
@@ -298,35 +298,32 @@ def update_request_status(
 ):
     request = db.get(GenericRequest, request_id)
     if not request:
-        raise HTTPException(status_code=404, detail="Request not found")
+        raise HTTPException(status_code=404, detail="Requête introuvable")
 
     role_names = {r.name.upper() for r in current_user.roles}
     is_admin = "ADMIN" in role_names
     
     if not is_admin:
-        if payload.status == RequestStatus.PENDING_FINANCE_APPROVAL or (payload.status == RequestStatus.REJECTED and request.status == RequestStatus.PENDING_MANAGER_APPROVAL):
+        if payload.status == RequestStatus.PENDING_FINANCE_APPROVAL or (payload.status == RequestStatus.REJECTED and request.status == RequestStatus.PENDING_MANAGER_APPROVAL) or (request.status == RequestStatus.COMPROMISE_PENDING and payload.status in {RequestStatus.APPROVED, RequestStatus.REJECTED}):
             if "DIRECTION" not in role_names:
-                from app.modules.users.models.user import User
-                current_employee = db.query(User).filter(User.email == current_user.email).first()
                 requester = db.get(User, request.requester_id)
-                requester_employee = db.query(User).filter(User.email == requester.email).first() if requester else None
                 
-                is_direct_manager = current_employee and requester_employee and requester_employee.manager_id == current_employee.id
+                is_direct_manager = requester and requester.manager_id == current_user.id
                 if not is_direct_manager:
-                    raise HTTPException(status_code=403, detail="Manager or Direction approval required")
+                    raise HTTPException(status_code=403, detail="Approbation du responsable ou de la direction requise")
                     
-        elif payload.status in {RequestStatus.APPROVED, RequestStatus.REJECTED}:
+        elif payload.status in {RequestStatus.APPROVED, RequestStatus.REJECTED} and request.status != RequestStatus.COMPROMISE_PENDING:
             if request.type in {RequestType.LEAVE, RequestType.DOCUMENT}:
                 if not (role_names & {"RH", "HR", "DIRECTION"} or any("RH" in r for r in role_names)):
-                    raise HTTPException(status_code=403, detail="HR approval required")
+                    raise HTTPException(status_code=403, detail="Approbation RH requise")
             elif request.type in {RequestType.IT_EQUIPMENT, RequestType.IT_ACCESS, RequestType.IT_INCIDENT}:
                 it_roles = {"IT", "IT ADMIN", "ADMIN IT", "RESPONSABLE IT"}
                 if not (role_names & it_roles or any("IT" in r for r in role_names)):
-                    raise HTTPException(status_code=403, detail="IT approval required")
+                    raise HTTPException(status_code=403, detail="Approbation IT requise")
             elif request.type in {RequestType.FACILITY_MAINTENANCE, RequestType.FACILITY_SUPPLIES, RequestType.FACILITY_BADGE, RequestType.FUEL}:
                 facility_roles = {"FINANCE", "ACHAT", "FINANCE / BUDGET", "FACILITY", "FACILITY MANAGER", "LOGISTIQUE", "STOCK / LOGISTIQUE", "MAINTENANCE"}
                 if not (role_names & facility_roles or any(term in r for r in role_names for term in ["FACILITY", "FINANCE", "ACHAT"])):
-                    raise HTTPException(status_code=403, detail="Finance/Achat/Facility approval required")
+                    raise HTTPException(status_code=403, detail="Approbation Finance/Achat/Services Généraux requise")
 
     if not validate_transition(request.status, payload.status):
         raise HTTPException(
@@ -338,20 +335,39 @@ def update_request_status(
         )
 
     old_status = request.status.value
+
+    # Handle payload updates and fuel compromise
+    is_finance_compromise = False
+    if payload.updated_payload:
+        if request.type == RequestType.FUEL:
+            old_quantity = request.payload.get("fuel_quantity")
+            new_quantity = payload.updated_payload.get("fuel_quantity")
+            if old_quantity and new_quantity and float(new_quantity) < float(old_quantity):
+                payload.updated_payload["original_fuel_quantity"] = float(old_quantity)
+                # Force status to compromise pending if finance is approving
+                if payload.status == RequestStatus.APPROVED and request.status == RequestStatus.PENDING_FINANCE_APPROVAL:
+                    payload.status = RequestStatus.COMPROMISE_PENDING
+                    is_finance_compromise = True
+        
+        # Merge updated payload
+        request.payload = {**request.payload, **payload.updated_payload}
+        from sqlalchemy.orm.attributes import flag_modified
+        flag_modified(request, "payload")
+
     request.status = payload.status
     request.validator_id = current_user.id
     
     if payload.status == RequestStatus.PENDING_FINANCE_APPROVAL:
         request.manager_validator_id = current_user.id
         request.manager_validated_at = datetime.utcnow()
-    elif payload.status == RequestStatus.APPROVED and old_status == RequestStatus.PENDING_FINANCE_APPROVAL:
+    elif (payload.status == RequestStatus.APPROVED or is_finance_compromise) and old_status == RequestStatus.PENDING_FINANCE_APPROVAL:
         request.finance_validator_id = current_user.id
         request.finance_validated_at = datetime.utcnow()
 
     if payload.rejection_comment:
         request.rejection_comment = payload.rejection_comment
 
-    if payload.status in {RequestStatus.REJECTED, RequestStatus.CANCELLED}:
+    if payload.status == RequestStatus.REJECTED:
         from app.models.project.expense import ProjectExpense
         expense = db.query(ProjectExpense).filter(ProjectExpense.reference == f"REQ-{request.id}").first()
         if expense:
@@ -443,22 +459,26 @@ def update_request_status(
             def _generate_caisse_voucher():
                 with SessionLocal() as bg_db:
                     try:
-                        from app.models.caisse_voucher import CaisseVoucher, CaisseVoucherStatus
-                        from app.models.project.expense import ProjectExpense
-                        
-                        expense = bg_db.query(ProjectExpense).filter(ProjectExpense.reference == f"REQ-{request_id}").first()
-                        amount = expense.amount if expense else 0.0
+                        from app.models.caisse_voucher import CaisseVoucher, VoucherStatus, CaisseVoucherLine, CaisseVoucherLineType
+                        # ProjectExpense no longer has a 'reference' column. Setting amount to 0 for now
+                        amount = 0.0
                         
                         voucher = CaisseVoucher(
-                            date=datetime.utcnow(),
-                            description=f"Demande de décaissement pour {request.type.value} #{request_id}",
-                            type="Sortie",
-                            amount=amount,
-                            beneficiary=request.payload.get("beneficiary", "Fournisseur inconnu"),
-                            status=CaisseVoucherStatus.DRAFT,
-                            generic_request_id=request_id
+                            num=f"REQ-{request_id}",
+                            expense_id=None,
+                            status=VoucherStatus.DRAFT
                         )
                         bg_db.add(voucher)
+                        bg_db.flush()
+                        
+                        line = CaisseVoucherLine(
+                            voucher_id=voucher.id,
+                            line_type=CaisseVoucherLineType.EXPENSE,
+                            date=datetime.utcnow().strftime("%d/%m/%Y"),
+                            designation=f"Décaissement {request.type.value} #{request_id}",
+                            amount=amount
+                        )
+                        bg_db.add(line)
                         bg_db.commit()
                     except Exception:
                         bg_db.rollback()
@@ -478,11 +498,11 @@ def delete_request(
 ):
     request = db.get(GenericRequest, request_id)
     if not request:
-        raise HTTPException(status_code=404, detail="Request not found")
+        raise HTTPException(status_code=404, detail="Requête introuvable")
 
     roles = _user_roles(current_user)
     if request.requester_id != current_user.id and "Admin" not in roles:
-        raise HTTPException(status_code=403, detail="Not authorized to delete this request")
+        raise HTTPException(status_code=403, detail="Non autorisé à supprimer cette requête")
 
     if request.status in {RequestStatus.COMPLETED, RequestStatus.APPROVED}:
         raise HTTPException(
@@ -504,7 +524,7 @@ def get_request_history(
 ):
     request = db.get(GenericRequest, request_id)
     if not request:
-        raise HTTPException(status_code=404, detail="Request not found")
+        raise HTTPException(status_code=404, detail="Requête introuvable")
 
     return [
         {
@@ -526,7 +546,7 @@ def download_request_pdf(
 ):
     request = db.get(GenericRequest, request_id)
     if not request or not request.attachment_url:
-        raise HTTPException(status_code=404, detail="PDF not found")
+        raise HTTPException(status_code=404, detail="PDF introuvable")
         
     from fastapi.responses import RedirectResponse
     from app.services.storage import get_file_url_from_minio
@@ -538,4 +558,4 @@ def download_request_pdf(
         return RedirectResponse(url=url)
     except Exception as e:
         logger.error(f"Error generating presigned URL for {file_path}: {e}")
-        raise HTTPException(status_code=500, detail="Error retrieving PDF from storage")
+        raise HTTPException(status_code=500, detail="Erreur lors de la récupération du PDF")

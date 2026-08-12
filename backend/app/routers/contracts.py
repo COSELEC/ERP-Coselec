@@ -31,7 +31,7 @@ def create_contract(
 ):
     user = db.query(User).filter(User.id == contract_data.user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
 
     new_contract = Contract(**contract_data.model_dump())
     db.add(new_contract)
@@ -57,7 +57,7 @@ def update_contract(
 ):
     contract = db.query(Contract).filter(Contract.id == contract_id).first()
     if not contract:
-        raise HTTPException(status_code=404, detail="Contract not found")
+        raise HTTPException(status_code=404, detail="Contrat introuvable")
 
     for key, value in contract_data.model_dump(exclude_unset=True).items():
         setattr(contract, key, value)
@@ -75,7 +75,7 @@ def delete_contract(
 ):
     contract = db.query(Contract).filter(Contract.id == contract_id).first()
     if not contract:
-        raise HTTPException(status_code=404, detail="Contract not found")
+        raise HTTPException(status_code=404, detail="Contrat introuvable")
 
     db.delete(contract)
     db.commit()

@@ -203,10 +203,10 @@ def finalize_bank_voucher(voucher_id: int, db: Session = Depends(get_db)):
     from datetime import datetime
     voucher = db.query(BankVoucher).filter(BankVoucher.id == voucher_id).first()
     if not voucher:
-        raise HTTPException(status_code=404, detail="Voucher not found")
+        raise HTTPException(status_code=404, detail="Pièce introuvable")
         
     if voucher.status != VoucherStatus.DRAFT:
-        raise HTTPException(status_code=400, detail="Only DRAFT vouchers can be finalized")
+        raise HTTPException(status_code=400, detail="Seules les pièces en BROUILLON peuvent être finalisées")
         
     voucher.status = VoucherStatus.FINALIZED
     voucher.finalized_at = datetime.utcnow()
@@ -226,10 +226,10 @@ def void_bank_voucher(voucher_id: int, db: Session = Depends(get_db)):
     from app.models.caisse_voucher import VoucherStatus
     voucher = db.query(BankVoucher).filter(BankVoucher.id == voucher_id).first()
     if not voucher:
-        raise HTTPException(status_code=404, detail="Voucher not found")
+        raise HTTPException(status_code=404, detail="Pièce introuvable")
         
     if voucher.status == VoucherStatus.VOID:
-        raise HTTPException(status_code=400, detail="Voucher is already voided")
+        raise HTTPException(status_code=400, detail="La pièce est déjà annulée")
         
     voucher.status = VoucherStatus.VOID
     db.commit()
@@ -244,7 +244,7 @@ def upload_bank_attachment(
 ):
     voucher = db.query(BankVoucher).filter(BankVoucher.id == voucher_id).first()
     if not voucher:
-        raise HTTPException(status_code=404, detail="Bank Voucher not found")
+        raise HTTPException(status_code=404, detail="Pièce de banque introuvable")
         
     ext = file.filename.split('.')[-1] if '.' in file.filename else 'bin'
     filename = f"orders/bank_{voucher_id}_{uuid.uuid4().hex[:8]}.{ext}"
@@ -252,7 +252,7 @@ def upload_bank_attachment(
     try:
         storage_path = upload_file_to_minio(file, filename)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Échec de l'upload : {str(e)}")
         
     attachment = VoucherAttachment(
         bank_voucher_id=voucher_id,

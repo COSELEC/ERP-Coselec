@@ -90,7 +90,7 @@ def create_purchase_request(
         return db_req
     except IntegrityError as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Invalid project_id or requester_id")
+        raise HTTPException(status_code=400, detail="project_id ou requester_id invalide")
 
 @router.get("/orders", response_model=List[PurchaseOrderResponse])
 def get_purchase_orders(
@@ -154,7 +154,7 @@ def create_purchase_order(
         return db_order
     except IntegrityError as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Invalid request_id, supplier_id or product_id")
+        raise HTTPException(status_code=400, detail="request_id, supplier_id ou product_id invalide")
 
 @router.get("/orders/{order_id}/download-pdf")
 def download_order_pdf(
@@ -164,7 +164,7 @@ def download_order_pdf(
 ):
     db_order = db.query(PurchaseOrder).filter(PurchaseOrder.id == order_id).first()
     if not db_order:
-        raise HTTPException(status_code=404, detail="Order not found")
+        raise HTTPException(status_code=404, detail="Commande introuvable")
         
     if not db_order.pdf_url:
         pdf_path = generate_purchase_order_pdf(db_order)
@@ -172,7 +172,7 @@ def download_order_pdf(
             db_order.pdf_url = pdf_path
             db.commit()
         else:
-            raise HTTPException(status_code=500, detail="Failed to generate PDF")
+            raise HTTPException(status_code=500, detail="Échec de la génération du PDF")
             
     url = get_file_url_from_minio(db_order.pdf_url)
     return {"pdf_url": url}
@@ -187,10 +187,10 @@ def approve_purchase_order(
 ):
     db_order = db.query(PurchaseOrder).filter(PurchaseOrder.id == order_id).first()
     if not db_order:
-        raise HTTPException(status_code=404, detail="Order not found")
+        raise HTTPException(status_code=404, detail="Commande introuvable")
         
     if getattr(db_order.status, "name", db_order.status) == "APPROVED":
-        raise HTTPException(status_code=400, detail="Order is already approved")
+        raise HTTPException(status_code=400, detail="La commande est déjà approuvée")
         
     line_map = {line.id: line for line in db_order.lines}
     
@@ -199,7 +199,7 @@ def approve_purchase_order(
         proj_id = db_order.purchase_request.project_id
         
     if not proj_id:
-        raise HTTPException(status_code=400, detail="Order is not linked to any project")
+        raise HTTPException(status_code=400, detail="La commande n'est liée à aucun projet")
     
     for approve_line in approve_req.lines:
         db_line = line_map.get(approve_line.line_id)
@@ -294,7 +294,7 @@ def validate_delivery_note(
     
     note = db.query(DeliveryNote).filter(DeliveryNote.id == note_id).first()
     if not note:
-        raise HTTPException(status_code=404, detail="Delivery Note not found")
+        raise HTTPException(status_code=404, detail="Bon de livraison introuvable")
         
     for line_req in req.lines:
         line = db.query(DeliveryNoteLine).filter(DeliveryNoteLine.id == line_req.id, DeliveryNoteLine.delivery_note_id == note.id).first()
@@ -305,13 +305,13 @@ def validate_delivery_note(
             
     if req.action == "magasinier":
         if note.status != DeliveryNoteStatus.DRAFT:
-            raise HTTPException(status_code=400, detail="Delivery Note is not in DRAFT status")
+            raise HTTPException(status_code=400, detail="Le bon de livraison n'est pas au statut BROUILLON")
         note.status = DeliveryNoteStatus.CHECKED_BY_MAGASINIER
         note.magasinier_validator_id = current_user.id
         note.magasinier_validated_at = datetime.utcnow()
     elif req.action == "manager":
         if note.status != DeliveryNoteStatus.CHECKED_BY_MAGASINIER:
-            raise HTTPException(status_code=400, detail="Delivery Note must be checked by magasinier first")
+            raise HTTPException(status_code=400, detail="Le bon de livraison doit d'abord être vérifié par le magasinier")
         note.status = DeliveryNoteStatus.VALIDATED_BY_MANAGER
         note.manager_validator_id = current_user.id
         note.manager_validated_at = datetime.utcnow()

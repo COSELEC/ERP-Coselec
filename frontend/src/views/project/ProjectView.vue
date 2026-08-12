@@ -32,13 +32,20 @@
               <span class="material-symbols-outlined">edit</span>
               <span class="ml-1 font-medium text-sm">Modifier</span>
             </button>
-            <button class ="ml-2 bg-red-50 border-2 border-red-600 text-red-700 rounded-lg px-3 h-10 flex items-center justify-center hover:bg-red-100 transition"
-              v-if="selectedProject"
-              @click="isDailyReportModalOpen = true"
-            >
-              <span class="material-symbols-outlined">calendar_month</span>
-              <span class="ml-1 font-medium text-sm">Rapport hebdomadaire</span>
-            </button>
+            <div v-if="selectedProject" class="flex gap-2 ml-2">
+              <button class="bg-red-50 border-2 border-red-600 text-red-700 rounded-lg px-3 h-10 flex items-center justify-center hover:bg-red-100 transition"
+                @click="openReportModal('weekly')"
+              >
+                <span class="material-symbols-outlined">calendar_month</span>
+                <span class="ml-1 font-medium text-sm">Rapport hebdomadaire</span>
+              </button>
+              <button class="bg-red-50 border-2 border-red-600 text-red-700 rounded-lg px-3 h-10 flex items-center justify-center hover:bg-red-100 transition"
+                @click="openReportModal('daily')"
+              >
+                <span class="material-symbols-outlined">today</span>
+                <span class="ml-1 font-medium text-sm">Rapport journalier</span>
+              </button>
+            </div>
           </div>
 
           <div class="flex border border-red-500 rounded-lg overflow-hidden">
@@ -135,8 +142,9 @@
   </div>
   
   <DailyReportForm 
-    :is-open="isDailyReportModalOpen" 
-    @close="isDailyReportModalOpen = false" 
+    :is-open="isReportModalOpen" 
+    :type="reportModalType"
+    @close="isReportModalOpen = false" 
     @report-submitted="onReportSubmitted" 
   />
     <TaskCreateModal
@@ -254,7 +262,12 @@ const currentView = shallowRef('Kanban');
 const selectedProject = ref<string | null>(null);
 const selectedMilestone = ref<number | null>(null);
 const isTaskCreateModalOpen = ref(false);
-const isDailyReportModalOpen = ref(false);
+const isReportModalOpen = ref(false);
+const reportModalType = ref<'daily' | 'weekly'>('weekly');
+const openReportModal = (type: 'daily' | 'weekly') => {
+  reportModalType.value = type;
+  isReportModalOpen.value = true;
+};
 
 const isProjectEditModalOpen = ref(false);
 const projectEditForm = ref({ code: '', nom: '', date_debut_estimee: '', date_fin_estimee: '', status: '', location: { lat: null as number|null, lng: null as number|null, address: null as string|null } });
@@ -349,12 +362,20 @@ const resolveActiveProjectId = (): number | null => {
   return Number.isFinite(routeId) && routeId > 0 ? routeId : null;
 };
 
-const onProjectChange = async () => {
+const onProjectChange = async (preserveMilestone = false) => {
     const project = projects.value.find(p => p.nom === selectedProject.value);
     if (project) {
         try {
             const msRes = await projectService.getProjectMilestones(project.id);
             milestones.value = msRes.data || [];
+            
+            if (preserveMilestone && selectedMilestone.value) {
+                const stillExists = milestones.value.find(m => m.id === selectedMilestone.value);
+                if (stillExists) {
+                    await loadTasks();
+                    return;
+                }
+            }
             
             const activeMilestone = milestones.value.find(m => m.status === 'Active') || milestones.value[0];
             if (activeMilestone) {
@@ -396,7 +417,7 @@ const handleTaskCreate = async (rawData: any) => {
 
     isTaskCreateModalOpen.value = false;
     
-    await onProjectChange(); 
+    await onProjectChange(true); 
   } catch (error: any) {
     console.error('Erreur lors de la creation de la tache', error);
   }
@@ -529,7 +550,7 @@ const handleTaskUpdate = async (taskId: number, rawData: any) => {
       await taskService.uploadTaskDocuments(Number(projectId), taskId, files);
     }
 
-    await onProjectChange();
+    await onProjectChange(true);
     
   } catch (error: any) {
     console.error("Failed to update task", error);

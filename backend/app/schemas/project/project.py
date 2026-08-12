@@ -37,7 +37,7 @@ class ProjectResponse(ProjectBase):
 
     @computed_field
     def employees_count(self) -> int:
-        return len(set(a.user_id for a in self.attendances)) if getattr(self, "attendances", None) else 0
+        return 0
 
     @computed_field
     def current_phase(self) -> Optional[str]:

@@ -72,6 +72,7 @@ class FuelPayload(BaseModel):
     vehicle_plate: str
     destination: str
     fuel_quantity: float = Field(gt=0)
+    original_fuel_quantity: Optional[float] = None
     trip_days: int = Field(gt=0)
     odometer_reading: int = Field(gt=0)
     trip_purpose: str = ""

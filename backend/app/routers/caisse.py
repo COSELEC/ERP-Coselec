@@ -264,7 +264,7 @@ def upload_caisse_attachment(
 ):
     voucher = db.query(CaisseVoucher).filter(CaisseVoucher.id == voucher_id).first()
     if not voucher:
-        raise HTTPException(status_code=404, detail="Caisse Voucher not found")
+        raise HTTPException(status_code=404, detail="Pièce de caisse introuvable")
         
     ext = file.filename.split('.')[-1] if '.' in file.filename else 'bin'
     filename = f"orders/caisse_{voucher_id}_{uuid.uuid4().hex[:8]}.{ext}"
@@ -272,7 +272,7 @@ def upload_caisse_attachment(
     try:
         storage_path = upload_file_to_minio(file, filename)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Échec de l'upload : {str(e)}")
         
     attachment = VoucherAttachment(
         caisse_voucher_id=voucher_id,

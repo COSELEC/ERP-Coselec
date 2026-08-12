@@ -40,11 +40,11 @@ def get_project_assignments(project_id: int, db: Session = Depends(get_db)):
 def create_project_assignment(project_id: int, assignment: AssignmentCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+        raise HTTPException(status_code=404, detail="Projet introuvable")
 
     user = db.query(User).filter(User.id == assignment.user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
 
     if is_employee_on_leave(db, assignment.user_id, assignment.start_date, assignment.end_date):
         raise HTTPException(status_code=400, detail="Employé en congé sur cette période")
@@ -54,7 +54,7 @@ def create_project_assignment(project_id: int, assignment: AssignmentCreate, bac
         ProjectAssignment.user_id == assignment.user_id
     ).first()
     if existing:
-        raise HTTPException(status_code=400, detail="User is already assigned to this project")
+        raise HTTPException(status_code=400, detail="L'utilisateur est déjà assigné à ce projet")
 
     today = date.today()
     is_active = assignment.start_date <= today and (assignment.end_date is None or assignment.end_date >= today)
@@ -95,7 +95,7 @@ def create_project_assignment(project_id: int, assignment: AssignmentCreate, bac
 def update_project_assignment(assignment_id: int, assignment_update: AssignmentUpdate, db: Session = Depends(get_db)):
     db_assignment = db.query(ProjectAssignment).filter(ProjectAssignment.id == assignment_id).first()
     if not db_assignment:
-        raise HTTPException(status_code=404, detail="Assignment not found")
+        raise HTTPException(status_code=404, detail="Assignation introuvable")
 
     update_data = assignment_update.model_dump(exclude_unset=True)
     
@@ -134,7 +134,7 @@ def update_project_assignment(assignment_id: int, assignment_update: AssignmentU
 def delete_project_assignment(assignment_id: int, db: Session = Depends(get_db)):
     db_assignment = db.query(ProjectAssignment).filter(ProjectAssignment.id == assignment_id).first()
     if not db_assignment:
-        raise HTTPException(status_code=404, detail="Assignment not found")
+        raise HTTPException(status_code=404, detail="Assignation introuvable")
         
     db.delete(db_assignment)
     db.commit()

@@ -62,11 +62,11 @@ def api_update_visibility(
 ):
     doc = db.query(QualityDocument).filter(QualityDocument.id == doc_id).first()
     if not doc:
-        raise HTTPException(status_code=404, detail="Document not found")
+        raise HTTPException(status_code=404, detail="Document introuvable")
         
     is_admin = any(r.name in ["Admin", "Qualité", "Qualite"] for r in current_user.roles)
     if doc.created_by_id != current_user.id and not is_admin:
-        raise HTTPException(status_code=403, detail="Not authorized to update visibility")
+        raise HTTPException(status_code=403, detail="Non autorisé à mettre à jour la visibilité")
         
     roles = db.query(Role).filter(Role.id.in_(payload.role_ids)).all()
     doc.visible_roles = roles
@@ -114,7 +114,7 @@ def api_create_document(
         if not isinstance(reviewers_list, list):
             raise ValueError
     except:
-        raise HTTPException(status_code=400, detail="reviewers_json must be a JSON list of objects")
+        raise HTTPException(status_code=400, detail="reviewers_json doit être une liste JSON d'objets")
 
     doc = create_document(db, title, description, reviewers_list, file, current_user)
     return doc
@@ -127,7 +127,7 @@ def api_get_document(
 ):
     doc = db.query(QualityDocument).filter(QualityDocument.id == doc_id).first()
     if not doc:
-        raise HTTPException(status_code=404, detail="Document not found")
+        raise HTTPException(status_code=404, detail="Document introuvable")
     return doc
 
 @router.post("/{doc_id}/versions", response_model=QualityDocumentResponse)
@@ -158,11 +158,11 @@ def api_download_document(
 ):
     doc = db.query(QualityDocument).filter(QualityDocument.id == doc_id).first()
     if not doc:
-        raise HTTPException(status_code=404, detail="Document not found")
+        raise HTTPException(status_code=404, detail="Document introuvable")
         
     version = next((v for v in doc.versions if v.id == version_id), None)
     if not version:
-        raise HTTPException(status_code=404, detail="Version not found")
+        raise HTTPException(status_code=404, detail="Version introuvable")
         
     from app.services.storage import get_file_url_from_minio
     url = get_file_url_from_minio(version.r2_file_key)

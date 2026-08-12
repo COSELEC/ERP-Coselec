@@ -46,14 +46,6 @@ const routes = [
     component: () => import("../views/employees/OrganizationView.vue"),
   },
   {
-    path: "/attendance",
-    name: "attendance",
-    component: () => import("../views/employees/AttendanceView.vue"),
-    meta: {
-      requiredRoles: ["Admin", "Direction", "RH / Comptabilité"],
-    },
-  },
-  {
     path: "/stock/movement",
     component: () => import("../views/Stock/StockMovementView.vue"),
     meta: {

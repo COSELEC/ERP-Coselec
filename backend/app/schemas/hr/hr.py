@@ -2,40 +2,6 @@ from pydantic import BaseModel, model_validator
 from datetime import date, datetime
 from typing import Optional
 from app.models.hr.document import DocumentCategory
-class AttendanceUpdate(BaseModel):
-    user_id: int
-    date: date
-    status: str
-    notes: Optional[str] = None
-    project_id: Optional[int] = None
-
-    class Config:
-        from_attributes = True
-
-class TimeclockResponse(BaseModel):
-    id: int
-    user_id: int
-    date: datetime
-    check_in: Optional[datetime] = None
-    check_out: Optional[datetime] = None
-    status: str
-    notes: Optional[str] = None
-
-    class Config:
-        from_attributes = True
-
-class TimeclockHistoryItem(BaseModel):
-    id: int
-    user_id: int
-    user_name: str
-    date: datetime
-    check_in: Optional[datetime] = None
-    check_out: Optional[datetime] = None
-    duration_minutes: Optional[int] = None
-
-    class Config:
-        from_attributes = True
-
 class ContractBase(BaseModel):
     user_id: int
     contract_type: str
