@@ -167,12 +167,7 @@ const routes = [
     component: () => import("@/views/Admin/UsersView.vue"),
     meta: { requiredRoles: ["Admin"] }
   },
-  {
-    path: "/portfolio",
-    name: "portfolio",
-    component: () => import("../views/PortfolioView.vue"),
-    meta: { requiredRoles: ["Admin", "Direction", "Finance", "Responsable Projet"] }
-  },
+
   {
     path: "/project-budget",
     name: "project-budget",

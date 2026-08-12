@@ -1,7 +1,7 @@
 <template>
   <div class="project-view-root w-full">
     <AppLayout>
-      <div class="flex flex-col w-full gap-6 p-4">
+      <div class="flex flex-col w-full gap-8 p-8">
         
         <div class="flex items-center justify-between w-full">
           <div class="flex items-center space-x-4">
@@ -82,7 +82,12 @@
           </div>
         </div>
 
-        <div v-if="milestones.length > 0" class="flex gap-2 overflow-x-auto border-b border-gray-200 pt-2 shrink-0">
+        <div v-if="activeProject?.address" class="flex items-center text-gray-600 text-sm -mt-4 mb-2 bg-gray-50 rounded-lg p-2 w-max border border-gray-200">
+           <span class="material-symbols-outlined text-base mr-2 text-red-600">location_on</span>
+           <span class="font-medium">{{ activeProject.address }}</span>
+        </div>
+
+        <div v-if="milestones.length > 0" class="flex gap-4 overflow-x-auto border-b border-gray-200 pt-2 shrink-0">
             <div
                 v-for="m in milestones" 
                 :key="m.id"
@@ -242,7 +247,7 @@ import MapLocationPicker from '@/components/project/MapLocationPicker.vue';
 import ProjectDailyReportsList from '@/components/projects/ProjectDailyReportsList.vue';
 import ProjectStockView from '@/components/project/ProjectStockView.vue';
 import DailyReportForm from '@/components/projects/DailyReportForm.vue';
-import { shallowRef, ref, onMounted, watch } from 'vue';
+import { shallowRef, ref, onMounted, watch, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useToast } from '@/composables/useToast';
 import TaskCreateModal from "@/components/project/TaskCreateModal.vue";
@@ -252,6 +257,9 @@ const toast = useToast();
 interface Project {
     id: number;
     nom: string;
+    address?: string;
+    latitude?: number;
+    longitude?: number;
 }
 
 const tasks = ref([]);
@@ -261,6 +269,9 @@ const milestones = ref<any[]>([]);
 const currentView = shallowRef('Kanban');
 const selectedProject = ref<string | null>(null);
 const selectedMilestone = ref<number | null>(null);
+const activeProject = computed(() => {
+  return projects.value.find(p => p.nom === selectedProject.value);
+});
 const isTaskCreateModalOpen = ref(false);
 const isReportModalOpen = ref(false);
 const reportModalType = ref<'daily' | 'weekly'>('weekly');
