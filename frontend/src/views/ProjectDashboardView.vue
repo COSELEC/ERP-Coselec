@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import AppLayout from "@/layouts/AppLayout.vue";
+import ExcelImportModal from "@/components/ExcelImportModal.vue";
 import api from "@/services/api";
 import {
   Chart as ChartJS,
@@ -21,6 +22,42 @@ const projects = ref<any[]>([]);
 const selectedProjectId = ref<number | null>(null);
 const loading = ref(true);
 const hrStats = ref<any>(null);
+const financials = ref<{ budgets: any[], payment_milestones: any[] }>({ budgets: [], payment_milestones: [] });
+const isImportModalOpen = ref(false);
+const selectedMilestonePartner = ref<string>('all');
+
+const groupedBudgets = computed(() => {
+  const groups: Record<string, any[]> = {};
+  financials.value.budgets.forEach(b => {
+    if (!groups[b.partner_name]) groups[b.partner_name] = [];
+    groups[b.partner_name].push(b);
+  });
+  return groups;
+});
+
+const groupedMilestones = computed(() => {
+  const groups: Record<string, any[]> = {};
+  financials.value.payment_milestones.forEach(m => {
+    if (!groups[m.partner_name]) groups[m.partner_name] = [];
+    groups[m.partner_name].push(m);
+  });
+  // Sort milestones by date for each partner
+  for (const p in groups) {
+    groups[p].sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+  }
+  return groups;
+});
+
+const filteredGroupedMilestones = computed(() => {
+  if (selectedMilestonePartner.value === 'all') {
+    return groupedMilestones.value;
+  }
+  const result: Record<string, any[]> = {};
+  if (groupedMilestones.value[selectedMilestonePartner.value]) {
+    result[selectedMilestonePartner.value] = groupedMilestones.value[selectedMilestonePartner.value];
+  }
+  return result;
+});
 
 const kpis = ref([
   { title: "Progression Globale", value: "0%", color: "text-purple-600", bg: "bg-purple-50" },
@@ -77,6 +114,10 @@ const fetchDashboardData = async () => {
       ]
     };
     hrStats.value = res.data.hr_stats;
+    
+    // Fetch financials
+    const finRes = await api.get(`/projects/${selectedProjectId.value}/financials`);
+    financials.value = finRes.data;
   } catch {
   } finally {
     loading.value = false;
@@ -103,6 +144,24 @@ const downloadProjectReport = async () => {
     toast.error("Erreur lors de la génération du rapport.");
   }
 };
+
+const handleImportExcel = async (file: File) => {
+  if (!selectedProjectId.value) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  try {
+    const res = await api.post(`/projects/${selectedProjectId.value}/import`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    toast.success(res.data.message || "Importation réussie");
+    await fetchDashboardData(); // Rafraîchir les données
+  } catch (err: any) {
+    toast.error(err.response?.data?.detail || "Erreur lors de l'importation");
+  }
+};
 </script>
 
 <template>
@@ -117,6 +176,10 @@ const downloadProjectReport = async () => {
           <select v-model="selectedProjectId" class="border border-gray-300 rounded-lg px-4 py-2 bg-white min-w-[250px] shadow-sm">
             <option v-for="p in projects" :key="p.id" :value="p.id">[{{ p.code }}] {{ p.nom }}</option>
           </select>
+          <button @click="isImportModalOpen = true" :disabled="!selectedProjectId" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">upload_file</span>
+            Importer
+          </button>
           <button @click="downloadProjectReport" :disabled="!selectedProjectId" class="bg-[#d10f2f] hover:bg-[#97091f] disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
             <span class="material-symbols-outlined text-sm">download</span>
             Exporter Rapport
@@ -183,7 +246,83 @@ const downloadProjectReport = async () => {
             </div>
           </div>
         </div>
+
+        <!-- Financial Stats Section -->
+        <div v-if="financials.budgets.length > 0 || financials.payment_milestones.length > 0" class="space-y-6">
+          
+          <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2 border-b pb-4 mt-8">
+            <span class="material-symbols-outlined text-[#d10f2f]">account_balance_wallet</span>
+            Finances & Prestataires
+          </h2>
+
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <!-- Budgets par Prestataire -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-blue-600">receipt_long</span>
+                Budgets Alloués par Prestataire
+              </h3>
+              <div class="space-y-6 max-h-[500px] overflow-y-auto pr-2">
+                <div v-for="(budgets, partner) in groupedBudgets" :key="partner" class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                  <h4 class="font-bold text-gray-800 mb-3 border-b pb-2">{{ partner }}</h4>
+                  <div class="space-y-2">
+                    <div v-for="b in budgets" :key="b.id" class="flex justify-between items-center text-sm">
+                      <span class="text-gray-600">{{ b.category }}</span>
+                      <span class="font-bold text-gray-900">{{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(b.allocated_amount) }}</span>
+                    </div>
+                  </div>
+                  <div class="mt-3 pt-2 border-t border-gray-200 flex justify-between items-center text-sm font-bold">
+                    <span class="text-gray-800">Total Alloué</span>
+                    <span class="text-blue-600">{{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(budgets.reduce((sum, b) => sum + b.allocated_amount, 0)) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Échéancier de Paiement -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-green-600">calendar_month</span>
+                  Échéancier (Décomptes)
+                </h3>
+                <select v-model="selectedMilestonePartner" class="text-sm border border-gray-200 rounded-lg px-2 py-1 bg-gray-50 focus:outline-none focus:ring-1 focus:ring-green-500">
+                  <option value="all">Tous les prestataires</option>
+                  <option v-for="(_, partner) in groupedMilestones" :key="partner" :value="partner">{{ partner }}</option>
+                </select>
+              </div>
+              <div class="space-y-6 max-h-[500px] overflow-y-auto pr-2">
+                <div v-for="(milestones, partner) in filteredGroupedMilestones" :key="partner" class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                  <h4 class="font-bold text-gray-800 mb-3 border-b pb-2">{{ partner }}</h4>
+                  <div class="relative border-l-2 border-gray-200 ml-3 pl-4 space-y-4 py-2">
+                    <div v-for="m in milestones" :key="m.id" class="relative">
+                      <div class="absolute -left-[23px] top-1 w-3 h-3 rounded-full bg-white border-2 border-green-500"></div>
+                      <div class="flex justify-between items-start">
+                        <div>
+                          <p class="font-medium text-gray-900 text-sm">{{ m.title }}</p>
+                          <p class="text-xs text-gray-500 mt-0.5">Date Prévue : <span class="font-medium text-gray-700">{{ m.due_date ? new Date(m.due_date).toLocaleDateString('fr-FR') : 'Non définie' }}</span></p>
+                        </div>
+                        <span class="font-bold text-gray-900 text-sm bg-white px-2 py-1 rounded shadow-sm border border-gray-100">
+                          {{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(m.amount) }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-4 pt-3 border-t border-gray-200 flex justify-between items-center text-sm font-bold">
+                    <span class="text-gray-800">Total à Payer</span>
+                    <span class="text-green-600">{{ new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(milestones.reduce((sum, m) => sum + m.amount, 0)) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </template>
     </div>
+    <ExcelImportModal 
+      :is-open="isImportModalOpen" 
+      @close="isImportModalOpen = false" 
+      @import="handleImportExcel" 
+    />
   </AppLayout>
 </template>

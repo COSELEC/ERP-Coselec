@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "C:\Users\adam.guizaoui\Desktop\ERP\backend\app\routers\project\projects.py", line 285, in import_project_excel
+    summary = await service.import_excel(file)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\adam.guizaoui\Desktop\ERP\backend\app\services\project_import_service.py", line 52, in import_excel
+    self._process_quantities(df, summary)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\adam.guizaoui\Desktop\ERP\backend\app\services\project_import_service.py", line 114, in _process_quantities
+    melted_df = df.melt(id_vars=id_vars, value_vars=value_vars, var_name="Location", value_name="Quantity")
+  File "C:\Users\adam.guizaoui\Desktop\ERP\backend\.venv\Lib\site-packages\pandas\core\frame.py", line 11713, in melt
+    return melt(
+           ~~~~^
+        self,
+        ^^^^^
+    ...<5 lines>...
+        ignore_index=ignore_index,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ).__finalize__(self, method="melt")
+    ^
+  File "C:\Users\adam.guizaoui\Desktop\ERP\backend\.venv\Lib\site-packages\pandas\core\reshape\melt.py", line 190, in melt
+    raise ValueError("id_vars cannot contain duplicate columns.")
+ValueError: id_vars cannot contain duplicate columns.

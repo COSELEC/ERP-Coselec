@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.core.database import get_db
@@ -11,6 +11,9 @@ from app.services.pdf_generator import generate_project_report_pdf
 from app.services.storage import get_file_url_from_minio
 from typing import List
 from sqlalchemy import or_
+from app.services.project_import_service import ProjectImportService
+from app.models.project.budget import ProjectBudget
+from app.models.project.payment_milestone import PaymentMilestone
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -266,4 +269,57 @@ def get_project_dashboard(project_id: int, db: Session = Depends(get_db)):
             "average_allocation": round(avg_allocation, 1),
             "role_distribution": dict(role_distribution)
         }
+    }
+
+@router.post("/{project_id}/import", status_code=status.HTTP_200_OK)
+async def import_project_excel(
+    project_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user_permissions=Depends(check_permission("projects.update"))
+):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Projet non trouvé")
+        
+    try:
+        service = ProjectImportService(db=db, project_id=project_id)
+        summary = await service.import_excel(file)
+        db.commit()
+        return {"message": "Importation réussie", "summary": summary}
+    except HTTPException as e:
+        db.rollback()
+        raise e
+    except Exception as e:
+        db.rollback()
+        import traceback
+        with open("import_error.log", "w", encoding="utf-8") as f:
+            f.write(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'import: {str(e)}")
+
+@router.get("/{project_id}/financials")
+def get_project_financials(project_id: int, db: Session = Depends(get_db)):
+    from sqlalchemy.orm import joinedload
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Projet non trouvé")
+        
+    budgets = db.query(ProjectBudget).options(joinedload(ProjectBudget.partner)).filter(ProjectBudget.project_id == project_id).all()
+    milestones = db.query(PaymentMilestone).options(joinedload(PaymentMilestone.partner)).filter(PaymentMilestone.project_id == project_id).all()
+    
+    return {
+        "budgets": [{
+            "id": b.id,
+            "category": b.category,
+            "allocated_amount": float(b.allocated_amount or 0),
+            "partner_name": b.partner.name if b.partner else "Aucun"
+        } for b in budgets],
+        "payment_milestones": [{
+            "id": m.id,
+            "title": m.title,
+            "amount": float(m.amount or 0),
+            "due_date": m.due_date.isoformat() if m.due_date else None,
+            "status": m.status,
+            "partner_name": m.partner.name if m.partner else "Aucun"
+        } for m in milestones]
     }

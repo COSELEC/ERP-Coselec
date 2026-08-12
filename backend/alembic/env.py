@@ -26,6 +26,7 @@ from app.models.project.phase import ProjectPhase
 from app.models.project.milestone import ProjectMilestone
 from app.models.project.budget import ProjectBudget
 from app.models.project.expense import ProjectExpense
+from app.models.project.payment_milestone import PaymentMilestone
 from app.models.caisse_voucher import CaisseVoucher
 from app.models.procurement.purchase import PurchaseRequest, PurchaseOrder, PurchaseOrderLine
 from app.modules.stock.models.reservation import ProjectStockReservation

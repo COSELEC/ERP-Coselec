@@ -3,7 +3,8 @@ from sqlalchemy import (
     Column,
     Integer,
     ForeignKey,
-    Enum as SQLEnum
+    Enum as SQLEnum,
+    JSON
 )
 from sqlalchemy.orm import relationship
 
@@ -57,6 +58,11 @@ class Stock(Base):
     quantity = Column(
         Integer,
         default=0
+    )
+    
+    stock_metadata = Column(
+        JSON,
+        nullable=True
     )
     
     warehouse = relationship(

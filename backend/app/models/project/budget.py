@@ -9,6 +9,7 @@ class ProjectBudget(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    partner_id = Column(Integer, ForeignKey("partners.id", ondelete="SET NULL"), nullable=True)
     
     category = Column(String(100), nullable=False)
     allocated_amount = Column(Numeric(14, 2), default=0.0)
@@ -16,6 +17,7 @@ class ProjectBudget(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     project = relationship("Project", back_populates="budgets")
+    partner = relationship("Partner")
     expenses = relationship("ProjectExpense", back_populates="budget", cascade="all, delete-orphan")
 
     @property
