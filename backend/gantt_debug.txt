@@ -1,0 +1,5 @@
+
+--- Nouvel Import ---
+designation_idx: 1
+month_cols: ['MOIS 1', 'MOIS 2', 'MOIS 3', 'MOIS 4', 'MOIS 5']
+Toutes les colonnes: ['N°', 'DESIGNATION', 'MOIS 1', nan, 'nan_1', 'nan_2', 'MOIS 2', 'nan_3', 'nan_4', 'nan_5', 'MOIS 3', 'nan_6', 'nan_7', 'nan_8', 'MOIS 4', 'nan_9', 'nan_10', 'nan_11', 'MOIS 5', 'nan_12', 'nan_13', 'nan_14']

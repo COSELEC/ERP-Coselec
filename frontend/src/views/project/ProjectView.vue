@@ -48,37 +48,14 @@
             </div>
           </div>
 
-          <div class="flex border border-red-500 rounded-lg overflow-hidden">
-            <button 
-              @click="currentView = 'Kanban'" 
-              :class="{'bg-red-500 text-white': currentView === 'Kanban', 'text-red-600': currentView !== 'Kanban'}" 
-              class="px-4 py-2 hover:bg-red-50 font-medium transition-colors">
-              Kanban
-            </button>
-            <button 
-              @click="currentView = 'Gantt'" 
-              :class="{'bg-red-500 text-white': currentView === 'Gantt', 'text-red-600': currentView !== 'Gantt'}" 
-              class="px-4 py-2 hover:bg-red-50 font-medium transition-colors border-l border-red-500">
-              Gantt
-            </button>
-            <button 
-              @click="currentView = 'Ressources'" 
-              :class="{'bg-red-500 text-white': currentView === 'Ressources', 'text-red-600': currentView !== 'Ressources'}" 
-              class="px-4 py-2 hover:bg-red-50 font-medium transition-colors border-l border-red-500">
-              Ressources
-            </button>
-            <button 
-              @click="currentView = 'Rapports'" 
-              :class="{'bg-red-500 text-white': currentView === 'Rapports', 'text-red-600': currentView !== 'Rapports'}" 
-              class="px-4 py-2 hover:bg-red-50 font-medium transition-colors border-l border-red-500">
-              Rapports
-            </button>
-            <button 
-              @click="currentView = 'Stock'" 
-              :class="{'bg-red-500 text-white': currentView === 'Stock', 'text-red-600': currentView !== 'Stock'}" 
-              class="px-4 py-2 hover:bg-red-50 font-medium transition-colors border-l border-red-500">
-              Stock
-            </button>
+          <div class="flex items-center ml-2">
+            <select v-model="currentView" class="border-2 border-red-500 text-red-700 bg-white rounded-lg px-3 h-10 font-medium focus:outline-none focus:border-red-600">
+              <option value="Kanban">Kanban</option>
+              <option value="Gantt">Gantt</option>
+              <option value="Ressources">Ressources</option>
+              <option value="Rapports">Rapports</option>
+              <option value="Stock">Stock</option>
+            </select>
           </div>
         </div>
 

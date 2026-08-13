@@ -1,6 +1,6 @@
 import io
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from fastapi import UploadFile, HTTPException
 
@@ -15,7 +15,6 @@ from app.modules.stock.models.partner import Partner
 from app.models.project.budget import ProjectBudget
 from app.models.project.payment_milestone import PaymentMilestone
 from app.models.project.project import Project
-from datetime import timedelta
 
 class ProjectImportService:
     def __init__(self, db: Session, project_id: int):
@@ -47,121 +46,124 @@ class ProjectImportService:
         summary = {
             "parsed_milestones": 0,
             "parsed_tasks": 0,
+            "parsed_budgets": 0,
+            "parsed_payment_milestones": 0,
             "parsed_stock_requirements": 0,
             "errors_or_warnings": []
         }
         
-        for sheet_name in excel_file.sheet_names:
-            df = excel_file.parse(sheet_name=sheet_name)
-            header_idx = self._find_header_row(df)
-            financial_idx = self._find_financial_header_row(df)
-            
-            # Use whichever header is found first
-            active_idx = header_idx if header_idx is not None else financial_idx
-            
-            if active_idx is not None:
-                raw_cols = df.iloc[active_idx].astype(str).str.strip().str.upper()
-                new_cols = []
-                seen = set()
-                for col in raw_cols:
-                    if col in seen:
-                        i = 1
-                        while f"{col}_{i}" in seen:
-                            i += 1
-                        col = f"{col}_{i}"
-                    seen.add(col)
-                    new_cols.append(col)
-                df.columns = new_cols
-                df = df.iloc[active_idx + 1:].reset_index(drop=True)
-                df = df.dropna(how='all')
-                
-                if header_idx is not None and "DESIGNATION" in df.columns:
-                    has_quantities = any("QUANTIT" in str(col) or "TOTAL" in str(col) for col in df.columns)
-                    if has_quantities:
-                        self._process_quantities(df, summary)
-                    else:
-                        self._process_planning(df, summary)
-                elif financial_idx is not None and "PRESTATAIRES" in df.columns:
-                    self._process_financial_data(df, summary)
-                else:
-                    summary["errors_or_warnings"].append(f"Onglet ignoré: {sheet_name} (En-tête introuvable)")
-            else:
-                summary["errors_or_warnings"].append(f"Onglet ignoré: {sheet_name} (Aucun en-tête reconnu)")
-                    
-        return summary
+        planning_df = None
+        budget_df = None
         
-    def _find_header_row(self, df: pd.DataFrame) -> int:
-        for idx, row in df.iterrows():
-            row_str = " ".join([str(val).upper() for val in row.values if pd.notna(val)])
-            if "DESIGNATION" in row_str or "TÂCHES" in row_str:
-                return idx
-        return None
+        planning_sheet_name = None
+        
+        for sheet_name in excel_file.sheet_names:
+            name_upper = sheet_name.upper()
+            if "PLANNING" in name_upper or "TACHE" in name_upper:
+                planning_df = excel_file.parse(sheet_name=sheet_name, header=None)
+                planning_sheet_name = sheet_name
+            elif "BUDGET" in name_upper or "RECAP" in name_upper or "FINANCE" in name_upper:
+                budget_df = excel_file.parse(sheet_name=sheet_name, header=None)
+                
+        if planning_df is not None:
+            import openpyxl
+            wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
+            ws = wb[planning_sheet_name]
+            self._process_planning(planning_df, ws, summary)
+        else:
+            summary["errors_or_warnings"].append("Onglet Planning introuvable.")
+            
+        if budget_df is not None:
+            self._process_budgets(budget_df, summary)
+        else:
+            summary["errors_or_warnings"].append("Onglet Budgets introuvable.")
+            
+        return summary
 
-    def _find_financial_header_row(self, df: pd.DataFrame) -> int:
-        for idx, row in df.iterrows():
-            row_str = " ".join([str(val).upper() for val in row.values if pd.notna(val)])
-            if "PRESTATAIRES" in row_str:
-                return idx
-        return None
-
-    def _process_planning(self, df: pd.DataFrame, summary: dict):
+    def _process_planning(self, df: pd.DataFrame, ws, summary: dict):
+        designation_col = -1
+        header_row = -1
+        
+        for i, row in df.iterrows():
+            for j, val in enumerate(row):
+                if str(val).strip().upper() == "DESIGNATION":
+                    designation_col = j
+                    header_row = i
+                    break
+            if header_row != -1:
+                break
+                
+        if header_row == -1:
+            summary["errors_or_warnings"].append("Colonne DESIGNATION introuvable dans le Planning.")
+            return
+            
+        gantt_cols = []
+        for j in range(designation_col + 1, len(df.columns)):
+            gantt_cols.append(j)
+            
         project = self.db.query(Project).filter(Project.id == self.project_id).first()
         base_date = project.date_debut_estimee if project and project.date_debut_estimee else datetime.utcnow().date()
-
-        month_cols = []
-        designation_idx = -1
-        for i, col in enumerate(df.columns):
-            col_str = str(col).strip().upper()
-            if "DESIGNATION" in col_str:
-                designation_idx = i
-                
-            if ('M' in col_str and any(c.isdigit() for c in col_str)) or 'MOIS' in col_str or col_str.isdigit():
-                month_cols.append(col)
-                
-        if not month_cols and designation_idx != -1:
-            for i in range(designation_idx + 1, len(df.columns)):
-                col_str = str(df.columns[i]).strip().upper()
-                if not any(x in col_str for x in ["TOTAL", "PRIX", "QTE", "QUANTIT", "UNITE", "OBSERVATION"]):
-                    month_cols.append(df.columns[i])
-                
-        current_milestone = None
         
-        for idx, row in df.iterrows():
-            designation = str(row.get("DESIGNATION", "")).strip()
-            if not designation or pd.isna(row.get("DESIGNATION")) or designation == 'NAN':
+        current_milestone = None
+        order_idx = 0
+        
+        for i in range(header_row + 1, len(df)):
+            row = df.iloc[i]
+            designation = str(row.get(designation_col, "")).strip()
+            
+            if not designation or designation.upper() == 'NAN':
                 continue
                 
             is_milestone = designation.isupper()
             
-            start_offset = 0
-            end_offset = 0
-            has_data = False
+            start_offset = -1
+            end_offset = -1
             
-            for i, m_col in enumerate(month_cols):
-                val = row.get(m_col)
-                if pd.notna(val) and str(val).strip() != '' and str(val).strip().upper() != 'NAN':
-                    if not has_data:
-                        start_offset = i
-                        has_data = True
-                    end_offset = i
+            for offset_idx, c in enumerate(gantt_cols):
+                val = row.get(c)
+                has_value = pd.notna(val) and str(val).strip() != '' and str(val).strip().upper() != 'NAN'
+                
+                cell = ws.cell(row=i+1, column=c+1)
+                has_color = False
+                color_debug = ""
+                if cell.fill and cell.fill.patternType == 'solid':
+                    if cell.fill.fgColor:
+                        color_debug = f"type={getattr(cell.fill.fgColor, 'type', None)} rgb={getattr(cell.fill.fgColor, 'rgb', None)} theme={getattr(cell.fill.fgColor, 'theme', None)} indexed={getattr(cell.fill.fgColor, 'indexed', None)}"
+                        if cell.fill.fgColor.rgb and cell.fill.fgColor.rgb not in ('FFFFFFFF', '00000000'):
+                            has_color = True
+                        elif getattr(cell.fill.fgColor, 'theme', None) is not None:
+                            has_color = True
+                        elif getattr(cell.fill.fgColor, 'type', None) == 'indexed' and getattr(cell.fill.fgColor, 'indexed', None) not in (64, 65):
+                            has_color = True
+                
+                with open("c:/Users/adam.guizaoui/.gemini/antigravity-ide/brain/7241c8c3-72ab-4162-93f1-f029f1178150/scratch/color_log.txt", "a", encoding="utf-8") as f:
+                    if color_debug or has_value:
+                        f.write(f"Row {i+1} Col {c+1} ({designation}): val='{val}' has_value={has_value} pattern={cell.fill.patternType if cell.fill else None} {color_debug} -> has_color={has_color}\n")
+
+                if has_value or has_color:
+                    if start_offset == -1:
+                        start_offset = offset_idx
+                    end_offset = offset_idx
                     
-            if not has_data:
+            if start_offset == -1:
                 start_offset = 0
                 end_offset = 0
                 
-            start_date = base_date + timedelta(days=30 * start_offset)
-            due_date = base_date + timedelta(days=30 * (end_offset + 1))
+            start_date = base_date + timedelta(days=7 * start_offset)
+            due_date = base_date + timedelta(days=7 * (end_offset + 1))
             
             if is_milestone:
-                current_milestone = ProjectMilestone(
+                ms = ProjectMilestone(
                     project_id=self.project_id,
                     title=designation[:255],
-                    order_index=summary["parsed_milestones"],
-                    due_date=due_date, 
+                    order_index=order_idx,
+                    due_date=due_date
                 )
-                self.db.add(current_milestone)
+                self.db.add(ms)
                 self.db.flush()
+                current_milestone = ms
                 summary["parsed_milestones"] += 1
+                order_idx += 1
             else:
                 task = Task(
                     title=designation[:200],
@@ -175,185 +177,153 @@ class ProjectImportService:
                 )
                 self.db.add(task)
                 summary["parsed_tasks"] += 1
-
-    def _process_quantities(self, df: pd.DataFrame, summary: dict):
-        warehouse = self._get_or_create_warehouse()
-        category = self._get_or_create_default_category()
-        
-        total_col_idx = None
-        for i, col in enumerate(df.columns):
-            if "TOTAL" in str(col) or "QUANTIT" in str(col):
-                total_col_idx = i
-                break
                 
-        if total_col_idx is not None and total_col_idx < len(df.columns) - 1:
-            id_vars = list(df.columns[:total_col_idx + 1])
-            value_vars = list(df.columns[total_col_idx + 1:])
+        self.db.flush()
+
+    def _process_budgets(self, df: pd.DataFrame, summary: dict):
+        prestataire_col_1 = -1
+        montant_total_col = -1
+        avance_col = -1
+        decompte_cols = []
+        
+        prestataire_col_2 = -1
+        ciment_col = -1
+        beton_col = -1
+        grue_col = -1
+        transport_col = -1
+        
+        header_row_1 = -1
+        header_row_2 = -1
+        
+        for i, row in df.iterrows():
+            row_vals = [str(x).strip().upper() for x in row]
             
-            melted_df = df.melt(id_vars=id_vars, value_vars=value_vars, var_name="Location", value_name="Quantity")
-            melted_df["Quantity"] = pd.to_numeric(melted_df["Quantity"], errors="coerce").fillna(0)
-            melted_df = melted_df[melted_df["Quantity"] > 0]
-            
-            for _, row in melted_df.iterrows():
-                designation = str(row.get("DESIGNATION", "")).strip()
-                if not designation or designation == 'NAN':
+            if "PRESTATAIRES" in row_vals and header_row_1 == -1:
+                prestataire_col_1 = row_vals.index("PRESTATAIRES")
+                if "MONTANT TOTAL" in row_vals:
+                    montant_total_col = row_vals.index("MONTANT TOTAL")
+                if "AVANCE DE DÉMARRAGE" in row_vals:
+                    avance_col = row_vals.index("AVANCE DE DÉMARRAGE")
+                elif "AVANCE DE DEMARRAGE" in row_vals:
+                    avance_col = row_vals.index("AVANCE DE DEMARRAGE")
+                
+                for j, v in enumerate(row_vals):
+                    if "DÉCOMPTE" in v or "DECOMPTE" in v:
+                        decompte_cols.append(j)
+                        
+                header_row_1 = i
+                
+            if "PT CIMENT" in row_vals or "PT BETON" in row_vals:
+                indices = [idx for idx, val in enumerate(row_vals) if val == "PRESTATAIRES"]
+                if len(indices) > 1:
+                    prestataire_col_2 = indices[-1]
+                else:
+                    prestataire_col_2 = indices[0] if indices else -1
+                
+                if "PT CIMENT" in row_vals:
+                    ciment_col = row_vals.index("PT CIMENT")
+                if "PT BETON" in row_vals:
+                    beton_col = row_vals.index("PT BETON")
+                if "LOCATION GRUE" in row_vals:
+                    grue_col = row_vals.index("LOCATION GRUE")
+                if "TOTAL TRANSPORT" in row_vals:
+                    transport_col = row_vals.index("TOTAL TRANSPORT")
+                    
+                header_row_2 = i
+                
+        if header_row_1 != -1 and prestataire_col_1 != -1:
+            for i in range(header_row_1 + 1, len(df)):
+                row = df.iloc[i]
+                prestataire = str(row.get(prestataire_col_1, "")).strip()
+                if not prestataire or prestataire == 'NAN' or "TOTAL" in prestataire.upper():
                     continue
                     
-                product = self._get_or_create_product(designation, category.id)
-                quantity = int(row["Quantity"])
-                location = str(row["Location"]).strip()
+                partner = self._get_or_create_partner(prestataire)
                 
-                stock_entry = Stock(
-                    product_id=product.id,
-                    warehouse_id=warehouse.id,
-                    project_id=self.project_id,
-                    stock_type=StockType.PROJECT,
-                    quantity=quantity,
-                    stock_metadata={"location": location}
-                )
-                self.db.add(stock_entry)
-                summary["parsed_stock_requirements"] += 1
-
-    def _get_or_create_warehouse(self) -> Warehouse:
-        warehouse = self.db.query(Warehouse).first()
-        if not warehouse:
-            warehouse = Warehouse(name="Magasin Principal", address="Automatisé", code="WH_MAIN")
-            self.db.add(warehouse)
-            self.db.flush()
-        return warehouse
-        
-    def _get_or_create_default_category(self) -> Category:
-        cat = self.db.query(Category).filter(Category.name == "Matériel Importé").first()
-        if not cat:
-            cat = Category(name="Matériel Importé", code="CAT_IMP")
-            self.db.add(cat)
-            self.db.flush()
-        return cat
-
-    def _get_or_create_product(self, designation: str, category_id: int) -> Product:
-        product = self.db.query(Product).filter(Product.designation == designation).first()
-        if not product:
-            code = "P_" + designation[:5].upper() + "_" + str(datetime.now().timestamp()).replace('.', '')[-5:]
-            product = Product(
-                designation=designation,
-                code=code,
-                category_id=category_id
-            )
-            self.db.add(product)
-            self.db.flush()
-        return product
-
-    def _process_financial_data(self, df: pd.DataFrame, summary: dict):
-        if any("MONTANT TOTAL" in str(c).upper() for c in df.columns):
-            self._process_recap_contrat(df, summary)
-            self._extract_global_budgets(df)
-        else:
-            self._process_achat_intrants(df, summary)
-            self._extract_global_budgets(df)
-
-    def _extract_global_budgets(self, df: pd.DataFrame):
-        keywords = ["PRIX DE POSE", "DEBOURS", "AUTRES", "RELIQUAT", "PRIX DE TRANSPORT"]
-        for _, row in df.iterrows():
-            for i, val in enumerate(row.values):
-                val_str = str(val).strip().upper()
-                for kw in keywords:
-                    if val_str == kw:
-                        if i + 1 < len(row.values):
-                            amount_str = str(row.values[i+1]).replace("XOF", "").replace(" ", "").strip()
-                            try:
-                                amount = float(amount_str)
-                                if amount > 0:
-                                    budget = ProjectBudget(
-                                        project_id=self.project_id,
-                                        partner_id=None,
-                                        category=kw.title(),
-                                        allocated_amount=amount,
-                                        currency="XOF"
-                                    )
-                                    self.db.add(budget)
-                            except ValueError:
-                                pass
-        self.db.flush()
-
-    def _process_recap_contrat(self, df: pd.DataFrame, summary: dict):
-        milestone_cols = []
-        for col in df.columns:
-            if "AVANCE" in str(col).upper() or "DÉCOMPTE" in str(col).upper() or "DECOMPTE" in str(col).upper():
-                milestone_cols.append(col)
-                
-        for _, row in df.iterrows():
-            prestataire_name = str(row.get("PRESTATAIRES", "")).strip()
-            if not prestataire_name or prestataire_name == 'NAN' or prestataire_name == 'TOTAL':
-                continue
-                
-            partner = self._get_or_create_partner(prestataire_name)
-            base_date = datetime.utcnow().date()
-            
-            commune = str(row.get("COMMUNES", "")).strip()
-            localite = str(row.get("LOCALITES", "")).strip()
-            
-            location_str = ""
-            if commune and localite and commune.lower() != 'nan' and localite.lower() != 'nan':
-                location_str = f" - {commune} ({localite})"
-            elif localite and localite.lower() != 'nan':
-                location_str = f" - {localite}"
-            
-            months_offset = 0
-            for col in milestone_cols:
-                amount_str = str(row.get(col, "0")).replace("XOF", "").replace(" ", "").strip()
-                try:
-                    amount = float(amount_str)
-                except ValueError:
-                    amount = 0.0
-                
-                if amount > 0:
-                    due_date = base_date + timedelta(days=30 * months_offset)
-                    pm = PaymentMilestone(
-                        project_id=self.project_id,
-                        partner_id=partner.id,
-                        title=f"{str(col)[:150]}{location_str}",
-                        amount=amount,
-                        due_date=due_date
-                    )
-                    self.db.add(pm)
-                    months_offset += 1
-                    
-        self.db.flush()
-
-    def _process_achat_intrants(self, df: pd.DataFrame, summary: dict):
-        for _, row in df.iterrows():
-            prestataire_name = str(row.get("PRESTATAIRES", "")).strip()
-            if not prestataire_name or prestataire_name == 'NAN' or prestataire_name == 'TOTAL':
-                continue
-                
-            partner = self._get_or_create_partner(prestataire_name)
-            
-            budget_mapping = {
-                "PT CIMENT": "Achat Intrants - Ciment",
-                "PT BETON": "Achat Intrants - Béton",
-                "LOCATION GRUE": "Grues",
-                "TOTAL TRANSPORT": "Transport PBA"
-            }
-            
-            for col_keyword, cat_name in budget_mapping.items():
-                actual_col = next((c for c in df.columns if col_keyword in str(c).upper()), None)
-                if actual_col:
-                    amount_str = str(row.get(actual_col, "0")).replace("XOF", "").replace(" ", "").strip()
+                if montant_total_col != -1:
+                    mt = str(row.get(montant_total_col, "0")).replace(" ", "").replace("XOF", "")
                     try:
-                        amount = float(amount_str)
-                    except ValueError:
-                        amount = 0.0
+                        val = float(mt)
+                        if val > 0:
+                            budget = ProjectBudget(
+                                project_id=self.project_id,
+                                partner_id=partner.id,
+                                category="Prestation (Global)",
+                                allocated_amount=val,
+                                currency="XOF"
+                            )
+                            self.db.add(budget)
+                            summary["parsed_budgets"] += 1
+                    except:
+                        pass
+                
+                base_date = datetime.utcnow().date()
+                if avance_col != -1:
+                    av = str(row.get(avance_col, "0")).replace(" ", "").replace("XOF", "")
+                    try:
+                        val = float(av)
+                        if val > 0:
+                            pm = PaymentMilestone(
+                                project_id=self.project_id,
+                                partner_id=partner.id,
+                                title="Avance de démarrage",
+                                amount=val,
+                                due_date=base_date + timedelta(days=30)
+                            )
+                            self.db.add(pm)
+                            summary["parsed_payment_milestones"] += 1
+                    except:
+                        pass
                         
-                    if amount > 0:
-                        budget = ProjectBudget(
-                            project_id=self.project_id,
-                            partner_id=partner.id,
-                            category=cat_name,
-                            allocated_amount=amount,
-                            currency="XOF"
-                        )
-                        self.db.add(budget)
-                        
+                for k, d_col in enumerate(decompte_cols):
+                    dv = str(row.get(d_col, "0")).replace(" ", "").replace("XOF", "")
+                    try:
+                        val = float(dv)
+                        if val > 0:
+                            pm = PaymentMilestone(
+                                project_id=self.project_id,
+                                partner_id=partner.id,
+                                title=f"Décompte N°{k+1}",
+                                amount=val,
+                                due_date=base_date + timedelta(days=30*(k+2))
+                            )
+                            self.db.add(pm)
+                            summary["parsed_payment_milestones"] += 1
+                    except:
+                        pass
+
+        if header_row_2 != -1 and prestataire_col_2 != -1:
+            for i in range(header_row_2 + 1, len(df)):
+                row = df.iloc[i]
+                prestataire = str(row.get(prestataire_col_2, "")).strip()
+                if not prestataire or prestataire == 'NAN' or "TOTAL" in prestataire.upper():
+                    continue
+                    
+                partner = self._get_or_create_partner(prestataire)
+                
+                def add_intrant(col_idx, category):
+                    if col_idx != -1:
+                        val_str = str(row.get(col_idx, "0")).replace(" ", "").replace("XOF", "")
+                        try:
+                            val = float(val_str)
+                            if val > 0:
+                                budget = ProjectBudget(
+                                    project_id=self.project_id,
+                                    partner_id=partner.id,
+                                    category=category,
+                                    allocated_amount=val,
+                                    currency="XOF"
+                                )
+                                self.db.add(budget)
+                                summary["parsed_budgets"] += 1
+                        except:
+                            pass
+                            
+                add_intrant(ciment_col, "Achat Intrants - Ciment")
+                add_intrant(beton_col, "Achat Intrants - Béton")
+                add_intrant(grue_col, "Location Grue")
+                add_intrant(transport_col, "Transport PBA")
+                
         self.db.flush()
 
     def _get_or_create_partner(self, name: str) -> Partner:

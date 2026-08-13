@@ -26,6 +26,9 @@ def create_project(project_data : ProjectCreate, db: Session= Depends(get_db), u
             detail="Un projet avec ce code existe deja"
         )
 
+    if not project_data.date_fin_prevue:
+        project_data.date_fin_prevue = project_data.date_fin_estimee
+
     db_project = Project(**project_data.model_dump())
     db.add(db_project)
 
@@ -110,6 +113,74 @@ def get_projects(
         joinedload(Project.phases)
     ).all()
  
+
+@router.get("/import-template")
+def download_import_template():
+    import io
+    import pandas as pd
+    from fastapi.responses import StreamingResponse
+    
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        workbook = writer.book
+        
+        # Styles
+        header_format = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter', 'bg_color': '#b4c6e7', 'border': 1, 'text_wrap': True})
+        yellow_header = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter', 'bg_color': '#ffff00', 'border': 1})
+        bold_format = workbook.add_format({'bold': True, 'border': 1})
+        border_format = workbook.add_format({'border': 1})
+        light_blue = workbook.add_format({'bg_color': '#d9e1f2', 'border': 1, 'align': 'center'})
+        blue_fill = workbook.add_format({'bg_color': '#4472c4', 'border': 1})
+        red_fill = workbook.add_format({'bg_color': '#ff0000', 'border': 1})
+        
+        # Sheet 1: Planning
+        worksheet_plan = workbook.add_worksheet('Planning')
+        worksheet_plan.set_column('A:A', 5)
+        worksheet_plan.set_column('B:B', 40)
+        worksheet_plan.set_column('C:V', 8)
+        
+        # Header Rows
+        worksheet_plan.merge_range('A1:V1', 'MODÈLE D\'IMPORTATION DE PROJET (NE MODIFIEZ PAS LA STRUCTURE DES COLONNES, AJOUTEZ DES LIGNES EN DESSOUS)', header_format)
+        
+        worksheet_plan.write('A2', 'N°', header_format)
+        worksheet_plan.write('B2', 'DESIGNATION', header_format)
+        
+        for m in range(5):
+            start_col = 2 + m*4
+            worksheet_plan.merge_range(1, start_col, 1, start_col+3, f'Mois {m+1}', header_format)
+            for w in range(4):
+                worksheet_plan.write(2, start_col + w, f'Sem {m*4+w+1}', light_blue)
+                
+        # Some sample data
+        worksheet_plan.write('B4', 'ETUDES', bold_format)
+        worksheet_plan.write('A5', '1', border_format)
+        worksheet_plan.write('B5', 'Formalités Administratives', border_format)
+        worksheet_plan.write('C5', '', red_fill)
+        worksheet_plan.write('D5', '', red_fill)
+        
+        worksheet_plan.write('B7', 'APPROVISIONNEMENT', bold_format)
+        worksheet_plan.write('A8', '2', border_format)
+        worksheet_plan.write('B8', 'Câbles MT et BT', border_format)
+        worksheet_plan.write('E8', '', blue_fill)
+        worksheet_plan.write('F8', '', blue_fill)
+        worksheet_plan.write('G8', '', blue_fill)
+        
+        # Sheet 2: Budgets
+        worksheet_budgets = workbook.add_worksheet('Budgets Prestataires')
+        worksheet_budgets.set_column('A:C', 25)
+        worksheet_budgets.write('A1', 'PRESTATAIRE', header_format)
+        worksheet_budgets.write('B1', 'TYPE BUDGET', header_format)
+        worksheet_budgets.write('C1', 'MONTANT ALLOUÉ', header_format)
+        
+        worksheet_budgets.write('A2', 'SENELEC', border_format)
+        worksheet_budgets.write('B2', 'Matériel', border_format)
+        worksheet_budgets.write('C2', 50000000, border_format)
+        
+    output.seek(0)
+    headers = {
+        'Content-Disposition': 'attachment; filename="Modele_Import_Projet.xlsx"'
+    }
+    return StreamingResponse(output, headers=headers, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 @router.get("/{project_id}", response_model=ProjectResponse, status_code=status.HTTP_200_OK)
 def get_project(
     project_id:int,
@@ -323,3 +394,145 @@ def get_project_financials(project_id: int, db: Session = Depends(get_db)):
             "partner_name": m.partner.name if m.partner else "Aucun"
         } for m in milestones]
     }
+
+@router.get("/{project_id}/export-gantt")
+def export_project_gantt(
+    project_id: int, 
+    db: Session = Depends(get_db),
+    user_permissions = Depends(check_permission("projects.read"))
+):
+    import io
+    import pandas as pd
+    from fastapi.responses import StreamingResponse
+    from datetime import datetime, timedelta
+    
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Projet non trouvé")
+        
+    tasks = db.query(Task).filter(Task.project_id == project_id).order_by(Task.start_date).all()
+    milestones = db.query(ProjectMilestone).filter(ProjectMilestone.project_id == project_id).order_by(ProjectMilestone.due_date).all()
+    
+    if not tasks and not milestones:
+        raise HTTPException(status_code=400, detail="Aucune tâche ou jalon à exporter")
+        
+    # Calculate timeline
+    min_date = project.date_debut_estimee or datetime.utcnow().date()
+    if tasks:
+        task_starts = [t.start_date for t in tasks if t.start_date]
+        if task_starts:
+            min_date = min(min_date, min(task_starts))
+            
+    max_date = min_date + timedelta(days=30)
+    if tasks:
+        task_ends = [t.due_date for t in tasks if t.due_date]
+        if task_ends:
+            max_date = max(max_date, max(task_ends))
+    if milestones:
+        ms_ends = [m.due_date for m in milestones if m.due_date]
+        if ms_ends:
+            max_date = max(max_date, max(ms_ends))
+            
+    total_days = (max_date - min_date).days
+    total_weeks = max(8, (total_days // 7) + 2)
+    total_months = max(2, (total_weeks // 4) + 1)
+        
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        workbook = writer.book
+        
+        header_format = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter', 'bg_color': '#b4c6e7', 'border': 1, 'text_wrap': True})
+        yellow_header = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter', 'bg_color': '#ffff00', 'border': 1})
+        bold_format = workbook.add_format({'bold': True, 'border': 1})
+        border_format = workbook.add_format({'border': 1})
+        light_blue = workbook.add_format({'bg_color': '#d9e1f2', 'border': 1, 'align': 'center'})
+        blue_fill = workbook.add_format({'bg_color': '#4472c4', 'border': 1})
+        red_fill = workbook.add_format({'bg_color': '#ff0000', 'border': 1})
+        
+        worksheet_plan = workbook.add_worksheet('Planning')
+        worksheet_plan.set_column('A:A', 5)
+        worksheet_plan.set_column('B:B', 40)
+        worksheet_plan.set_column(2, 2 + total_weeks - 1, 8)
+        
+        # Row 0: Project name
+        worksheet_plan.merge_range(0, 2, 0, 2 + total_weeks - 1, project.nom or "Projet", bold_format)
+        # Row 1: Code + dates
+        worksheet_plan.merge_range('A2:B2', project.code or "CODE", header_format)
+        for w in range(total_weeks):
+            d = min_date + timedelta(days=w*7)
+            fmt = yellow_header if w == 0 else header_format
+            worksheet_plan.write(1, 2 + w, d.strftime("%d/%m/%Y"), fmt)
+            worksheet_plan.write(2, 2 + w, f"S{d.isocalendar()[1]}", bold_format)
+            
+        worksheet_plan.write(3, 0, 'N°', header_format)
+        worksheet_plan.write(3, 1, 'DESIGNATION', header_format)
+        
+        for m in range(total_months):
+            start_col = 2 + m*4
+            end_col = min(start_col + 3, 2 + total_weeks - 1)
+            if start_col <= end_col:
+                if start_col == end_col:
+                    worksheet_plan.write(3, start_col, f'Mois {m+1}', header_format)
+                else:
+                    worksheet_plan.merge_range(3, start_col, 3, end_col, f'Mois {m+1}', header_format)
+                    
+        worksheet_plan.write(4, 0, '', header_format)
+        worksheet_plan.write(4, 1, '', header_format)
+        for w in range(total_weeks):
+            worksheet_plan.write(4, 2 + w, f'Sem {w+1}', light_blue)
+            
+        row_idx = 5
+        task_num = 1
+        
+        def write_task(t, num, idx):
+            worksheet_plan.write(idx, 0, num, border_format)
+            worksheet_plan.write(idx, 1, t.title, border_format)
+            
+            s_date = t.start_date if t.start_date else min_date
+            e_date = t.due_date if t.due_date else s_date
+            
+            start_offset = (s_date - min_date).days // 7
+            start_offset = max(0, min(start_offset, total_weeks - 1))
+            
+            end_offset = (e_date - min_date).days // 7
+            end_offset = max(0, min(end_offset, total_weeks - 1))
+            if start_offset > end_offset:
+                end_offset = start_offset
+                
+            for w in range(total_weeks):
+                fmt = border_format
+                if start_offset <= w <= end_offset:
+                    fmt = red_fill if "administratif" in str(t.title).lower() else blue_fill
+                worksheet_plan.write(idx, 2 + w, "", fmt)
+        
+        for ms in milestones:
+            worksheet_plan.write(row_idx, 1, ms.title.upper(), bold_format)
+            for c in range(2, 2 + total_weeks):
+                worksheet_plan.write(row_idx, c, "", border_format)
+            worksheet_plan.write(row_idx, 0, "", border_format)
+            row_idx += 1
+            
+            ms_tasks = [t for t in tasks if t.milestone_id == ms.id]
+            for t in ms_tasks:
+                write_task(t, task_num, row_idx)
+                row_idx += 1
+                task_num += 1
+                
+        unparented = [t for t in tasks if not t.milestone_id]
+        if unparented:
+            worksheet_plan.write(row_idx, 1, "AUTRES TACHES", bold_format)
+            for c in range(2, 2 + total_weeks):
+                worksheet_plan.write(row_idx, c, "", border_format)
+            worksheet_plan.write(row_idx, 0, "", border_format)
+            row_idx += 1
+            
+            for t in unparented:
+                write_task(t, task_num, row_idx)
+                row_idx += 1
+                task_num += 1
+                
+    output.seek(0)
+    headers = {
+        'Content-Disposition': f'attachment; filename="Gantt_{project.code or project.id}.xlsx"'
+    }
+    return StreamingResponse(output, headers=headers, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")

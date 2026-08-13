@@ -9,7 +9,7 @@ class ProjectBase(BaseModel):
     nom: str
     date_debut_estimee: date
     date_fin_estimee: date
-    date_fin_prevue: date
+    date_fin_prevue: Optional[date] = None
     budget_estime: Optional[float] = Field(default=0.0, ge=0)
     latitude: Optional[float] = None
     longitude: Optional[float] = None

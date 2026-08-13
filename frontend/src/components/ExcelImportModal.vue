@@ -34,6 +34,16 @@
         <span class="truncate">{{ selectedFile.name }}</span>
         <button @click="selectedFile = null" class="text-red-500 hover:text-red-700">Retirer</button>
       </div>
+      
+      <div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-between">
+        <div>
+          <h4 class="text-sm font-medium text-blue-800">Besoin du modèle ?</h4>
+          <p class="text-xs text-blue-600 mt-0.5">Téléchargez le format requis pour l'import.</p>
+        </div>
+        <button @click="downloadTemplate" class="text-xs bg-white text-blue-700 border border-blue-200 px-3 py-1.5 rounded hover:bg-blue-50 transition-colors flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">download</span> Modèle
+        </button>
+      </div>
 
       <div class="mt-6 flex justify-end space-x-3">
         <button @click="close" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
@@ -57,6 +67,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import api from '@/services/api';
 
 const props = defineProps({
   isOpen: {
@@ -107,6 +118,21 @@ const uploadFile = async () => {
     console.error(error);
   } finally {
     isLoading.value = false;
+  }
+};
+
+const downloadTemplate = async () => {
+  try {
+    const res = await api.get('/projects/import-template', { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'Template_Import_Projet.xlsx');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (error) {
+    console.error('Erreur lors du téléchargement du modèle', error);
   }
 };
 </script>

@@ -14,6 +14,8 @@ import {
 } from 'chart.js'
 import { Bar } from 'vue-chartjs'
 import { useToast } from '@/composables/useToast'
+import 'leaflet/dist/leaflet.css';
+import { LMap, LTileLayer, LMarker } from '@vue-leaflet/vue-leaflet';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 const toast = useToast()
@@ -47,6 +49,13 @@ const groupedMilestones = computed(() => {
   }
   return groups;
 });
+
+const activeProject = computed(() => {
+  if (!selectedProjectId.value) return null;
+  return projects.value.find(p => p.id === selectedProjectId.value);
+});
+
+const mapZoom = ref(13);
 
 const filteredGroupedMilestones = computed(() => {
   if (selectedMilestonePartner.value === 'all') {
@@ -145,6 +154,24 @@ const downloadProjectReport = async () => {
   }
 };
 
+const exportGantt = async () => {
+  if (!selectedProjectId.value) return;
+  try {
+    toast.success("Génération du Gantt en cours...");
+    const res = await api.get(`/projects/${selectedProjectId.value}/export-gantt`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Gantt_${activeProject.value?.code || selectedProjectId.value}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (error) {
+    toast.error("Erreur lors de l'export du Gantt.");
+    console.error('Erreur lors de l\'export', error);
+  }
+};
+
 const handleImportExcel = async (file: File) => {
   if (!selectedProjectId.value) return;
   const formData = new FormData();
@@ -184,6 +211,10 @@ const handleImportExcel = async (file: File) => {
             <span class="material-symbols-outlined text-sm">download</span>
             Exporter Rapport
           </button>
+          <button @click="exportGantt" :disabled="!selectedProjectId" class="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">event_note</span>
+            Exporter Gantt
+          </button>
         </div>
       </div>
 
@@ -204,10 +235,40 @@ const handleImportExcel = async (file: File) => {
           </div>
         </div>
         
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 class="text-lg font-bold text-gray-900 mb-4">Dépenses Financières Annuelles</h2>
-          <div class="h-80 w-full">
-            <Bar :data="chartData" :options="chartOptions" />
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">Dépenses Financières Annuelles</h2>
+            <div class="h-80 w-full">
+              <Bar :data="chartData" :options="chartOptions" />
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-[#d10f2f]">location_on</span>
+              Localisation du Projet
+            </h2>
+            <div class="h-80 w-full rounded-xl border border-gray-200 overflow-hidden relative z-0">
+              <l-map
+                v-if="activeProject && activeProject.latitude && activeProject.longitude"
+                v-model:zoom="mapZoom"
+                :center="[activeProject.latitude, activeProject.longitude]"
+              >
+                <l-tile-layer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  layer-type="base"
+                  name="OpenStreetMap"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                ></l-tile-layer>
+                <l-marker
+                  :lat-lng="[activeProject.latitude, activeProject.longitude]"
+                ></l-marker>
+              </l-map>
+              <div v-else class="flex flex-col items-center justify-center h-full text-gray-500 bg-gray-50 px-4 text-center">
+                <span class="material-symbols-outlined text-4xl mb-2 text-gray-400">location_off</span>
+                <p>Aucune localisation définie pour ce projet.</p>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -326,3 +387,10 @@ const handleImportExcel = async (file: File) => {
     />
   </AppLayout>
 </template>
+
+<style scoped>
+/* Leaflet fixes for broken marker images in Vue 3/Vite */
+:deep(.leaflet-default-icon-path) {
+  background-image: url('leaflet/dist/images/marker-icon.png');
+}
+</style>
