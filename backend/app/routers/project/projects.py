@@ -343,7 +343,7 @@ def get_project_dashboard(project_id: int, db: Session = Depends(get_db)):
     }
 
 @router.post("/{project_id}/import", status_code=status.HTTP_200_OK)
-async def import_project_excel(
+def import_project_excel(
     project_id: int,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
@@ -355,7 +355,7 @@ async def import_project_excel(
         
     try:
         service = ProjectImportService(db=db, project_id=project_id)
-        summary = await service.import_excel(file)
+        summary = service.import_excel(file)
         db.commit()
         return {"message": "Importation réussie", "summary": summary}
     except HTTPException as e:

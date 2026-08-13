@@ -1,4 +1,5 @@
 import os
+import asyncio
 from contextlib import asynccontextmanager
 from alembic import command
 from alembic.config import Config
@@ -9,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.database import SessionLocal
 from app.core.security.middleware import SlidingSessionMiddleware
+from app.core.websockets.manager import notifier
 from app.modules.requests_unified.routes.requests import (
     router as generic_requests_router,
 )
@@ -50,6 +52,7 @@ from app.models.procurement.delivery import DeliveryNote
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    notifier.set_loop(asyncio.get_running_loop())
     try:
         print("Lancement des migrations Alembic...")
         alembic_cfg = Config("alembic.ini")

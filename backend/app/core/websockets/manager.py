@@ -1,10 +1,14 @@
 import asyncio
-from typing import Dict, List
+from typing import Dict, List, Optional
 from fastapi import WebSocket
 
 class NotificationManager:
     def __init__(self):
         self.active_connections: Dict[int, List[WebSocket]] = {}
+        self.main_loop: Optional[asyncio.AbstractEventLoop] = None
+
+    def set_loop(self, loop: asyncio.AbstractEventLoop):
+        self.main_loop = loop
 
     async def connect(self, websocket: WebSocket, user_id: int):
         await websocket.accept()
@@ -32,10 +36,21 @@ notifier = NotificationManager()
 def broadcast_notification_sync(user_id: int, payload: dict):
     """
     Safely triggers an async broadcast from synchronous code (e.g. standard db operations).
+    Uses the main event loop if called from a worker thread.
     """
     try:
-        loop = asyncio.get_running_loop()
-        loop.create_task(notifier.send_personal_message(user_id, payload))
+        current_loop = asyncio.get_running_loop()
+        current_loop.create_task(notifier.send_personal_message(user_id, payload))
     except RuntimeError:
-        asyncio.run(notifier.send_personal_message(user_id, payload))
+        if notifier.main_loop and notifier.main_loop.is_running():
+            asyncio.run_coroutine_threadsafe(
+                notifier.send_personal_message(user_id, payload),
+                notifier.main_loop
+            )
+        else:
+            try:
+                asyncio.run(notifier.send_personal_message(user_id, payload))
+            except Exception as e:
+                print(f"Failed to dispatch broadcast notification: {e}")
+
 

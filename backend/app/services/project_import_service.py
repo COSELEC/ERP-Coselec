@@ -34,9 +34,9 @@ class ProjectImportService:
         self.db.query(Stock).filter(Stock.project_id == self.project_id).delete()
         self.db.flush()
 
-    async def import_excel(self, file: UploadFile):
+    def import_excel(self, file: UploadFile):
         self._clear_existing_project_data()
-        content = await file.read()
+        content = file.file.read()
         
         try:
             excel_file = pd.ExcelFile(io.BytesIO(content))

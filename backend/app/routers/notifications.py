@@ -53,24 +53,28 @@ async def websocket_notifications(
     WebSocket endpoint for real-time notifications.
     Authenticates the user and registers the socket.
     """
+    actual_token = token or websocket.cookies.get("access_token")
+    
     db: Session = SessionLocal()
     try:
-        actual_token = token or websocket.cookies.get("access_token")
         current_user = await get_current_user_ws(actual_token, db)
-        if not current_user:
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-            return
-
-        await notifier.connect(websocket, current_user.id)
-
-        while True:
-            data = await websocket.receive_text()
-            
-    except WebSocketDisconnect:
-        notifier.disconnect(websocket, current_user.id)
-    except Exception as e:
-        print(f"Notification WS Error: {e}")
-        notifier.disconnect(websocket, current_user.id)
     finally:
         db.close()
+
+    if not current_user:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    user_id = current_user.id
+    await notifier.connect(websocket, user_id)
+
+    try:
+        while True:
+            await websocket.receive_text()
+            
+    except WebSocketDisconnect:
+        notifier.disconnect(websocket, user_id)
+    except Exception as e:
+        print(f"Notification WS Error: {e}")
+        notifier.disconnect(websocket, user_id)
 

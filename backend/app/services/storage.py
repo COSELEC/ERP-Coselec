@@ -4,7 +4,14 @@ from minio import Minio
 
 BUCKET_NAME = os.getenv("MINIO_BUCKET", "erp-documents")
 
+_minio_client_instance: Minio | None = None
+_bucket_ensured: bool = False
+
 def get_minio_client() -> Minio:
+    global _minio_client_instance
+    if _minio_client_instance is not None:
+        return _minio_client_instance
+
     endpoint = os.getenv("MINIO_ENDPOINT")
     if not endpoint:
         raise RuntimeError(
@@ -12,7 +19,6 @@ def get_minio_client() -> Minio:
         )
 
     is_secure = os.getenv("MINIO_SECURE", "true").lower() == "true"
-    
     region = os.getenv("MINIO_REGION", "auto")
 
     if endpoint.startswith("http://"):
@@ -22,20 +28,29 @@ def get_minio_client() -> Minio:
         endpoint = endpoint[8:]
         is_secure = True
 
-    return Minio(
+    _minio_client_instance = Minio(
         endpoint,
         access_key=os.getenv("MINIO_ACCESS_KEY"),
         secret_key=os.getenv("MINIO_SECRET_KEY"),
         region=region,
         secure=is_secure,
     )
+    return _minio_client_instance
+
+def _ensure_bucket_exists(client: Minio):
+    global _bucket_ensured
+    if not _bucket_ensured:
+        try:
+            if not client.bucket_exists(BUCKET_NAME):
+                client.make_bucket(BUCKET_NAME)
+            _bucket_ensured = True
+        except Exception as e:
+            print(f"Warning checking MinIO bucket: {e}")
 
 def upload_file_to_minio(file, file_name: str) -> str:
     """Uploads a file to the S3 compatible cloud storage (e.g. Cloudflare R2)"""
     minio_client = get_minio_client()
-
-    if not minio_client.bucket_exists(BUCKET_NAME):
-        minio_client.make_bucket(BUCKET_NAME)
+    _ensure_bucket_exists(minio_client)
     
     file.file.seek(0, 2)
     file_size = file.file.tell()
@@ -54,9 +69,7 @@ def upload_file_to_minio(file, file_name: str) -> str:
 def upload_buffer_to_minio(buffer, file_name: str, content_type: str = "application/pdf") -> str:
     """Uploads an in-memory buffer to the S3 compatible cloud storage"""
     minio_client = get_minio_client()
-
-    if not minio_client.bucket_exists(BUCKET_NAME):
-        minio_client.make_bucket(BUCKET_NAME)
+    _ensure_bucket_exists(minio_client)
     
     buffer.seek(0, 2)
     file_size = buffer.tell()

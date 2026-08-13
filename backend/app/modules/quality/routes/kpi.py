@@ -12,19 +12,19 @@ from app.modules.quality.services.kpi import get_excel_preview, parse_and_import
 router = APIRouter(prefix="/kpi", tags=["Quality KPI"])
 
 @router.post("/upload-preview", response_model=KPIImportPreviewResponse)
-async def api_kpi_upload_preview(
+def api_kpi_upload_preview(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user)
 ):
     if not any(r.name in ["Admin", "Qualité", "Qualite"] for r in current_user.roles):
         raise HTTPException(status_code=403, detail="Permission refusée")
         
-    contents = await file.read()
+    contents = file.file.read()
     sheet_names = get_excel_preview(contents)
     return {"sheet_names": sheet_names}
 
 @router.post("/upload-parse", response_model=KPIImportResponse)
-async def api_kpi_upload_parse(
+def api_kpi_upload_parse(
     file: UploadFile = File(...),
     sheet_name: str = Form(...),
     year: int = Form(...),
@@ -36,7 +36,7 @@ async def api_kpi_upload_parse(
     if not any(r.name in ["Admin", "Qualité"] for r in current_user.roles):
         raise HTTPException(status_code=403, detail="Permission refusée")
         
-    contents = await file.read()
+    contents = file.file.read()
     imported, updated = parse_and_import_kpi(db, contents, sheet_name, year, month_name, month_index)
     
     return {

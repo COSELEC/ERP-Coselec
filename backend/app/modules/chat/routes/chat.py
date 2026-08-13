@@ -229,44 +229,56 @@ async def websocket_chat(
     WebSocket endpoint that authenticates JWT via query param or cookie, listens for
     incoming messages, saves them to PostgreSQL, and broadcasts JSON payloads.
     """
+    actual_token = token or websocket.cookies.get("access_token")
+    
     db: Session = SessionLocal()
+    try:
+        current_user = await get_current_user_ws(actual_token, db)
+    finally:
+        db.close()
+
+    if not current_user:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    current_user_id = current_user.id
+    current_user_name = getattr(current_user, "name", f"User #{current_user.id}")
+
+    await manager.connect(websocket, room_id)
 
     try:
-        actual_token = token or websocket.cookies.get("access_token")
-        current_user = await get_current_user_ws(actual_token, db)
-        if not current_user:
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-            return
-
-        await manager.connect(websocket, room_id)
-
         while True:
             raw_data = await websocket.receive_text()
             data = json.loads(raw_data)
 
-            new_message = Message(
-                room_id=int(room_id),
-                sender_id=current_user.id,
-                text=data.get("text"),
-                file_url=data.get("file_url"),
-                file_name=data.get("file_name"),
-                file_type=data.get("file_type"),
-            )
-            db.add(new_message)
-            db.commit()
-            db.refresh(new_message)
+            msg_db: Session = SessionLocal()
+            try:
+                new_message = Message(
+                    room_id=int(room_id),
+                    sender_id=current_user_id,
+                    text=data.get("text"),
+                    file_url=data.get("file_url"),
+                    file_name=data.get("file_name"),
+                    file_type=data.get("file_type"),
+                )
+                msg_db.add(new_message)
+                msg_db.commit()
+                msg_db.refresh(new_message)
 
-            payload = {
-                "id": new_message.id,
-                "room_id": new_message.room_id,
-                "sender_id": current_user.id,
-                "sender_name": getattr(current_user, "name", f"User #{current_user.id}"),
-                "text": new_message.text,
-                "file_url": new_message.file_url,
-                "file_name": new_message.file_name,
-                "file_type": new_message.file_type,
-                "created_at": new_message.created_at.isoformat(),
-            }
+                payload = {
+                    "id": new_message.id,
+                    "room_id": new_message.room_id,
+                    "sender_id": current_user_id,
+                    "sender_name": current_user_name,
+                    "text": new_message.text,
+                    "file_url": new_message.file_url,
+                    "file_name": new_message.file_name,
+                    "file_type": new_message.file_type,
+                    "created_at": new_message.created_at.isoformat(),
+                }
+            finally:
+                msg_db.close()
+
             await manager.broadcast_json(payload, room_id)
 
     except WebSocketDisconnect:
@@ -274,5 +286,3 @@ async def websocket_chat(
     except Exception as e:
         print(f"WebSocket execution error: {e}")
         manager.disconnect(websocket, room_id)
-    finally:
-        db.close()
