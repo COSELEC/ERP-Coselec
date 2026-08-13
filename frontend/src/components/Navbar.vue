@@ -182,23 +182,23 @@ async function logout() {
                 </div>
             </div>
 
-            <div class="flex items-center gap-3">
-                <div
-                    class="h-10 w-10 rounded-full bg-[#d10f2f] text-white flex items-center justify-center"
-                >
+            <RouterLink
+                to="/profile"
+                class="group flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-red-200 bg-white hover:bg-red-50 hover:border-red-400 transition-all duration-200 shadow-sm cursor-pointer"
+                title="Accéder à mon profil"
+            >
+                <div class="w-8 h-8 rounded-full bg-[#d10f2f] group-hover:bg-[#b00c26] text-white font-bold text-sm flex items-center justify-center shadow-inner transition-colors duration-200">
                     {{ currentUserInitial }}
                 </div>
-
-                <div>
-                    <p class="font-semibold">
+                <div class="hidden sm:flex flex-col text-left">
+                    <span class="text-xs font-semibold text-gray-800 group-hover:text-[#d10f2f] transition-colors leading-tight">
                         {{ currentUserName }}
-                    </p>
-
-                    <p class="text-xs text-gray-500">
+                    </span>
+                    <span class="text-[10px] text-gray-500 font-medium leading-tight">
                         {{ currentUserRole }}
-                    </p>
+                    </span>
                 </div>
-            </div>
+            </RouterLink>
 
             
 <button class="flex items-center gap-2 text-[#d10f2f] hover:bg-red-50 transition p-2 rounded-lg" @click="logout">

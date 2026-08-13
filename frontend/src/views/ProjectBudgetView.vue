@@ -158,7 +158,7 @@ onMounted(async () => {
           <p class="mt-1 text-gray-500">Gestion des budgets alloués et des dépenses</p>
         </div>
         <div class="flex gap-4 items-center">
-          <select v-model="selectedProjectId" class="px-4 py-2 rounded-lg border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#d10f2f]">
+          <select v-model="selectedProjectId" class="px-4 py-2 rounded-lg border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#d10f2f] w-50">
             <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.code }} - {{ p.nom }}</option>
           </select>
           <button @click="showExpenseModal = true" :disabled="!selectedProjectId" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">

@@ -7,7 +7,7 @@
           <div class="flex items-center space-x-4">
             <span class="material-symbols-outlined text-[#d10f2f]">work</span>
             <h2 class="text-2xl font-bold text-[#b30c27]">Projet à gérer</h2>
-            <select v-model="selectedProject" @change="onProjectChange" class="border-2 w-max h-10 rounded-lg px-2">
+            <select v-model="selectedProject" @change="onProjectChange" class="border-2 w-50 h-10 rounded-lg px-2">
                <option v-for="p in projects" :key="p.id" :value="p.nom">
                  {{ p.nom }}
                </option>

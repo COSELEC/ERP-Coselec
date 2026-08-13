@@ -106,18 +106,6 @@ onMounted(async () => {
           </span>
         </button>
       </div>
-
-      <!-- User Info Placeholder -->
-      <div v-if="!collapsed" class="mt-8 flex flex-col space-y-1">
-        <span class="text-sm text-red-200">Connecté en tant que</span>
-        <span class="font-medium text-lg capitalize">{{ profile?.name || 'Utilisateur' }}</span>
-        <span class="text-xs text-red-100 capitalize">{{ roles.join(', ') || 'Aucun rôle' }}</span>
-        
-        <router-link to="/profile" class="mt-2 text-xs flex items-center space-x-1 hover:text-white text-red-200 transition-colors w-max">
-            <span class="material-symbols-outlined text-sm">person</span>
-            <span>Mon Profil</span>
-        </router-link>
-      </div>
     </div>
 
     <nav class="p-4 space-y-6">
@@ -125,7 +113,7 @@ onMounted(async () => {
       <!-- Général / Commun -->
       <div>
         <h2 v-if="!collapsed" class="text-xs uppercase text-red-200 mb-2">
-          Entreprise
+          Accueil
         </h2>
         <SidebarItem
           to="/"
