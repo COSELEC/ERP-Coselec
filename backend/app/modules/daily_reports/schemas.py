@@ -26,6 +26,17 @@ class WeeklyReportCreate(BaseModel):
 DailyReportCreate = WeeklyReportCreate
 
 
+class ReportUser(BaseModel):
+    id: int
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    name: Optional[str] = None
+    email: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
 class WeeklyReportResponse(BaseModel):
     id: int
     user_id: int
@@ -34,19 +45,38 @@ class WeeklyReportResponse(BaseModel):
     week_end: date
     report_date: date
     hours_worked: float
-    progress_percentage: Optional[int]
+    progress_percentage: Optional[int] = None
     tasks_completed: str
-    issues_encountered: Optional[str]
-    plan_next_week: Optional[str]
+    issues_encountered: Optional[str] = None
+    plan_next_week: Optional[str] = None
+    photos_urls: Optional[list[str]] = []
     status: ReportStatus
     created_at: datetime
     updated_at: datetime
+    user: Optional[ReportUser] = None
 
     class Config:
         from_attributes = True
 
 
-DailyReportResponse = WeeklyReportResponse
+class DailyReportResponse(BaseModel):
+    id: int
+    user_id: int
+    project_id: int
+    report_date: date
+    hours_worked: float
+    progress_percentage: Optional[int] = None
+    tasks_completed: str
+    issues_encountered: Optional[str] = None
+    plan_next_day: Optional[str] = None
+    photos_urls: Optional[list[str]] = []
+    status: ReportStatus
+    created_at: datetime
+    updated_at: datetime
+    user: Optional[ReportUser] = None
+
+    class Config:
+        from_attributes = True
 
 
 class WeeklyReportStatusUpdate(BaseModel):

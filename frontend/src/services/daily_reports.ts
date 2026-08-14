@@ -12,6 +12,14 @@ export interface WeeklyReportCreate {
   plan_next_week?: string;
 }
 
+export interface ReportUser {
+  id: number;
+  first_name?: string;
+  last_name?: string;
+  name?: string;
+  email?: string;
+}
+
 export interface WeeklyReportResponse {
   id: number;
   user_id: number;
@@ -25,12 +33,30 @@ export interface WeeklyReportResponse {
   issues_encountered?: string;
   plan_next_week?: string;
   status: 'DRAFT' | 'SUBMITTED' | 'APPROVED';
+  photos_urls?: string[];
   created_at: string;
   updated_at: string;
+  user?: ReportUser;
+}
+
+export interface DailyReportResponse {
+  id: number;
+  user_id: number;
+  project_id: number;
+  report_date: string;
+  hours_worked: number;
+  progress_percentage?: number;
+  tasks_completed: string;
+  issues_encountered?: string;
+  plan_next_day?: string;
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED';
+  photos_urls?: string[];
+  created_at: string;
+  updated_at: string;
+  user?: ReportUser;
 }
 
 export type DailyReportCreate = WeeklyReportCreate;
-export type DailyReportResponse = WeeklyReportResponse;
 
 export const dailyReportsService = {
   async submitReport(data: WeeklyReportCreate, photos: File[] = []): Promise<WeeklyReportResponse> {

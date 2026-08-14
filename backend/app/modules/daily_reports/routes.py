@@ -1,7 +1,7 @@
 import uuid
 import os
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from datetime import date, timedelta
 
@@ -9,6 +9,7 @@ from app.core.database import get_db
 from app.core.security.auth import get_current_user
 from app.modules.users.models.user import User
 from app.models.project.daily_report import WeeklyReport, DailyReport, ReportStatus
+from app.modules.daily_reports.schemas import WeeklyReportResponse, DailyReportResponse
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
@@ -32,7 +33,7 @@ def save_files(files: List[UploadFile]):
 
 # ---- WEEKLY REPORTS ----
 
-@router.post("/weekly")
+@router.post("/weekly", response_model=WeeklyReportResponse)
 def submit_weekly_report(
     project_id: int = Form(...),
     report_date: str = Form(...),
@@ -75,16 +76,16 @@ def submit_weekly_report(
     db.add(report)
     db.commit()
     db.refresh(report)
-    return report
+    return db.query(WeeklyReport).options(joinedload(WeeklyReport.user)).filter(WeeklyReport.id == report.id).first()
 
-@router.get("/weekly")
+@router.get("/weekly", response_model=List[WeeklyReportResponse])
 def list_weekly_reports(
     project_id: int = None,
     week_start: date = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    query = db.query(WeeklyReport)
+    query = db.query(WeeklyReport).options(joinedload(WeeklyReport.user))
     
     role_names = [r.name.upper() for r in current_user.roles]
     if "ADMIN" not in role_names and "DIRECTION" not in role_names:
@@ -97,17 +98,18 @@ def list_weekly_reports(
     if week_start: query = query.filter(WeeklyReport.week_start == week_start)
     return query.order_by(WeeklyReport.week_start.desc()).all()
 
-@router.patch("/weekly/{report_id}/status")
+@router.patch("/weekly/{report_id}/status", response_model=WeeklyReportResponse)
 def update_weekly_report_status(report_id: int, status: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    report = db.query(WeeklyReport).filter(WeeklyReport.id == report_id).first()
+    report = db.query(WeeklyReport).options(joinedload(WeeklyReport.user)).filter(WeeklyReport.id == report_id).first()
     if not report: raise HTTPException(status_code=404)
     report.status = status
     db.commit()
+    db.refresh(report)
     return report
 
 # ---- DAILY REPORTS ----
 
-@router.post("/daily")
+@router.post("/daily", response_model=DailyReportResponse)
 def submit_daily_report(
     project_id: int = Form(...),
     report_date: str = Form(...),
@@ -146,16 +148,16 @@ def submit_daily_report(
     db.add(report)
     db.commit()
     db.refresh(report)
-    return report
+    return db.query(DailyReport).options(joinedload(DailyReport.user)).filter(DailyReport.id == report.id).first()
 
-@router.get("/daily")
+@router.get("/daily", response_model=List[DailyReportResponse])
 def list_daily_reports(
     project_id: int = None,
     report_date: date = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    query = db.query(DailyReport)
+    query = db.query(DailyReport).options(joinedload(DailyReport.user))
     
     role_names = [r.name.upper() for r in current_user.roles]
     if "ADMIN" not in role_names and "DIRECTION" not in role_names:
@@ -168,10 +170,11 @@ def list_daily_reports(
     if report_date: query = query.filter(DailyReport.report_date == report_date)
     return query.order_by(DailyReport.report_date.desc()).all()
 
-@router.patch("/daily/{report_id}/status")
+@router.patch("/daily/{report_id}/status", response_model=DailyReportResponse)
 def update_daily_report_status(report_id: int, status: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    report = db.query(DailyReport).filter(DailyReport.id == report_id).first()
+    report = db.query(DailyReport).options(joinedload(DailyReport.user)).filter(DailyReport.id == report_id).first()
     if not report: raise HTTPException(status_code=404)
     report.status = status
     db.commit()
+    db.refresh(report)
     return report

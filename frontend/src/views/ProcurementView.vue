@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import AppLayout from "@/layouts/AppLayout.vue";
 import api from "@/services/api";
 import { StockService } from "@/services/stock";
-import { useToast } from "@/composables/useToast";
+import { useToast, useFormatters, useTableSort, useDebounceFn, useStatusBadges } from "@/composables";
 import { getStoredProfile } from "@/services/session";
 
 const toast = useToast();
+const { formatMonthDay, formatYear, formatCurrency } = useFormatters();
+const { getStatusBadgeClass } = useStatusBadges();
 
 const purchaseRequests = ref<any[]>([]);
 const purchaseOrders = ref<any[]>([]);
@@ -21,10 +23,8 @@ const showOrderModal = ref(false);
 const isSubmitting = ref(false);
 
 const searchQuery = ref('');
-let debounceTimer: any = null;
 
-const sortColumn = ref('id');
-const sortOrder = ref<'asc' | 'desc'>('desc');
+const { sortColumn, sortOrder, sortBy, sortedItems: sortedOrders } = useTableSort(purchaseOrders, 'id', 'desc');
 
 const requestForm = ref({
   project_id: '',
@@ -77,38 +77,7 @@ const fetchData = async () => {
   }
 };
 
-const debouncedSearch = () => {
-  if (debounceTimer) clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => {
-    fetchData();
-  }, 300);
-};
-
-const sortBy = (column: string) => {
-  if (sortColumn.value === column) {
-    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    sortColumn.value = column;
-    sortOrder.value = 'asc';
-  }
-};
-
-const sortedOrders = computed(() => {
-  return [...purchaseOrders.value].sort((a, b) => {
-    let valA = a[sortColumn.value];
-    let valB = b[sortColumn.value];
-
-    if (valA === null || valA === undefined) valA = '';
-    if (valB === null || valB === undefined) valB = '';
-
-    if (typeof valA === 'string') valA = valA.toLowerCase();
-    if (typeof valB === 'string') valB = valB.toLowerCase();
-
-    if (valA < valB) return sortOrder.value === 'asc' ? -1 : 1;
-    if (valA > valB) return sortOrder.value === 'asc' ? 1 : -1;
-    return 0;
-  });
-});
+const { debounced: debouncedSearch } = useDebounceFn(fetchData, 300);
 
 const createPurchaseRequest = async () => {
   if (!requestForm.value.project_id) {
@@ -343,10 +312,10 @@ const downloadOrderPdf = async (orderId: number) => {
                   <td class="px-6 py-4 text-sm font-bold text-gray-900">BC-{{ order.id }}</td>
                   <td class="px-6 py-4 text-sm text-gray-500">DA-{{ order.purchase_request_id || '-' }}</td>
                   <td class="px-6 py-4 text-sm font-bold text-gray-900">{{ order.total_amount }} XOF</td>
-                  <td class="px-6 py-4 text-sm text-gray-500">{{ new Date(order.created_at).toLocaleDateString('fr-FR', { month: '2-digit', day: '2-digit' }) }}</td>
-                  <td class="px-6 py-4 text-sm font-bold text-gray-700">{{ new Date(order.created_at).getFullYear() }}</td>
+                  <td class="px-6 py-4 text-sm text-gray-500">{{ formatMonthDay(order.created_at) }}</td>
+                  <td class="px-6 py-4 text-sm font-bold text-gray-700">{{ formatYear(order.created_at) }}</td>
                   <td class="px-6 py-4">
-                    <span :class="{'bg-blue-100 text-blue-800': order.status === 'Issued', 'bg-gray-100 text-gray-800': order.status === 'Draft'}" class="px-2 py-1 text-xs font-semibold rounded-full">
+                    <span :class="getStatusBadgeClass(order.status)" class="px-2.5 py-1 text-xs font-semibold rounded-full">
                       {{ order.status }}
                     </span>
                   </td>

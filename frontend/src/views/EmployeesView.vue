@@ -334,9 +334,10 @@ import { onMounted, ref, computed } from "vue";
 import AppLayout from "@/layouts/AppLayout.vue";
 import { employeeService } from "@/services/employees";
 import { api } from "@/services/api";
-import { useToast } from '@/composables/useToast';
+import { useToast, useStatusBadges, useTableSort } from '@/composables';
 
 const toast = useToast();
+const { getStatusBadgeClass: getStatusClass } = useStatusBadges();
 
 import EmployeeContracts from "@/components/employees/EmployeeContracts.vue";
 import EmployeeDocuments from "@/components/employees/EmployeeDocuments.vue";
@@ -392,35 +393,7 @@ const openCreateModal = () => {
   showCreateModal.value = true;
 };
 
-const sortColumn = ref('');
-const sortOrder = ref<'asc' | 'desc'>('asc');
-
-const sortBy = (column: string) => {
-  if (sortColumn.value === column) {
-    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    sortColumn.value = column;
-    sortOrder.value = 'asc';
-  }
-};
-
-const sortedEmployees = computed(() => {
-  if (!sortColumn.value) return employees.value;
-  return [...employees.value].sort((a, b) => {
-    let valA = (a as any)[sortColumn.value];
-    let valB = (b as any)[sortColumn.value];
-
-    if (valA === null || valA === undefined) valA = '';
-    if (valB === null || valB === undefined) valB = '';
-
-    if (typeof valA === 'string') valA = valA.toLowerCase();
-    if (typeof valB === 'string') valB = valB.toLowerCase();
-
-    if (valA < valB) return sortOrder.value === 'asc' ? -1 : 1;
-    if (valA > valB) return sortOrder.value === 'asc' ? 1 : -1;
-    return 0;
-  });
-});
+const { sortColumn, sortOrder, sortBy, sortedItems: sortedEmployees } = useTableSort(employees, '', 'asc');
 
 const form = ref({
   first_name: '',
@@ -604,29 +577,6 @@ const confirmDeleteEmployee = async () => {
     console.error("Error deleting employee", e);
     const errorMsg = e.response?.data?.detail || "Erreur lors de la suppression de l'employé";
     toast.error(errorMsg);
-  }
-};
-
-const getStatusClass = (status: string) => {
-  if (!status) return "bg-slate-100 text-slate-700";
-  
-  switch (status.toUpperCase()) {
-    case "CDI":
-    case "SUR SITE":
-      return "bg-emerald-100 text-emerald-700";
-    case "CDD":
-    case "SUR CHANTIER":
-    case "ALTERNANT":
-      return "bg-amber-100 text-amber-700";
-    case "STAGIAIRE":
-      return "bg-sky-100 text-sky-700";
-    case "EN CONGÉ":
-    case "PRESTATAIRE":
-      return "bg-violet-100 text-violet-700";
-    case "INACTIF":
-      return "bg-rose-100 text-rose-700";
-    default:
-      return "bg-slate-100 text-slate-700";
   }
 };
 

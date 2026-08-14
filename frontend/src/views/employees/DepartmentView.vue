@@ -2,9 +2,10 @@
 import { ref, onMounted, watch, computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import api from '@/services/api';
-import { useToast } from '@/composables/useToast';
+import { useToast, useStatusBadges } from '@/composables';
 
 const toast = useToast();
+const { getStatusLabel } = useStatusBadges();
 
 interface Department {
   id: number;
@@ -183,13 +184,6 @@ const getStatusClasses = (status: 'CHANTIER' | 'SITE' | 'CONGE' | 'NONE'): strin
     case 'CONGE': return 'bg-amber-400 text-gray-900 border-amber-500 font-bold shadow-3xs cursor-pointer hover:bg-amber-500';
     default: return 'bg-gray-100 text-gray-400 border-gray-200 font-normal';
   }
-};
-
-const getStatusLabel = (status: 'CHANTIER' | 'SITE' | 'CONGE' | 'NONE'): string => {
-  if (status === 'CHANTIER') return 'Chantier';
-  if (status === 'SITE') return 'Sur Site';
-  if (status === 'CONGE') return 'Congé';
-  return '-';
 };
 
 onMounted(() => {

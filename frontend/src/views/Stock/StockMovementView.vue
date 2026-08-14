@@ -232,7 +232,7 @@
 import { ref, reactive, onMounted, watch, computed } from 'vue';
 import { StockService } from '@/services/stock';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { useToast } from '@/composables/useToast';
+import { useToast, useTableSort } from '@/composables';
 import axios from 'axios';
 
 type MovementType = 'ENTRY' | 'EXIT';
@@ -295,17 +295,7 @@ const warehouses = ref<Warehouse[]>([]);
 const partners = ref<Partner[]>([]);
 const movements = ref<Movement[]>([]);
 
-const sortColumn = ref('');
-const sortOrder = ref<'asc' | 'desc'>('asc');
-
-const sortBy = (column: string) => {
-  if (sortColumn.value === column) {
-    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    sortColumn.value = column;
-    sortOrder.value = 'asc';
-  }
-};
+const { sortColumn, sortOrder, sortBy } = useTableSort(movements, '', 'asc');
 
 const isInternalPartner = (partner: Partner | undefined) => {
   if (!partner) {

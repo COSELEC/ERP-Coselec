@@ -275,7 +275,7 @@
                 <div class="text-xs text-gray-500">Chèque: {{ item.check_number }}</div>
               </td>
               <td class="px-6 py-4 text-sm text-gray-700 font-medium">{{ item.recipient }}</td>
-              <td class="px-6 py-4 text-sm font-bold text-[#d10f2f]">{{ item.amount_in_numbers.toLocaleString() }} {{ item.currency }}</td>
+              <td class="px-6 py-4 text-sm font-bold text-[#d10f2f]">{{ formatCurrency(item.amount_in_numbers, item.currency) }}</td>
               <td class="px-6 py-4">
                 <div v-if="item.linked_caisse_voucher_ids && item.linked_caisse_voucher_ids.length > 0" class="flex flex-wrap gap-1">
                   <span 
@@ -288,7 +288,7 @@
                 </div>
                 <span v-else class="text-gray-400 text-xs italic">-</span>
               </td>
-              <td class="px-6 py-4 text-sm text-gray-500">{{ new Date(item.created_at || item.date).toLocaleDateString('fr-FR') }}</td>
+              <td class="px-6 py-4 text-sm text-gray-500">{{ formatDate(item.created_at || item.date) }}</td>
               <td class="px-6 py-4 text-sm flex gap-3">
                 <a v-if="item.pdf_url" :href="item.pdf_url" target="_blank" class="text-indigo-600 hover:text-indigo-900 flex items-center gap-1 font-medium">
                   <span class="material-symbols-outlined text-[18px]">download</span> PDF
@@ -312,26 +312,26 @@
   </AppLayout>
   
   <VoucherAttachmentModal 
-    :is-open="isAttachmentModalOpen"
-    :voucher-id="selectedVoucherId"
+    :is-open="attachmentModal.isOpen.value"
+    :voucher-id="attachmentModal.selectedItem.value"
     type="bank"
-    @close="isAttachmentModalOpen = false"
+    @close="attachmentModal.close()"
   />
 </template>
 
 <script setup>
-import { reactive, computed, onMounted, ref } from 'vue';
+import { reactive, onMounted, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import VoucherAttachmentModal from '@/components/VoucherAttachmentModal.vue';
 import { api } from '@/services/api';
+import { useFormatters, useTableSort, useModal } from '@/composables';
 
-const isAttachmentModalOpen = ref(false);
-const selectedVoucherId = ref(null);
+const { formatDate, formatCurrency, formatPeriod } = useFormatters();
+const attachmentModal = useModal();
 const isDropdownOpen = ref(false);
 
 const openAttachments = (id) => {
-  selectedVoucherId.value = id;
-  isAttachmentModalOpen.value = true;
+  attachmentModal.open(id);
 };
 
 const toggleCaisseSelection = (id) => {
@@ -363,34 +363,11 @@ const form = reactive({
 const availableCaisseVouchers = ref([]);
 const history = ref([]);
 const searchQuery = ref('');
-const sortColumn = ref('id');
-const sortOrder = ref('desc');
 
-const sortedHistory = computed(() => {
-  return [...history.value].sort((a, b) => {
-    let valA = a[sortColumn.value];
-    let valB = b[sortColumn.value];
-    
-    if (valA < valB) return sortOrder.value === 'asc' ? -1 : 1;
-    if (valA > valB) return sortOrder.value === 'asc' ? 1 : -1;
-    return 0;
-  });
-});
-
-const toggleSort = (col) => {
-  if (sortColumn.value === col) {
-    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    sortColumn.value = col;
-    sortOrder.value = 'desc';
-  }
-};
+const { sortColumn, sortOrder, toggleSort, sortedItems: sortedHistory } = useTableSort(history, 'id', 'desc');
 
 const updatePeriod = () => {
-  const d = new Date(form.date);
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const year = String(d.getFullYear()).slice(2);
-  form.period_num = `${month}${year}`;
+  form.period_num = formatPeriod(form.date);
 };
 
 const fetchNextId = async () => {

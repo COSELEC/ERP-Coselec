@@ -86,21 +86,17 @@
 import { ref, onMounted } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import api from '@/services/api';
-import { useToast } from '@/composables/useToast';
+import { useToast, useStatusBadges, useFormatters } from '@/composables';
 
 const toast = useToast();
+const { getStatusBadgeClass } = useStatusBadges();
+const { formatDate } = useFormatters();
 
 const requests = ref<any[]>([]);
 
 const rejectModalOpen = ref(false);
 const rejectionComment = ref('');
 const currentRejectId = ref<number | null>(null);
-
-const getStatusBadgeClass = (status: string) => {
-  if (status === 'APPROVED') return 'bg-emerald-100 text-emerald-700';
-  if (status === 'REJECTED') return 'bg-red-100 text-red-700';
-  return 'bg-amber-100 text-amber-700';
-};
 
 const fetchRequests = async () => {
   try {

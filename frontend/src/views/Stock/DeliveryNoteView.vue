@@ -120,10 +120,11 @@
 import { ref, onMounted, computed } from 'vue';
 import api from '@/services/api';
 import { getStoredProfile, hasAnyRole } from '@/services/session';
-import { useToast } from '@/composables/useToast';
+import { useToast, useStatusBadges } from '@/composables';
 
 const profile = getStoredProfile();
 const toast = useToast();
+const { getStatusBadgeClass: getStatusClass } = useStatusBadges();
 
 const loading = ref(true);
 const deliveryNotes = ref<any[]>([]);
@@ -152,15 +153,6 @@ const fetchNotes = async () => {
 };
 
 onMounted(fetchNotes);
-
-const getStatusClass = (status: string) => {
-    switch (status) {
-        case 'DRAFT': return 'bg-yellow-100 text-yellow-800';
-        case 'CHECKED_BY_MAGASINIER': return 'bg-blue-100 text-blue-800';
-        case 'VALIDATED_BY_MANAGER': return 'bg-green-100 text-green-800';
-        default: return 'bg-gray-100 text-gray-800';
-    }
-};
 
 const canValidate = (note: any) => {
     if (note.status === 'DRAFT' && isMagasinier.value) return true;

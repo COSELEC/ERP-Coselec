@@ -66,12 +66,12 @@
         <!-- En-tête du rapport -->
         <div class="flex justify-between items-start mb-5">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white text-sm font-bold">
-              {{ String(report.user_id).slice(0, 2) }}
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white text-sm font-bold shadow-sm">
+              {{ employeeInitials(report) }}
             </div>
             <div>
               <div class="flex items-center gap-2">
-                <h4 class="font-semibold text-gray-800">Employé #{{ report.user_id }}</h4>
+                <h4 class="font-semibold text-gray-800">{{ employeeName(report) }}</h4>
                 <span
                   class="px-2.5 py-0.5 rounded-full text-xs font-semibold"
                   :class="{
@@ -185,6 +185,40 @@ const loading = ref(false);
 const activeTab = ref<'weekly' | 'daily'>('weekly');
 const filterWeek = ref('');
 const filterDate = ref('');
+
+function employeeName(report: any): string {
+  if (report.user) {
+    const fullName = `${report.user.first_name || ''} ${report.user.last_name || ''}`.trim();
+    if (fullName) return fullName;
+    if (report.user.name) return report.user.name;
+    if (report.user.email) return report.user.email;
+  }
+  return `Employé #${report.user_id}`;
+}
+
+function employeeInitials(report: any): string {
+  if (report.user) {
+    const fn = (report.user.first_name || '').trim();
+    const ln = (report.user.last_name || '').trim();
+    if (fn && ln) {
+      return (fn[0] + ln[0]).toUpperCase();
+    }
+    if (fn) {
+      return fn.slice(0, 2).toUpperCase();
+    }
+    if (report.user.name) {
+      const parts = report.user.name.trim().split(' ').filter(Boolean);
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+      }
+      return report.user.name.slice(0, 2).toUpperCase();
+    }
+    if (report.user.email) {
+      return report.user.email.slice(0, 2).toUpperCase();
+    }
+  }
+  return String(report.user_id).slice(0, 2);
+}
 
 function fmt(dateStr: string): string {
   if (!dateStr) return '';
