@@ -413,17 +413,14 @@ def export_project_gantt(
     tasks = db.query(Task).filter(Task.project_id == project_id).order_by(Task.start_date).all()
     milestones = db.query(ProjectMilestone).filter(ProjectMilestone.project_id == project_id).order_by(ProjectMilestone.due_date).all()
     
-    if not tasks and not milestones:
-        raise HTTPException(status_code=400, detail="Aucune tâche ou jalon à exporter")
-        
     # Calculate timeline
-    min_date = project.date_debut_estimee or datetime.utcnow().date()
+    min_date = project.date_debut_estimee or project.date_debut_reelle or datetime.utcnow().date()
     if tasks:
         task_starts = [t.start_date for t in tasks if t.start_date]
         if task_starts:
             min_date = min(min_date, min(task_starts))
             
-    max_date = min_date + timedelta(days=30)
+    max_date = project.date_fin_prevue or project.date_fin_estimee or project.date_fin_reelle or (min_date + timedelta(days=60))
     if tasks:
         task_ends = [t.due_date for t in tasks if t.due_date]
         if task_ends:
@@ -433,7 +430,10 @@ def export_project_gantt(
         if ms_ends:
             max_date = max(max_date, max(ms_ends))
             
-    total_days = (max_date - min_date).days
+    if max_date <= min_date:
+        max_date = min_date + timedelta(days=30)
+
+    total_days = max(7, (max_date - min_date).days)
     total_weeks = max(8, (total_days // 7) + 2)
     total_months = max(2, (total_weeks // 4) + 1)
         
@@ -530,6 +530,12 @@ def export_project_gantt(
                 write_task(t, task_num, row_idx)
                 row_idx += 1
                 task_num += 1
+
+        if not milestones and not tasks:
+            worksheet_plan.write(row_idx, 0, 1, border_format)
+            worksheet_plan.write(row_idx, 1, "Aucune tâche définie", border_format)
+            for c in range(2, 2 + total_weeks):
+                worksheet_plan.write(row_idx, c, "", border_format)
                 
     output.seek(0)
     headers = {
