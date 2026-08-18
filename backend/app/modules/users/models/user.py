@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 from app.models.relations import user_roles
+from app.modules.users.models.department import Department
 
 class User(Base):
     __tablename__ = "users"
@@ -33,6 +34,7 @@ class User(Base):
     documents = relationship("EmployeeDocument", back_populates="user", cascade="all, delete-orphan")
     contracts = relationship("Contract", back_populates="user", cascade="all, delete-orphan")
     project_assignments = relationship("ProjectAssignment", back_populates="user", cascade="all, delete-orphan")
+    attendances = relationship("Attendance", back_populates="user", cascade="all, delete-orphan")
 
     notifications = relationship(
         "Notification",

@@ -3,6 +3,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Date, Boolean, Enum,
 from datetime import datetime
 from sqlalchemy.orm import relationship
 from app.core.database import Base
+from app.models.project.task import Task
 
 class DocumentCategory(str, enum.Enum):
     IDENTITY = "Identité"

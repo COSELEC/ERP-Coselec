@@ -37,3 +37,23 @@ class DocumentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class AttendanceUpdate(BaseModel):
+    employee_id: Optional[int] = None
+    user_id: Optional[int] = None
+    date: date
+    status: str
+    notes: Optional[str] = None
+    project_id: Optional[int] = None
+
+    @model_validator(mode="after")
+    def check_user_id(self):
+        if not self.employee_id and not self.user_id:
+            raise ValueError("employee_id or user_id is required")
+        if not self.user_id:
+            self.user_id = self.employee_id
+        if not self.employee_id:
+            self.employee_id = self.user_id
+        return self
+

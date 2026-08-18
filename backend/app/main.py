@@ -34,6 +34,7 @@ from app.routers.project.assignments import router as assignments_router
 from app.routers.project.budget import router as budgets_router
 from app.routers.project.projects import router as projects_router
 from app.routers.project.tasks import router as tasks_router
+from app.routers.planning import router as planning_router
 from app.modules.stock.routes import stock_router
 
 from app.tasks.hr_alerts import check_document_expirations
@@ -135,6 +136,7 @@ app.include_router(procurement_router)
 app.include_router(auth_router)
 app.include_router(caisse_router)
 app.include_router(departments_router)
+app.include_router(planning_router)
 app.include_router(users_router)
 app.include_router(generic_requests_router)
 app.include_router(bank_vouchers_router)

@@ -34,7 +34,35 @@ const loadingTaskDocuments = ref(false)
 const documentActionId = ref<number | null>(null)
 const documentError = ref('')
 const descriptionMode = ref<'edit' | 'preview'>('edit')
+const showMarkdownHelp = ref(false)
+const descriptionTextareaRef = ref<HTMLTextAreaElement | null>(null)
 const renderedDescription = computed(() => marked.parse(localTask.value.description || '') as string)
+
+const applyMarkdown = (prefix: string, suffix = '', defaultPlaceholder = '') => {
+  const textarea = descriptionTextareaRef.value
+  const currentText = localTask.value.description || ''
+
+  if (!textarea) {
+    localTask.value.description = currentText + `${prefix}${defaultPlaceholder}${suffix}`
+    return
+  }
+
+  const start = textarea.selectionStart ?? currentText.length
+  const end = textarea.selectionEnd ?? currentText.length
+  const selectedText = currentText.substring(start, end)
+  const textToInsert = selectedText || defaultPlaceholder
+  const newContent = `${prefix}${textToInsert}${suffix}`
+
+  localTask.value.description =
+    currentText.substring(0, start) + newContent + currentText.substring(end)
+
+  setTimeout(() => {
+    textarea.focus()
+    const newCursorStart = start + prefix.length
+    const newCursorEnd = newCursorStart + textToInsert.length
+    textarea.setSelectionRange(newCursorStart, newCursorEnd)
+  }, 0)
+}
 
 const onDragOver = (e: DragEvent) => {
   isDragging.value = true
@@ -291,47 +319,174 @@ const handleSave = () => {
 
         <!-- Ligne 3 : Description -->
         <div>
-          <div class="mb-1 flex items-center justify-between">
-            <label class="block text-sm font-medium text-gray-900">Description (Markdown)</label>
-            <div class="inline-flex rounded-md border border-gray-200 bg-gray-50 p-0.5 text-xs">
+          <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <label class="block text-sm font-medium text-gray-900">Description (Markdown)</label>
               <button
                 type="button"
-                class="rounded px-2 py-1"
-                :class="descriptionMode === 'edit' ? 'bg-white text-red-700 shadow-sm' : 'text-gray-600'"
-                @click="descriptionMode = 'edit'"
+                @click="showMarkdownHelp = !showMarkdownHelp"
+                title="Afficher/Masquer le guide Markdown"
+                class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-gray-500 hover:bg-gray-100 hover:text-red-600 transition"
               >
-                Edition
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{{ showMarkdownHelp ? 'Masquer guide' : 'Guide' }}</span>
               </button>
-              <button
-                type="button"
-                class="rounded px-2 py-1"
-                :class="descriptionMode === 'preview' ? 'bg-white text-red-700 shadow-sm' : 'text-gray-600'"
-                @click="descriptionMode = 'preview'"
-              >
-                Apercu
-              </button>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <!-- Outils rapides (visibles en mode édition) -->
+              <div v-if="descriptionMode === 'edit'" class="flex items-center border border-gray-200 rounded-md bg-gray-50 p-0.5 text-xs">
+                <button
+                  type="button"
+                  @click="applyMarkdown('**', '**', 'texte en gras')"
+                  title="Gras (**texte**)"
+                  class="rounded px-2 py-1 font-bold text-gray-700 hover:bg-white hover:text-red-700 transition"
+                >
+                  B
+                </button>
+                <button
+                  type="button"
+                  @click="applyMarkdown('*', '*', 'texte en italique')"
+                  title="Italique (*texte*)"
+                  class="rounded px-2 py-1 italic font-serif text-gray-700 hover:bg-white hover:text-red-700 transition"
+                >
+                  I
+                </button>
+                <button
+                  type="button"
+                  @click="applyMarkdown('### ', '', 'Titre')"
+                  title="Titre (### Titre)"
+                  class="rounded px-2 py-1 font-bold text-gray-700 hover:bg-white hover:text-red-700 transition"
+                >
+                  H
+                </button>
+                <div class="h-3 w-px bg-gray-300 mx-0.5" />
+                <button
+                  type="button"
+                  @click="applyMarkdown('- ', '', 'Élément')"
+                  title="Liste à puces (- élément)"
+                  class="rounded px-2 py-1 text-gray-700 hover:bg-white hover:text-red-700 transition"
+                >
+                  •
+                </button>
+                <button
+                  type="button"
+                  @click="applyMarkdown('- [ ] ', '', 'Tâche')"
+                  title="Liste de tâches (- [ ] tâche)"
+                  class="rounded px-2 py-1 text-gray-700 hover:bg-white hover:text-red-700 transition"
+                >
+                  ☑
+                </button>
+                <button
+                  type="button"
+                  @click="applyMarkdown('[', '](https://...)', 'texte du lien')"
+                  title="Lien ([texte](url))"
+                  class="rounded px-2 py-1 text-gray-700 hover:bg-white hover:text-red-700 transition"
+                >
+                  🔗
+                </button>
+                <button
+                  type="button"
+                  @click="applyMarkdown('`', '`', 'code')"
+                  title="Code (`code`)"
+                  class="rounded px-2 py-1 font-mono text-gray-700 hover:bg-white hover:text-red-700 transition"
+                >
+                  &lt;/&gt;
+                </button>
+                <button
+                  type="button"
+                  @click="applyMarkdown('> ', '', 'Citation')"
+                  title="Citation (> texte)"
+                  class="rounded px-2 py-1 text-gray-700 hover:bg-white hover:text-red-700 transition"
+                >
+                  ”
+                </button>
+              </div>
+
+              <!-- Switcher Édition / Aperçu -->
+              <div class="inline-flex rounded-md border border-gray-200 bg-gray-50 p-0.5 text-xs">
+                <button
+                  type="button"
+                  class="rounded px-2 py-1 transition"
+                  :class="descriptionMode === 'edit' ? 'bg-white text-red-700 shadow-xs font-medium' : 'text-gray-600'"
+                  @click="descriptionMode = 'edit'"
+                >
+                  Édition
+                </button>
+                <button
+                  type="button"
+                  class="rounded px-2 py-1 transition"
+                  :class="descriptionMode === 'preview' ? 'bg-white text-red-700 shadow-xs font-medium' : 'text-gray-600'"
+                  @click="descriptionMode = 'preview'"
+                >
+                  Aperçu
+                </button>
+              </div>
             </div>
           </div>
 
           <textarea
             v-if="descriptionMode === 'edit'"
-            class="w-full border border-gray-300 rounded-md px-4 py-3 text-gray-900 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-30 resize-y"
+            ref="descriptionTextareaRef"
+            class="w-full border border-gray-300 rounded-md px-4 py-3 text-gray-900 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-32 resize-y"
             v-model="localTask.description"
             placeholder="# Titre\n\n- Point 1\n- Point 2\n\n**Texte important**"
           ></textarea>
 
           <div
             v-else
-            class="markdown-preview rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 min-h-30"
+            class="markdown-preview rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 min-h-32"
             v-html="renderedDescription"
           />
 
-          <p class="mt-1 text-xs text-gray-500">
-            Astuce: utilise #, ##, -, **gras**, *italique*, [lien](https://...).
-          </p>
+          <!-- Aide-mémoire interactif dépliable -->
+          <div
+            v-if="showMarkdownHelp"
+            class="mt-2 rounded-md border border-red-100 bg-red-50/40 p-3 text-xs text-gray-700 shadow-xs transition-all"
+          >
+            <div class="mb-2 font-semibold text-gray-900 flex items-center justify-between">
+              <span>Aide-mémoire de mise en page Markdown</span>
+              <span class="text-[11px] text-gray-500 font-normal">Cliquez sur les boutons de la barre d'outils pour insérer rapidement</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono">
+              <div class="rounded bg-white p-2 border border-gray-200">
+                <span class="text-red-700"># Titre</span>
+                <p class="font-sans text-[11px] text-gray-500 mt-0.5">Titre principal</p>
+              </div>
+              <div class="rounded bg-white p-2 border border-gray-200">
+                <span class="text-red-700">**Gras**</span>
+                <p class="font-sans text-[11px] text-gray-500 mt-0.5">Texte en <b>gras</b></p>
+              </div>
+              <div class="rounded bg-white p-2 border border-gray-200">
+                <span class="text-red-700">*Italique*</span>
+                <p class="font-sans text-[11px] text-gray-500 mt-0.5">Texte en <i>italique</i></p>
+              </div>
+              <div class="rounded bg-white p-2 border border-gray-200">
+                <span class="text-red-700">- [ ] À faire</span>
+                <p class="font-sans text-[11px] text-gray-500 mt-0.5">Case à cocher</p>
+              </div>
+              <div class="rounded bg-white p-2 border border-gray-200">
+                <span class="text-red-700">- Liste</span>
+                <p class="font-sans text-[11px] text-gray-500 mt-0.5">Puce non ordonnée</p>
+              </div>
+              <div class="rounded bg-white p-2 border border-gray-200">
+                <span class="text-red-700">[Titre](url)</span>
+                <p class="font-sans text-[11px] text-gray-500 mt-0.5">Lien hypertexte</p>
+              </div>
+              <div class="rounded bg-white p-2 border border-gray-200">
+                <span class="text-red-700">`code`</span>
+                <p class="font-sans text-[11px] text-gray-500 mt-0.5">Code en ligne</p>
+              </div>
+              <div class="rounded bg-white p-2 border border-gray-200">
+                <span class="text-red-700">&gt; Citation</span>
+                <p class="font-sans text-[11px] text-gray-500 mt-0.5">Bloc citation</p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Ligne 4 : Métadonnées -->
         <div>
           <label class="block text-sm font-medium text-gray-900 mb-1">Métadonnées (Format JSON)</label>
           <textarea 
