@@ -2,6 +2,7 @@
 import { ref, onMounted, watch, computed } from "vue";
 import AppLayout from "@/layouts/AppLayout.vue";
 import ExcelImportModal from "@/components/ExcelImportModal.vue";
+import ExportProjectModal from "@/components/project/ExportProjectModal.vue";
 import api from "@/services/api";
 import {
   Chart as ChartJS,
@@ -26,6 +27,7 @@ const loading = ref(true);
 const hrStats = ref<any>(null);
 const financials = ref<{ budgets: any[], payment_milestones: any[] }>({ budgets: [], payment_milestones: [] });
 const isImportModalOpen = ref(false);
+const isExportModalOpen = ref(false);
 const selectedMilestonePartner = ref<string>('all');
 
 const groupedBudgets = computed(() => {
@@ -141,18 +143,7 @@ onMounted(() => {
   fetchProjects();
 });
 
-const downloadProjectReport = async () => {
-  if (!selectedProjectId.value) return;
-  try {
-    toast.success("Génération du rapport en cours...");
-    const res = await api.get(`/projects/${selectedProjectId.value}/download-report`);
-    if (res.data && res.data.pdf_url) {
-      window.open(res.data.pdf_url, '_blank');
-    }
-  } catch (err: any) {
-    toast.error("Erreur lors de la génération du rapport.");
-  }
-};
+
 
 const exportGantt = async () => {
   if (!selectedProjectId.value) return;
@@ -207,13 +198,9 @@ const handleImportExcel = async (file: File) => {
             <span class="material-symbols-outlined text-sm">upload_file</span>
             Importer
           </button>
-          <button @click="downloadProjectReport" :disabled="!selectedProjectId" class="bg-[#d10f2f] hover:bg-[#97091f] disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+          <button @click="isExportModalOpen = true" :disabled="!selectedProjectId" class="bg-[#d10f2f] hover:bg-[#97091f] disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
             <span class="material-symbols-outlined text-sm">download</span>
-            Exporter Rapport
-          </button>
-          <button @click="exportGantt" :disabled="!selectedProjectId" class="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
-            <span class="material-symbols-outlined text-sm">event_note</span>
-            Exporter Gantt
+            Exporter
           </button>
         </div>
       </div>
@@ -384,6 +371,12 @@ const handleImportExcel = async (file: File) => {
       :is-open="isImportModalOpen" 
       @close="isImportModalOpen = false" 
       @import="handleImportExcel" 
+    />
+    <ExportProjectModal
+      :is-open="isExportModalOpen"
+      :project-id="selectedProjectId"
+      :project-code="activeProject?.code"
+      @close="isExportModalOpen = false"
     />
   </AppLayout>
 </template>

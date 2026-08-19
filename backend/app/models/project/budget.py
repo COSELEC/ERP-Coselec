@@ -14,6 +14,17 @@ class ProjectBudget(Base):
     category = Column(String(100), nullable=False)
     allocated_amount = Column(Numeric(14, 2), default=0.0)
     currency = Column(String(10), default="XOF")
+    
+    # Location fields for per-row alignment
+    region = Column(String(100), nullable=True)
+    departement = Column(String(100), nullable=True)
+    commune = Column(String(100), nullable=True)
+    localite = Column(String(200), nullable=True)
+    
+    # Fields for Transport (NBRE and PU TTC)
+    quantity = Column(Numeric(14, 2), nullable=True)
+    unit_price = Column(Numeric(14, 2), nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow)
 
     project = relationship("Project", back_populates="budgets")
