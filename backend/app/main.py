@@ -1,5 +1,6 @@
 import os
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 from alembic import command
 from alembic.config import Config
@@ -7,6 +8,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+
+logging.basicConfig(level=logging.INFO)
 
 from app.core.database import SessionLocal
 from app.core.security.middleware import SlidingSessionMiddleware
@@ -70,9 +73,9 @@ async def lifespan(app: FastAPI):
         db.close()
 
     scheduler = BackgroundScheduler()
-    scheduler.add_job(check_document_expirations, "cron", hour=8, minute=0)
-    scheduler.add_job(check_missing_daily_reports, "cron", day_of_week="fri", hour=16, minute=0)
-    scheduler.add_job(notify_stale_requests, "cron", hour=7, minute=0)
+    scheduler.add_job(check_document_expirations, "cron", hour=8, minute=0, misfire_grace_time=60)
+    scheduler.add_job(check_missing_daily_reports, "cron", day_of_week="fri", hour=16, minute=30, misfire_grace_time=60)
+    scheduler.add_job(notify_stale_requests, "cron", hour=7, minute=0, misfire_grace_time=60)
     scheduler.start()
 
     yield

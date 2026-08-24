@@ -18,7 +18,7 @@ def check_missing_daily_reports():
     today = date.today()
     monday_of_week = today - timedelta(days=today.weekday())
 
-    logger.info(f"Vérification des rapports hebdomadaires manquants pour la semaine du {monday_of_week}...")
+    print(f"Vérification des rapports hebdomadaires manquants pour la semaine du {monday_of_week}...")
     try:
         db = SessionLocal()
         report_repo = SqlAlchemyDailyReportRepository(db)
@@ -28,9 +28,9 @@ def check_missing_daily_reports():
         use_case.execute(today)
 
         db.commit()
-        logger.info("Vérification des rapports hebdomadaires terminée.")
+        print("Vérification des rapports hebdomadaires terminée.")
     except Exception as e:
-        logger.error(f"Erreur lors de la vérification des rapports hebdomadaires: {e}")
+        print(f"Erreur lors de la vérification des rapports hebdomadaires: {e}")
         if 'db' in locals():
             db.rollback()
     finally:

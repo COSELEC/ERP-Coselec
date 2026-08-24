@@ -3,7 +3,7 @@ import { clearStoredProfile } from "./session";
 import { useToast } from "@/composables/useToast";
 
 function resolveApiBaseUrl(): string {
-  return "/api";
+  return import.meta.env.VITE_API_BASE_URL || "/api";
 }
 
 const api = axios.create({
