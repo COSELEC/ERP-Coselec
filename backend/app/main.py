@@ -20,24 +20,25 @@ from app.modules.requests_unified.routes.requests import (
 from app.modules.users.routes.auth import router as auth_router
 from app.modules.users.routes.employees import router as employees_router
 from app.modules.users.routes.users import router as users_router
+from app.modules.users.routes.roles import router as roles_router
 from app.modules.users.services.rbac import (
     ensure_admin_role_for_email,
     ensure_rbac_setup,
 )
-from app.routers.bank_vouchers import router as bank_vouchers_router
-from app.routers.caisse import router as caisse_router
-from app.routers.contracts import router as contracts_router
-from app.routers.dashboard import router as app_dashboard_router
-from app.routers.departments import router as departments_router
-from app.routers.documents import router as documents_router
-from app.routers.notifications import router as notifications_router
-from app.routers.norms import router as norms_router
-from app.routers.procurement import router as procurement_router
-from app.routers.project.assignments import router as assignments_router
-from app.routers.project.budget import router as budgets_router
-from app.routers.project.projects import router as projects_router
-from app.routers.project.tasks import router as tasks_router
-from app.routers.planning import router as planning_router
+from app.modules.finance.routes.bank_vouchers import router as bank_vouchers_router
+from app.modules.finance.routes.caisse import router as caisse_router
+from app.modules.hr.routes.contracts import router as contracts_router
+from app.modules.dashboard.routes.dashboard import router as app_dashboard_router
+from app.modules.hr.routes.departments import router as departments_router
+from app.modules.hr.routes.documents import router as documents_router
+from app.modules.notifications.routes.notifications import router as notifications_router
+from app.modules.quality.routes.norms import router as norms_router
+from app.modules.procurement.routes.procurement import router as procurement_router
+from app.modules.projects.routes.assignments import router as assignments_router
+from app.modules.projects.routes.budget import router as budgets_router
+from app.modules.projects.routes.projects import router as projects_router
+from app.modules.projects.routes.tasks import router as tasks_router
+from app.modules.hr.routes.planning import router as planning_router
 from app.modules.stock.routes import stock_router
 
 from app.tasks.hr_alerts import check_document_expirations
@@ -141,6 +142,7 @@ app.include_router(caisse_router)
 app.include_router(departments_router)
 app.include_router(planning_router)
 app.include_router(users_router)
+app.include_router(roles_router)
 app.include_router(generic_requests_router)
 app.include_router(bank_vouchers_router)
 app.include_router(norms_router)

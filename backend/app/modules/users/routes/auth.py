@@ -118,11 +118,17 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
 
 @router.get("/me")
 def me(current_user: User = Depends(get_current_user)):
+    permissions = set()
+    for role in current_user.roles:
+        for perm in role.permissions:
+            permissions.add(perm.code)
+            
     return {
         "id": current_user.id,
         "name": current_user.name,
         "email": current_user.email,
-        "roles": [role.name for role in current_user.roles]
+        "roles": [role.name for role in current_user.roles],
+        "permissions": list(permissions)
     }
 
 @router.post("/logout")

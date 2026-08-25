@@ -16,6 +16,16 @@ RBAC_PERMISSIONS: dict[str, tuple[str, str]] = {
     "employees.update": ("Employes - mise a jour", "Modifier des employes"),
     "employees.delete": ("Employes - suppression", "Supprimer des employes"),
 
+    "users.read": ("Utilisateurs - lecture", "Consulter les utilisateurs"),
+    "users.create": ("Utilisateurs - creation", "Creer des utilisateurs"),
+    "users.update": ("Utilisateurs - mise a jour", "Modifier des utilisateurs"),
+    "users.delete": ("Utilisateurs - suppression", "Supprimer des utilisateurs"),
+
+    "roles.read": ("Rôles - lecture", "Consulter les rôles"),
+    "roles.create": ("Rôles - creation", "Creer des rôles"),
+    "roles.update": ("Rôles - mise a jour", "Modifier des rôles"),
+    "roles.delete": ("Rôles - suppression", "Supprimer des rôles"),
+
     "notifications.read": ("Notifications - lecture", "Consulter ses notifications"),
     "notifications.update": ("Notifications - mise a jour", "Marquer les notifications"),
     "hr.read": ("Planning RH - lecture", "Consulter le planning RH"),
@@ -26,6 +36,7 @@ RBAC_PERMISSIONS: dict[str, tuple[str, str]] = {
     "contracts.delete": ("Contrats - suppression", "Supprimer des contrats"),
     "documents.read": ("Documents - lecture", "Consulter les documents RH"),
     "documents.create": ("Documents - creation", "Ajouter des documents RH"),
+    "documents.update": ("Documents - mise a jour", "Modifier des documents RH"),
     "documents.delete": ("Documents - suppression", "Supprimer des documents RH"),
     "stock.read": ("Stock - lecture", "Consulter le stock"),
     "stock.create": ("Stock - creation", "Creer des donnees stock"),

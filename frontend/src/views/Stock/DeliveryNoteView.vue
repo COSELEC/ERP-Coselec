@@ -119,7 +119,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import api from '@/services/api';
-import { getStoredProfile, hasAnyRole } from '@/services/session';
+import { getStoredProfile, hasPermission } from '@/services/session';
 import { useToast, useStatusBadges } from '@/composables';
 
 const profile = getStoredProfile();
@@ -135,9 +135,10 @@ const editLines = ref<any[]>([]);
 const approvalComments = ref('');
 const isSubmitting = ref(false);
 
-const roles = computed(() => profile?.roles || []);
-const isMagasinier = computed(() => hasAnyRole(roles.value, ['Admin', 'Stock / Logistique', 'Magasinier']));
-const isManager = computed(() => hasAnyRole(roles.value, ['Admin', 'Chef de Projet', 'Direction']));
+const permissions = computed(() => profile?.permissions || []);
+
+const isMagasinier = computed(() => hasPermission(permissions.value, ['stock.create']));
+const isManager = computed(() => hasPermission(permissions.value, ['projects.read', 'stock.read']));
 
 const fetchNotes = async () => {
     loading.value = true;

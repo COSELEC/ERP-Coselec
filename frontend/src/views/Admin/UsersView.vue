@@ -34,32 +34,53 @@
         />
 
         <!-- Pagination -->
-        <div class="mt-6 flex items-center justify-between border-t border-gray-100 pt-4" v-if="totalPages > 1">
+        <AppPagination 
+          :currentPage="currentPage" 
+          :totalPages="totalPages" 
+          @change="changePage" 
+        />
+      </div>
+      
+      <!-- Section des Rôles -->
+      <div class="mt-12">
+        <header class="mb-6 flex justify-between items-end">
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 tracking-tight">Gestion des Rôles</h2>
+            <p class="text-sm text-gray-400 mt-1">Gérez les rôles et leurs permissions</p>
+          </div>
           <button 
-            :disabled="currentPage === 1"
-            @click="changePage(currentPage - 1)"
-            class="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition"
+            @click="openRoleCreateForm"
+            class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm"
           >
-            Précédent
+            + Nouveau Rôle
           </button>
-          <span class="text-sm text-gray-500">Page {{ currentPage }} sur {{ totalPages }}</span>
-          <button 
-            :disabled="currentPage === totalPages"
-            @click="changePage(currentPage + 1)"
-            class="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition"
-          >
-            Suivant
-          </button>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <RoleList 
+            :roles="roles" 
+            :loading="loadingRoles"
+            @edit="openRoleEditForm" 
+            @delete="confirmRoleDelete" 
+          />
         </div>
       </div>
     </div>
 
-    <!-- Modal Form -->
+    <!-- Modal Form Utilisateur -->
     <UserForm 
-      v-if="showForm"
+      v-if="showUserForm"
       :user="selectedUser"
-      @close="closeForm"
+      @close="closeUserForm"
       @saved="onUserSaved"
+    />
+
+    <!-- Modal Form Rôle -->
+    <RoleForm 
+      v-if="showRoleForm"
+      :role="selectedRole"
+      @close="closeRoleForm"
+      @saved="onRoleSaved"
     />
   </AppLayout>
 </template>
@@ -69,7 +90,11 @@ import { ref, onMounted } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import UserList from '@/components/users/UserList.vue';
 import UserForm from '@/components/users/UserForm.vue';
+import AppPagination from '@/components/common/AppPagination.vue';
+import RoleList from '@/components/users/RoleList.vue';
+import RoleForm from '@/components/users/RoleForm.vue';
 import { userService, type User } from '@/services/userService';
+import { roleService, type Role } from '@/services/roleService';
 import { getStoredProfile } from '@/services/session';
 import { useToast } from '@/composables/useToast';
 
@@ -78,6 +103,7 @@ const toast = useToast();
 const profile = getStoredProfile();
 const currentUserId = profile?.id;
 
+// Users state
 const users = ref<User[]>([]);
 const loading = ref(true);
 const totalPages = ref(1);
@@ -85,10 +111,16 @@ const currentPage = ref(1);
 const limit = 10;
 const searchQuery = ref('');
 
-const showForm = ref(false);
+const showUserForm = ref(false);
 const selectedUser = ref<User | null>(null);
 
-let searchTimeout: any;
+let searchTimeout: ReturnType<typeof setTimeout>;
+
+// Roles state
+const roles = ref<Role[]>([]);
+const loadingRoles = ref(true);
+const showRoleForm = ref(false);
+const selectedRole = ref<Role | null>(null);
 
 const fetchUsers = async (page = 1) => {
   loading.value = true;
@@ -105,6 +137,17 @@ const fetchUsers = async (page = 1) => {
   }
 };
 
+const fetchRoles = async () => {
+  loadingRoles.value = true;
+  try {
+    roles.value = await roleService.getRoles();
+  } catch (error) {
+    console.error('Failed to fetch roles:', error);
+  } finally {
+    loadingRoles.value = false;
+  }
+};
+
 const handleSearch = () => {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
@@ -118,23 +161,24 @@ const changePage = (page: number) => {
   }
 };
 
+// Users Handlers
 const openCreateForm = () => {
   selectedUser.value = null;
-  showForm.value = true;
+  showUserForm.value = true;
 };
 
 const openEditForm = (user: User) => {
   selectedUser.value = user;
-  showForm.value = true;
+  showUserForm.value = true;
 };
 
-const closeForm = () => {
-  showForm.value = false;
+const closeUserForm = () => {
+  showUserForm.value = false;
   selectedUser.value = null;
 };
 
 const onUserSaved = () => {
-  closeForm();
+  closeUserForm();
   fetchUsers(currentPage.value);
 };
 
@@ -143,6 +187,7 @@ const confirmDelete = async (user: User) => {
     try {
       await userService.deleteUser(user.id);
       fetchUsers(currentPage.value);
+      toast.success("Utilisateur supprimé avec succès.");
     } catch (error) {
       console.error('Failed to delete user:', error);
       toast.error("Erreur lors de la suppression de l'utilisateur.");
@@ -150,7 +195,42 @@ const confirmDelete = async (user: User) => {
   }
 };
 
+// Roles Handlers
+const openRoleCreateForm = () => {
+  selectedRole.value = null;
+  showRoleForm.value = true;
+};
+
+const openRoleEditForm = (role: Role) => {
+  selectedRole.value = role;
+  showRoleForm.value = true;
+};
+
+const closeRoleForm = () => {
+  showRoleForm.value = false;
+  selectedRole.value = null;
+};
+
+const onRoleSaved = () => {
+  closeRoleForm();
+  fetchRoles();
+};
+
+const confirmRoleDelete = async (role: Role) => {
+  if (confirm(`Êtes-vous sûr de vouloir supprimer le rôle ${role.name} ?`)) {
+    try {
+      await roleService.deleteRole(role.id);
+      fetchRoles();
+      toast.success("Rôle supprimé avec succès.");
+    } catch (error: any) {
+      console.error('Failed to delete role:', error);
+      toast.error(error.response?.data?.detail || "Erreur lors de la suppression du rôle.");
+    }
+  }
+};
+
 onMounted(() => {
   fetchUsers();
+  fetchRoles();
 });
 </script>

@@ -4,7 +4,7 @@ import { computed, onMounted, ref } from "vue";
 import SidebarItem from "./SidebarItem.vue";
 import {
   getStoredProfile,
-  hasAnyRole,
+  hasPermission,
   refreshCurrentUserProfile,
   type CurrentUserProfile,
 } from "@/services/session";
@@ -22,38 +22,38 @@ const handleScroll = (e: Event) => {
   sessionStorage.setItem("sidebarScrollPos", target.scrollTop.toString());
 };
 
-const roles = computed(() => profile.value?.roles || []);
+const permissions = computed(() => profile.value?.permissions || []);
 
 const canViewHr = computed(() => {
-  return hasAnyRole(roles.value, ["Admin", "Direction", "RH / Comptabilité"]);
+  return hasPermission(permissions.value, ["employees.read"]);
 });
 
 const canViewStock = computed(() => {
-  return hasAnyRole(roles.value, ["Admin", "Achats", "Direction"]);
+  return hasPermission(permissions.value, ["stock.read"]);
 });
 
 const canViewDocuments = computed(() => {
-  return hasAnyRole(roles.value, ["Admin", "Direction", "Qualité", "Employé"]);
+  return hasPermission(permissions.value, ["documents.read"]);
 });
 
 const canViewTreasury = computed(() => {
-  return hasAnyRole(roles.value, ["RH", "RH / Comptabilité","Admin"]);
+  return hasPermission(permissions.value, ["dashboard.read", "requests.validate_finance"]);
 });
 
 const canViewProjects = computed(() => {
-  return hasAnyRole(roles.value, ["Admin", "Direction", "Chef de Projet", "Chef d'Equipe", "Commercial"]);
+  return hasPermission(permissions.value, ["projects.read"]);
 });
 
 const canViewAdmin = computed(() => {
-  return hasAnyRole(roles.value, ["Admin"]);
+  return hasPermission(permissions.value, ["users.read", "roles.read"]);
 });
 
 const canViewValidationRequests = computed(() => {
-  return hasAnyRole(roles.value, ["Admin", "Direction", "RH / Comptabilité", "Achats"]);
+  return hasPermission(permissions.value, ["requests.validate_hr", "requests.validate_it", "requests.validate_facility", "requests.validate_finance"]);
 });
 
 const canViewFuelRequests = computed(() => {
-  return hasAnyRole(roles.value, ["Admin", "Direction", "Achats", "Employé"]);
+  return hasPermission(permissions.value, ["fuel_requests.read"]);
 });
 
 onMounted(async () => {

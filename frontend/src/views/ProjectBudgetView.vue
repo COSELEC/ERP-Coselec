@@ -3,12 +3,17 @@ import { ref, onMounted, watch } from 'vue';
 import AppLayout from "@/layouts/AppLayout.vue";
 import api from "@/services/api";
 import { useToast } from '@/composables/useToast';
-import { getStoredProfile, hasAnyRole } from '@/services/session';
+import { getStoredProfile, hasPermission } from '@/services/session';
 
 const toast = useToast();
 
 const currentUser = getStoredProfile();
-const canManageBudget = ref(true);
+const profile = getStoredProfile();
+const permissions = computed(() => profile?.permissions || []);
+
+const canManageBudget = computed(() => {
+  return hasPermission(permissions.value, ['budget.manage']);
+});
 
 const projects = ref<any[]>([]);
 const selectedProjectId = ref<number | null>(null);
