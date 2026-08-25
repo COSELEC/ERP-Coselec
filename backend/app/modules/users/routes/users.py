@@ -34,8 +34,7 @@ def create_user(
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
         if not existing_user.is_active:
-            db.delete(existing_user)
-            db.commit()
+            raise HTTPException(status_code=400, detail="L'email est déjà utilisé par un compte désactivé. Veuillez le réactiver au lieu de le recréer.")
         else:
             raise HTTPException(status_code=400, detail="L'email est déjà utilisé.")
         

@@ -32,9 +32,19 @@ class CaisseVoucher(Base):
     expense_id = Column(Integer, ForeignKey("project_expenses.id", ondelete="SET NULL"), nullable=True)
     reservation_id = Column(Integer, ForeignKey("project_stock_reservations.id", ondelete="SET NULL"), nullable=True)
 
+    demandeur_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    validator_cg_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    validator_dga_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    validator_dg_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
     project = relationship("Project")
     expense = relationship("ProjectExpense")
     reservation = relationship("ProjectStockReservation")
+    
+    demandeur = relationship("User", foreign_keys=[demandeur_id])
+    validator_cg = relationship("User", foreign_keys=[validator_cg_id])
+    validator_dga = relationship("User", foreign_keys=[validator_dga_id])
+    validator_dg = relationship("User", foreign_keys=[validator_dg_id])
     
     lines = relationship("CaisseVoucherLine", back_populates="voucher", cascade="all, delete-orphan")
     attachments = relationship("VoucherAttachment", cascade="all, delete-orphan")

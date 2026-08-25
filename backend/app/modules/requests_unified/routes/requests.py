@@ -231,6 +231,7 @@ def get_request(
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=RequestResponse)
 def create_request(
     request_data: RequestCreate,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -284,6 +285,22 @@ def create_request(
 
     db.commit()
     db.refresh(new_request)
+    
+    if new_request.type == RequestType.FUEL:
+        def _generate_initial_fuel_pdf(req_id: int):
+            with SessionLocal() as bg_db:
+                try:
+                    from app.services.pdf_generator import generate_dmcar_pdf
+                    bg_request = bg_db.get(GenericRequest, req_id)
+                    if bg_request:
+                        pdf_url = generate_dmcar_pdf(bg_request)
+                        bg_request.attachment_url = pdf_url
+                        bg_db.commit()
+                except Exception:
+                    bg_db.rollback()
+                    
+        background_tasks.add_task(_generate_initial_fuel_pdf, new_request.id)
+        
     return new_request
 
 
@@ -415,20 +432,20 @@ def update_request_status(
     db.commit()
     db.refresh(request)
 
-    if request.status == RequestStatus.APPROVED and request.type == RequestType.FUEL:
-        def _generate_fuel_pdf():
+    if request.type == RequestType.FUEL:
+        def _generate_fuel_pdf(req_id: int):
             with SessionLocal() as bg_db:
                 try:
                     from app.services.pdf_generator import generate_dmcar_pdf
-                    bg_request = bg_db.get(GenericRequest, request.id)
-                    pdf_url = generate_dmcar_pdf(bg_request)
-                    bg_request.attachment_url = pdf_url
-                    bg_db.commit()
+                    bg_request = bg_db.get(GenericRequest, req_id)
+                    if bg_request:
+                        pdf_url = generate_dmcar_pdf(bg_request)
+                        bg_request.attachment_url = pdf_url
+                        bg_db.commit()
                 except Exception:
                     bg_db.rollback()
-                    logger.exception("Failed to generate PDF for fuel request %s", request_id)
 
-        background_tasks.add_task(_generate_fuel_pdf)
+        background_tasks.add_task(_generate_fuel_pdf, request.id)
 
     if request.status == RequestStatus.APPROVED and request.type == RequestType.LEAVE:
         start_date = request.payload.get("start_date")

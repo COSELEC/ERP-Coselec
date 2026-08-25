@@ -97,8 +97,7 @@ async def upload_employee_signature(
     ext = file.filename.split('.')[-1]
     filename = f"signatures/{user_id}_{uuid.uuid4().hex}.{ext}"
     
-    file_bytes = await file.read()
-    file_url = upload_file_to_minio(file_bytes, filename)
+    file_url = upload_file_to_minio(file, filename)
     
     employee.signature_url = file_url
     db.commit()

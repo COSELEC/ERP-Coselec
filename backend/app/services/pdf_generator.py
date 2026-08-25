@@ -182,23 +182,39 @@ def _get_signature_cell(user_obj, fallback_name: str, prefix: str = ""):
     if not user_obj:
         return fallback_name
         
+    name = getattr(user_obj, 'name', fallback_name)
+    if hasattr(user_obj, 'first_name') and hasattr(user_obj, 'last_name') and user_obj.first_name:
+        name = f"{user_obj.first_name} {user_obj.last_name}"
+        
     sig_url = getattr(user_obj, 'signature_url', None)
     if sig_url:
-        from app.services.storage import get_file_url_from_minio
+        from app.services.storage import get_minio_client, extract_minio_key, BUCKET_NAME
+        import io
         try:
-            full_url = get_file_url_from_minio(sig_url)
-            from reportlab.platypus import Image as RLImage
-            return [prefix, RLImage(full_url, width=80, height=40)]
-        except Exception:
+            clean_key = extract_minio_key(sig_url)
+            if clean_key:
+                minio_client = get_minio_client()
+                response = minio_client.get_object(BUCKET_NAME, clean_key)
+                img_data = response.read()
+                from reportlab.platypus import Image as RLImage, Paragraph
+                from reportlab.lib.styles import getSampleStyleSheet
+                styles = getSampleStyleSheet()
+                
+                elements = []
+                text = f"{prefix} {name}" if prefix else name
+                elements.append(Paragraph(text, styles['Normal']))
+                elements.append(RLImage(io.BytesIO(img_data), width=80, height=40))
+                return elements
+        except Exception as e:
+            print(f"Error fetching signature for {user_obj.id}: {e}")
             pass
             
-    name = getattr(user_obj, 'name', fallback_name)
     return f"{prefix}\n{name}" if prefix else name
 
 def _build_dmcar_sig_table(request: Any) -> Table:
     employee_cell = _get_signature_cell(getattr(request, 'requester', None), "")
     manager_cell = _get_signature_cell(getattr(request, 'manager_validator', None), "En attente", "Validé par:")
-    finance_cell = _get_signature_cell(getattr(request, 'finance_validator', None), "En attente", "Validé par:")
+    finance_cell = _get_signature_cell(getattr(request, 'finance_validator', None), "", "Validé par:")
     
     sig_data = [
         ["DEMANDEUR", "RESP. SERVICE", "VISA DIRECTION"],
@@ -231,7 +247,7 @@ def generate_dmcar_pdf(request: Any) -> str:
     return builder.build_and_upload()
 
 
-def generate_caisse_pdf(data: dict) -> str:
+def generate_caisse_pdf(voucher) -> str:
     filename = f"caisse_vouchers/CAISSE_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
     builder = CoselecPdfBuilder(filename)
     
@@ -242,17 +258,17 @@ def generate_caisse_pdf(data: dict) -> str:
     builder.add_table([[dep_header]], col_widths=[510], highlight_header=False, style_commands=[('BOTTOMPADDING', (0,0), (-1,-1), 5), ('TOPPADDING', (0,0), (-1,-1), 5)])
     
     builder.add_spacer(10)
-    builder.add_paragraph(f"<b>NUM :</b> {data.get('num', '')}", font_size=10, space_after=2)
-    builder.add_paragraph(f"<b>N°AFFAIRE :</b> {data.get('affaire', '')}", font_size=10, space_after=2)
-    builder.add_paragraph(f"<b>N°CIA :</b> {data.get('cia', '')}", font_size=10, space_after=2)
-    builder.add_paragraph(f"<b>MOYEN DE PAIEMENT :</b> {data.get('payment_method', '') or 'Non spécifié'}", font_size=10, space_after=10)
+    builder.add_paragraph(f"<b>NUM :</b> {voucher.num or ''}", font_size=10, space_after=2)
+    builder.add_paragraph(f"<b>N°AFFAIRE :</b> {voucher.affaire or ''}", font_size=10, space_after=2)
+    builder.add_paragraph(f"<b>N°CIA :</b> {voucher.cia or ''}", font_size=10, space_after=2)
+    builder.add_paragraph(f"<b>MOYEN DE PAIEMENT :</b> {voucher.payment_method or 'Non spécifié'}", font_size=10, space_after=10)
     
-    depenses = data.get("depenses", [])
+    depenses = [l for l in voucher.lines if l.line_type.value == "EXPENSE"]
     t_depense_data = [["DATE", "DESIGNATION", "MONTANT"]]
     num_rows = max(4, len(depenses))
     for i in range(num_rows):
         if i < len(depenses):
-            t_depense_data.append([depenses[i].get("date", ""), depenses[i].get("designation", ""), depenses[i].get("montant", "")])
+            t_depense_data.append([depenses[i].date or "", depenses[i].designation or "", str(depenses[i].amount) or ""])
         else:
             t_depense_data.append(["", "", ""])
             
@@ -263,19 +279,36 @@ def generate_caisse_pdf(data: dict) -> str:
     builder.add_table([[rec_header]], col_widths=[510], highlight_header=False, style_commands=[('BOTTOMPADDING', (0,0), (-1,-1), 5), ('TOPPADDING', (0,0), (-1,-1), 5)])
     builder.add_spacer(10)
     
-    recettes = data.get("recettes", [])
+    recettes = [l for l in voucher.lines if l.line_type.value == "RECEIPT"]
     t_recette_data = [["DATE", "DESIGNATION", "MONTANT"]]
     num_rec_rows = max(4, len(recettes))
     for i in range(num_rec_rows):
         if i < len(recettes):
-            t_recette_data.append([recettes[i].get("date", ""), recettes[i].get("designation", ""), recettes[i].get("montant", "")])
+            t_recette_data.append([recettes[i].date or "", recettes[i].designation or "", str(recettes[i].amount) or ""])
         else:
             t_recette_data.append(["", "", ""])
             
     builder.add_table(t_recette_data, col_widths=[80, 330, 100], row_heights=[20] + [30]*num_rec_rows, style_commands=[('ALIGN', (0,0), (-1,-1), 'CENTER')])
     builder.add_spacer(30)
     
-    builder.add_signatures(["Service\nDemandeur", "Visa contrôleur de\ngestion", "Visa D.G.A", "Visa D.G"])
+    demandeur_cell = _get_signature_cell(getattr(voucher, 'demandeur', None), "En attente", "Service Demandeur:")
+    cg_cell = _get_signature_cell(getattr(voucher, 'validator_cg', None), "En attente", "Contrôleur de gestion:")
+    dga_cell = _get_signature_cell(getattr(voucher, 'validator_dga', None), "En attente", "Visa D.G.A:")
+    dg_cell = _get_signature_cell(getattr(voucher, 'validator_dg', None), "En attente", "Visa D.G:")
+    
+    sig_data = [
+        ["Service Demandeur", "Visa contrôleur de gestion", "Visa D.G.A", "Visa D.G"],
+        [demandeur_cell, cg_cell, dga_cell, dg_cell]
+    ]
+    t_sig = Table(sig_data, colWidths=[127.5, 127.5, 127.5, 127.5], rowHeights=[20, 50])
+    t_sig.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 1, colors.black),
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    builder.add_custom_element(t_sig)
     
     return builder.build_and_upload()
 

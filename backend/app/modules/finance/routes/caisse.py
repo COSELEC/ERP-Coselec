@@ -12,8 +12,8 @@ from app.models.voucher_attachment import VoucherAttachment
 from fastapi import UploadFile, File, HTTPException
 import uuid
 from app.services.storage import upload_file_to_minio
-
-from app.core.security.auth import require_rh_role
+from app.core.security.auth import require_rh_role, get_current_user
+from app.modules.users.models.user import User
 
 router = APIRouter(
     prefix="/caisse",
@@ -45,6 +45,11 @@ class CaisseVoucherResponse(BaseModel):
     payment_method: Optional[str] = None
     pdf_url: Optional[str]
     created_at: datetime
+    demandeur_id: Optional[int] = None
+    validator_cg_id: Optional[int] = None
+    validator_dga_id: Optional[int] = None
+    validator_dg_id: Optional[int] = None
+    
     
     @computed_field
     def depenses(self) -> List[CaisseRow]:
@@ -100,49 +105,74 @@ def get_caisse_voucher_pdf_url(voucher_id: int, db: Session = Depends(get_db)):
     return RedirectResponse(url=url)
 
 @router.post("/generate")
-def generate_caisse(payload: CaisseRequest, db: Session = Depends(get_db)):
-    pdf_path = generate_caisse_pdf(payload.dict())
-    if not pdf_path:
-        return {"error": "Failed to generate PDF"}
-        
+def generate_caisse(payload: CaisseRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     voucher = CaisseVoucher(
         num=payload.num,
         affaire=payload.affaire,
         cia=payload.cia,
         payment_method=payload.payment_method,
-        pdf_url=pdf_path,
         project_id=payload.project_id,
         expense_id=payload.expense_id,
-        reservation_id=payload.reservation_id
+        reservation_id=payload.reservation_id,
+        demandeur_id=current_user.id
     )
-    db.add(voucher)
-    db.flush()
     
     for row in payload.depenses:
-        line = CaisseVoucherLine(
-            voucher_id=voucher.id,
+        voucher.lines.append(CaisseVoucherLine(
             line_type=CaisseVoucherLineType.EXPENSE,
             date=row.date,
             designation=row.designation,
             amount=float(row.montant) if row.montant else 0.0
-        )
-        db.add(line)
+        ))
         
     for row in payload.recettes:
-        line = CaisseVoucherLine(
-            voucher_id=voucher.id,
+        voucher.lines.append(CaisseVoucherLine(
             line_type=CaisseVoucherLineType.RECEIPT,
             date=row.date,
             designation=row.designation,
             amount=float(row.montant) if row.montant else 0.0
-        )
-        db.add(line)
+        ))
+        
+    db.add(voucher)
+    db.commit()
+    db.refresh(voucher)
+    
+    pdf_path = generate_caisse_pdf(voucher)
+    if pdf_path:
+        voucher.pdf_url = pdf_path
+        db.commit()
+        db.refresh(voucher)
+        fresh_pdf_url = get_file_url_from_minio(pdf_path)
+    else:
+        fresh_pdf_url = ""
+        
+    return {"pdf_url": fresh_pdf_url, "voucher_id": voucher.id}
+
+@router.post("/{voucher_id}/validate/{role}")
+def validate_caisse(voucher_id: int, role: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    voucher = db.query(CaisseVoucher).filter(CaisseVoucher.id == voucher_id).first()
+    if not voucher:
+        raise HTTPException(status_code=404, detail="Pièce de caisse introuvable")
+        
+    if role == "cg":
+        voucher.validator_cg_id = current_user.id
+    elif role == "dga":
+        voucher.validator_dga_id = current_user.id
+    elif role == "dg":
+        voucher.validator_dg_id = current_user.id
+    else:
+        raise HTTPException(status_code=400, detail="Rôle invalide")
         
     db.commit()
     db.refresh(voucher)
     
-    fresh_pdf_url = get_file_url_from_minio(pdf_path)
-    return {"pdf_url": fresh_pdf_url, "voucher_id": voucher.id}
+    pdf_path = generate_caisse_pdf(voucher)
+    if pdf_path:
+        voucher.pdf_url = pdf_path
+        db.commit()
+        db.refresh(voucher)
+        
+    return {"status": "success"}
 
 @router.post("/{voucher_id}/finalize")
 def finalize_caisse(voucher_id: int, db: Session = Depends(get_db)):

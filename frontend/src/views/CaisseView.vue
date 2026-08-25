@@ -159,12 +159,35 @@
                     <td class="px-6 py-4 text-sm text-gray-500">{{ item.cia || '-' }}</td>
                     <td class="px-6 py-4 text-sm text-gray-500">{{ formatMonthDay(item.created_at) }}</td>
                     <td class="px-6 py-4 text-sm font-bold text-gray-700">{{ formatYear(item.created_at) }}</td>
-                    <td class="px-6 py-4 text-sm flex gap-3">
+                    <td class="px-6 py-4 text-sm flex flex-wrap gap-3 items-center">
                       <a v-if="item.pdf_url" :href="item.pdf_url" target="_blank" class="text-indigo-600 hover:text-indigo-900 flex items-center gap-1 font-medium">
                         <span class="material-symbols-outlined text-[18px]">download</span> PDF
                       </a>
                       <button @click="openAttachments(item.id)" class="text-red-600 hover:text-red-900 flex items-center gap-1 font-medium">
                         <span class="material-symbols-outlined text-[18px]">attach_file</span> Photos
+                      </button>
+                      
+                      <!-- Validation Buttons -->
+                      <button 
+                        v-if="canValidateCG && !item.validator_cg_id"
+                        @click="validateCaisse(item.id, 'cg')" 
+                        class="px-2 py-1 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded text-xs font-semibold flex items-center gap-1 transition-colors"
+                      >
+                        <span class="material-symbols-outlined text-[14px]">check_circle</span> Viser CG
+                      </button>
+                      <button 
+                        v-if="canValidateDirection && !item.validator_dga_id"
+                        @click="validateCaisse(item.id, 'dga')" 
+                        class="px-2 py-1 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded text-xs font-semibold flex items-center gap-1 transition-colors"
+                      >
+                        <span class="material-symbols-outlined text-[14px]">check_circle</span> Viser DGA
+                      </button>
+                      <button 
+                        v-if="canValidateDirection && !item.validator_dg_id"
+                        @click="validateCaisse(item.id, 'dg')" 
+                        class="px-2 py-1 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded text-xs font-semibold flex items-center gap-1 transition-colors"
+                      >
+                        <span class="material-symbols-outlined text-[14px]">check_circle</span> Viser DG
                       </button>
                     </td>
                   </tr>
@@ -192,11 +215,18 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import VoucherAttachmentModal from '@/components/VoucherAttachmentModal.vue';
 import { api } from '@/services/api';
 import { useToast, useFormatters, useTableSort, useDebounceFn, useModal } from '@/composables';
+import { getStoredProfile } from '@/services/session';
 
 const toast = useToast();
 const { formatMonthDay, formatYear } = useFormatters();
 const attachmentModal = useModal<number>();
 const isSubmitting = ref(false);
+
+const profile = getStoredProfile();
+const userRoles = profile ? profile.roles : [];
+
+const canValidateCG = userRoles.includes('RH / Comptabilité') || userRoles.includes('Admin');
+const canValidateDirection = userRoles.includes('Direction') || userRoles.includes('Admin');
 
 const form = ref({
   num: '',
@@ -263,6 +293,17 @@ async function generateCaissePdf() {
     toast.error("Une erreur est survenue lors de la génération du PDF.");
   } finally {
     isSubmitting.value = false;
+  }
+}
+
+async function validateCaisse(id: number, role: string) {
+  try {
+    await api.post(`/caisse/${id}/validate/${role}`);
+    toast.success("Pièce de caisse validée et signée avec succès.");
+    await fetchHistory();
+  } catch (e: any) {
+    console.error("Erreur lors de la validation", e);
+    toast.error(e.response?.data?.detail || "Erreur lors de la validation.");
   }
 }
 

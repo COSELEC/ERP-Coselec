@@ -3,6 +3,20 @@ import { computed } from 'vue';
 import type { KPIIndicator } from '@/services/kpi';
 import VueApexCharts from "vue3-apexcharts";
 
+const formatKpiValue = (val: number, targetRaw?: string | null) => {
+  if (val === null || val === undefined) return '';
+  const hasPercent = targetRaw?.includes('%');
+  
+  // Appliquer le formatage en pourcentage pour toute valeur entre 0 et 1 inclus
+  const isFraction = val >= 0 && val <= 1;
+  
+  if (hasPercent || isFraction) {
+    const displayVal = (val >= 0 && val <= 1) ? Number((val * 100).toFixed(1)) : val;
+    return `${displayVal}%`;
+  }
+  return val;
+};
+
 const props = defineProps<{
   indicator: KPIIndicator;
   year: number;
@@ -103,9 +117,7 @@ const chartOptions = computed(() => {
     dataLabels: {
       enabled: true,
       formatter: function (val: number) {
-        if (val === null) return '';
-        const hasPercent = target?.target_raw?.includes('%');
-        return hasPercent ? `${val}%` : val;
+        return formatKpiValue(val, target?.target_raw);
       },
       style: {
         fontSize: '10px',
@@ -119,6 +131,9 @@ const chartOptions = computed(() => {
     },
     yaxis: {
       labels: {
+        formatter: function (val: number) {
+          return formatKpiValue(val, target?.target_raw);
+        },
         style: { colors: '#6b7280' }
       }
     },
@@ -131,8 +146,7 @@ const chartOptions = computed(() => {
     tooltip: {
       y: {
         formatter: function (val: number) {
-          const hasPercent = target?.target_raw?.includes('%');
-          return hasPercent ? `${val}%` : val;
+          return formatKpiValue(val, target?.target_raw);
         }
       }
     }
