@@ -111,6 +111,18 @@ const getCategoryIcon = (category: string) => {
     default: return 'folder';
   }
 };
+
+const getExpiryStatus = (expiryDate: string | null) => {
+  if (!expiryDate) return null;
+  const expiry = new Date(expiryDate);
+  const today = new Date();
+  const diffTime = expiry.getTime() - today.getTime();
+  const diffMonths = diffTime / (1000 * 60 * 60 * 24 * 30);
+  
+  if (diffMonths < 0) return { label: 'Expiré', class: 'bg-red-100 text-red-800 border border-red-200' };
+  if (diffMonths <= 6) return { label: 'Expire bientôt', class: 'bg-orange-100 text-orange-800 border border-orange-200' };
+  return { label: 'Valide', class: 'bg-green-100 text-green-800 border border-green-200' };
+};
 </script>
 
 <template>
@@ -180,8 +192,8 @@ const getCategoryIcon = (category: string) => {
 
     <div v-if="loading" class="text-center py-4 text-sm text-gray-400">Chargement des documents...</div>
 
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <div v-if="documents.length === 0" class="col-span-full py-6 text-center text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-xl">
+    <div v-else class="grid grid-cols-1 gap-3">
+      <div v-if="documents.length === 0" class="col-span-1 py-6 text-center text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-xl">
         Aucun document enregistré pour cet employé.
       </div>
       
@@ -200,15 +212,18 @@ const getCategoryIcon = (category: string) => {
           <div class="p-2 bg-red-50 text-[#d10f2f] rounded-lg shrink-0 flex items-center justify-center">
             <span class="material-symbols-outlined text-xl">{{ getCategoryIcon(doc.category) }}</span>
           </div>
-          <div class="overflow-hidden min-w-0">
+          <div class="overflow-hidden min-w-0 flex-1">
             <p class="text-sm font-semibold text-gray-900 truncate" :title="doc.file_name">{{ doc.file_name }}</p>
-            <div class="flex items-center gap-2 text-[10px] text-gray-500 font-medium uppercase mt-0.5">
+            <div class="flex flex-wrap items-center gap-2 text-[10px] text-gray-500 font-medium uppercase mt-1">
               <span>{{ doc.category }}</span>
               <span v-if="doc.numero" class="text-gray-700 font-bold border-l pl-2 border-gray-300">
                 N°: {{ doc.numero }}
               </span>
-              <span v-if="doc.expiry_date" class="text-orange-500">
-                • Exp: {{ doc.expiry_date }}
+              <span v-if="doc.expiry_date" class="flex items-center gap-1.5 border-l pl-2 border-gray-300">
+                <span class="text-gray-500">Exp: {{ doc.expiry_date }}</span>
+                <span :class="['px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold uppercase tracking-wider whitespace-nowrap', getExpiryStatus(doc.expiry_date)?.class]">
+                  {{ getExpiryStatus(doc.expiry_date)?.label }}
+                </span>
               </span>
             </div>
           </div>

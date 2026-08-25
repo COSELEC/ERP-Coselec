@@ -6,6 +6,7 @@
         <span>Gestion des employés</span>
       </h1>
       <button
+        v-if="canCreateEmployee"
         @click="openCreateModal"
         class="bg-[#d10f2f] w-max text-white px-4 py-2 rounded-xl hover:bg-[#97091f] shadow-[0_10px_30px_rgba(209,15,47,0.28)] transition flex items-center gap-2 mb-6"
       >
@@ -14,81 +15,49 @@
       </button>
 
       <div class="bg-white rounded-2xl shadow-[0_15px_40px_rgba(127,7,28,0.10)] border border-red-100 overflow-auto">
-        <table class="w-full">
-          <thead>
-            <tr class="bg-gradient-to-r from-red-100/90 to-red-50 text-left">
-              <th @click="sortBy('matricule')" class="px-6 py-4 text-sm font-semibold text-[#7f071c] cursor-pointer hover:bg-red-50 transition">
-                <span class="flex items-center gap-2">
-                  <span class="material-symbols-outlined text-base">pin</span>
-                  <span>Matricule</span>
-                  <span v-if="sortColumn === 'matricule'" class="material-symbols-outlined text-sm">{{ sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</span>
-                </span>
-              </th>
-              <th @click="sortBy('first_name')" class="px-6 py-4 text-sm font-semibold text-[#7f071c] cursor-pointer hover:bg-red-50 transition">
-                <span class="flex items-center gap-2">
-                  <span class="material-symbols-outlined text-base">person</span>
-                  <span>Employé</span>
-                  <span v-if="sortColumn === 'first_name'" class="material-symbols-outlined text-sm">{{ sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</span>
-                </span>
-              </th>
-              <th @click="sortBy('email')" class="px-6 py-4 text-sm font-semibold text-[#7f071c] cursor-pointer hover:bg-red-50 transition">
-                <span class="flex items-center gap-2">
-                  <span class="material-symbols-outlined text-base">mail</span>
-                  <span>Email</span>
-                  <span v-if="sortColumn === 'email'" class="material-symbols-outlined text-sm">{{ sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</span>
-                </span>
-              </th>
-              <th @click="sortBy('position')" class="px-6 py-4 text-sm font-semibold text-[#7f071c] cursor-pointer hover:bg-red-50 transition">
-                <span class="flex items-center gap-2">
-                  <span class="material-symbols-outlined text-base">work</span>
-                  <span>Poste</span>
-                  <span v-if="sortColumn === 'position'" class="material-symbols-outlined text-sm">{{ sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</span>
-                </span>
-              </th>
-              <th @click="sortBy('status')" class="px-6 py-4 text-sm font-semibold text-[#7f071c] cursor-pointer hover:bg-red-50 transition">
-                <span class="flex items-center gap-2">
-                  <span class="material-symbols-outlined text-base">verified</span>
-                  <span>Statut</span>
-                  <span v-if="sortColumn === 'status'" class="material-symbols-outlined text-sm">{{ sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</span>
-                </span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="employee in sortedEmployees"
-              :key="employee.id"
-              @click="openEmployeeDetails(employee)"
-              class="border-t border-red-100/80 hover:bg-red-50/70 transition cursor-pointer"
-            >
-              <td class="px-6 py-4 text-gray-600 font-medium">
-                {{ employee.matricule || 'EMP' + String(employee.id).padStart(3, "0") }}
-              </td>
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-red-100 text-[#d10f2f] flex items-center justify-center font-semibold">
-                    {{ employee.first_name ? employee.first_name[0].toUpperCase() : (employee.email ? employee.email[0].toUpperCase() : '?') }}
-                  </div>
-                  <div>
-                    <p class="font-medium text-gray-900">
-                      {{ employee.first_name || 'Inconnu' }} {{ employee.last_name || '' }}
-                    </p>
-                    <p class="text-xs text-gray-500">
-                      {{ employee.email }}
-                    </p>
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4 text-gray-500">{{ employee.email }}</td>
-              <td class="px-6 py-4 text-gray-700">{{ employee.position }}</td>
-              <td class="px-6 py-4">
-                <span :class="[getStatusClass(employee.status), 'px-3 py-1 rounded-full text-xs font-medium uppercase']">
-                  {{ employee.status }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <AppTable 
+          :columns="tableColumns" 
+          :items="sortedEmployees" 
+          emptyMessage="Aucun employé trouvé."
+          @rowClick="openEmployeeDetails"
+        >
+          <template #matricule="{ item }">
+            <span class="text-gray-600 font-medium">
+              {{ item.matricule || 'EMP' + String(item.id).padStart(3, "0") }}
+            </span>
+          </template>
+          
+          <template #first_name="{ item }">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-red-100 text-[#d10f2f] flex items-center justify-center font-semibold">
+                {{ item.first_name ? item.first_name[0].toUpperCase() : (item.email ? item.email[0].toUpperCase() : '?') }}
+              </div>
+              <div>
+                <p class="font-medium text-gray-900 flex items-center gap-2">
+                  {{ item.first_name || 'Inconnu' }} {{ item.last_name || '' }}
+                  <span v-if="item.has_expiring_documents" class="material-symbols-outlined text-orange-500 text-[16px]" title="Documents expirés ou expirant bientôt">warning</span>
+                </p>
+                <p class="text-xs text-gray-500">
+                  {{ item.email }}
+                </p>
+              </div>
+            </div>
+          </template>
+          
+          <template #email="{ item }">
+            <span class="text-gray-500">{{ item.email }}</span>
+          </template>
+          
+          <template #position="{ item }">
+            <span class="text-gray-700">{{ item.position }}</span>
+          </template>
+          
+          <template #status="{ item }">
+            <span :class="[getStatusClass(item.status), 'px-3 py-1 rounded-full text-xs font-medium uppercase']">
+              {{ item.status }}
+            </span>
+          </template>
+        </AppTable>
       </div>
 
       <!-- Modal Nouvel Employé -->
@@ -264,10 +233,10 @@
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <button @click="openEditModal(selectedEmployee)" class="p-2 text-[#b30c27] hover:text-white hover:bg-[#b30c27] rounded-lg transition flex items-center justify-center border border-red-200" title="Modifier cet employé">
+            <button v-if="canUpdateEmployee" @click="openEditModal(selectedEmployee)" class="p-2 text-[#b30c27] hover:text-white hover:bg-[#b30c27] rounded-lg transition flex items-center justify-center border border-red-200" title="Modifier cet employé">
               <span class="material-symbols-outlined">edit</span>
             </button>
-            <button @click="confirmDeleteEmployee" class="p-2 text-red-500 hover:text-white hover:bg-red-500 rounded-lg transition flex items-center justify-center border border-red-200" title="Supprimer cet employé">
+            <button v-if="canDeleteEmployee" @click="confirmDeleteEmployee" class="p-2 text-red-500 hover:text-white hover:bg-red-500 rounded-lg transition flex items-center justify-center border border-red-200" title="Supprimer cet employé">
               <span class="material-symbols-outlined">delete</span>
             </button>
             <button @click="closeSlideOver" class="p-2 text-[#b94a5d] hover:text-[#7f071c] hover:bg-red-100 rounded-full transition">
@@ -332,12 +301,29 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from "vue";
 import AppLayout from "@/layouts/AppLayout.vue";
+import AppTable from "@/components/common/AppTable.vue";
 import { employeeService } from "@/services/employees";
 import { api } from "@/services/api";
+import { getStoredProfile, hasPermission } from '@/services/session';
 import { useToast, useStatusBadges, useTableSort } from '@/composables';
 
 const toast = useToast();
+const profile = getStoredProfile();
+const permissions = computed(() => profile?.permissions || []);
+
+const canCreateEmployee = computed(() => hasPermission(permissions.value, ['employees.create']));
+const canUpdateEmployee = computed(() => hasPermission(permissions.value, ['employees.update']));
+const canDeleteEmployee = computed(() => hasPermission(permissions.value, ['employees.delete']));
+
 const { getStatusBadgeClass: getStatusClass } = useStatusBadges();
+
+const tableColumns = [
+  { key: 'matricule', label: 'Matricule' },
+  { key: 'first_name', label: 'Employé' },
+  { key: 'email', label: 'Email' },
+  { key: 'position', label: 'Poste' },
+  { key: 'status', label: 'Statut' },
+];
 
 import EmployeeContracts from "@/components/employees/EmployeeContracts.vue";
 import EmployeeDocuments from "@/components/employees/EmployeeDocuments.vue";
@@ -357,6 +343,7 @@ interface Employee {
   manager_id?: number | null;
   supervised_employee_ids?: number[];
   is_active?: boolean;
+  has_expiring_documents?: boolean;
 }
 
 const showCreateModal = ref(false);

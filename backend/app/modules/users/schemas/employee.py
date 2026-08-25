@@ -45,6 +45,7 @@ class EmployeeResponse(BaseModel):
     supervised_employee_ids: Optional[list[int]] = []
     is_active: Optional[bool] = True
     signature_url: Optional[str] = None
+    has_expiring_documents: Optional[bool] = False
 
     class Config:
         from_attributes = True

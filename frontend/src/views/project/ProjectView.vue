@@ -110,7 +110,7 @@
   />
   <ProjectDailyReportsList
     v-else-if="currentView === 'Rapports'"
-    key="reports-layout"
+    :key="'reports-layout-' + reportsRefreshKey"
     :project-id="resolveActiveProjectId()"
   />
   <ProjectStockView
@@ -334,9 +334,10 @@ const closeTaskCreateModal = () => {
   isTaskCreateModalOpen.value = false;
 };
 
+const reportsRefreshKey = ref(0);
+
 const onReportSubmitted = () => {
-  if (currentView.value === 'Rapports') {
-  }
+  reportsRefreshKey.value++;
 };
 
 const resolveActiveProjectId = (): number | null => {

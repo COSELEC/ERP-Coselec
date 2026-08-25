@@ -48,3 +48,18 @@ class User(Base):
             return [sub.id for sub in self.subordinates]
         return []
 
+    @property
+    def has_expiring_documents(self) -> bool:
+        from datetime import date
+        from dateutil.relativedelta import relativedelta
+        today = date.today()
+        threshold_date = today + relativedelta(months=6)
+        
+        if not self.documents:
+            return False
+            
+        for doc in self.documents:
+            if doc.expiry_date and doc.expiry_date <= threshold_date:
+                return True
+        return False
+

@@ -43,7 +43,7 @@ def get_employees(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return db.query(User).all()
+    return db.query(User).options(joinedload(User.documents)).all()
 
 @router.get(
     "/org-chart",

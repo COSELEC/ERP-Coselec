@@ -25,7 +25,8 @@
           v-else
           v-for="item in items" 
           :key="item.id || Math.random()" 
-          class="bg-white border-b border-gray-50 hover:bg-gray-50/50 transition"
+          @click="emit('rowClick', item)"
+          class="bg-white border-b border-gray-50 hover:bg-gray-50/50 transition cursor-pointer"
         >
           <td v-for="col in columns" :key="col.key" class="px-6 py-4" :class="col.cellClass">
             <slot :name="col.key" :item="item" :value="item[col.key]">
@@ -51,5 +52,9 @@ defineProps<{
   items: any[];
   loading?: boolean;
   emptyMessage?: string;
+}>();
+
+const emit = defineEmits<{
+  (e: 'rowClick', item: any): void
 }>();
 </script>
