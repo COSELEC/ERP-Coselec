@@ -156,7 +156,6 @@ const routes = [
     path: "/admin/requests",
     name: "admin-requests",
     component: () => import("@/views/Admin/AdminRequestsView.vue"),
-    meta: { requiredPermissions: ["requests.validate_hr", "requests.validate_it", "requests.validate_facility", "requests.validate_finance"] }
   },
   {
     path: "/admin/users",

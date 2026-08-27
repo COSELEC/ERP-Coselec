@@ -30,7 +30,8 @@
           :loading="loading"
           :currentUserId="currentUserId"
           @edit="openEditForm" 
-          @delete="confirmDelete" 
+          @delete="confirmDelete"
+          @reset-password="openResetPasswordForm"
         />
 
         <!-- Pagination -->
@@ -82,6 +83,14 @@
       @close="closeRoleForm"
       @saved="onRoleSaved"
     />
+
+    <!-- Modal Reset Password -->
+    <ResetPasswordModal
+      v-if="showResetModal"
+      :isOpen="showResetModal"
+      :userEmail="userForReset?.email || ''"
+      @close="closeResetPasswordForm"
+    />
   </AppLayout>
 </template>
 
@@ -93,6 +102,7 @@ import UserForm from '@/components/users/UserForm.vue';
 import AppPagination from '@/components/common/AppPagination.vue';
 import RoleList from '@/components/users/RoleList.vue';
 import RoleForm from '@/components/users/RoleForm.vue';
+import ResetPasswordModal from '@/components/users/ResetPasswordModal.vue';
 import { userService, type User } from '@/services/userService';
 import { roleService, type Role } from '@/services/roleService';
 import { getStoredProfile } from '@/services/session';
@@ -113,6 +123,9 @@ const searchQuery = ref('');
 
 const showUserForm = ref(false);
 const selectedUser = ref<User | null>(null);
+
+const showResetModal = ref(false);
+const userForReset = ref<User | null>(null);
 
 let searchTimeout: ReturnType<typeof setTimeout>;
 
@@ -194,6 +207,17 @@ const confirmDelete = async (user: User) => {
     }
   }
 };
+
+const openResetPasswordForm = (user: User) => {
+  userForReset.value = user;
+  showResetModal.value = true;
+};
+
+const closeResetPasswordForm = () => {
+  showResetModal.value = false;
+  userForReset.value = null;
+};
+
 
 // Roles Handlers
 const openRoleCreateForm = () => {

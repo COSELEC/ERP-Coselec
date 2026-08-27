@@ -268,13 +268,10 @@ def create_request(
                 expense = ProjectExpense(
                     project_id=new_request.project_id,
                     budget_id=budget.id,
-                    expense_date=datetime.utcnow().date(),
+                    date_incurred=datetime.utcnow().date(),
                     amount=estimated_amount,
-                    currency=budget.currency or "XOF",
-                    category="Achat/Carburant" if new_request.type == RequestType.FUEL else "Achat Matériel",
-                    description=f"Demande {new_request.type.value} #{new_request.id}",
+                    description=f"REQ-{new_request.id} : Demande {new_request.type.value}",
                     status="PENDING", 
-                    reference=f"REQ-{new_request.id}",
                 )
                 db.add(expense)
                 db.flush()
@@ -386,7 +383,7 @@ def update_request_status(
 
     if payload.status == RequestStatus.REJECTED:
         from app.models.project.expense import ProjectExpense
-        expense = db.query(ProjectExpense).filter(ProjectExpense.reference == f"REQ-{request.id}").first()
+        expense = db.query(ProjectExpense).filter(ProjectExpense.description.like(f"REQ-{request.id} :%")).first()
         if expense:
             db.delete(expense)
 

@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import AppLayout from "@/layouts/AppLayout.vue";
 import MapLocationPicker from "@/components/project/MapLocationPicker.vue";
 import api from '../services/api';
-import { getStoredProfile } from '@/services/session';
+import { getStoredProfile, hasPermission } from '@/services/session';
 import { useToast } from '@/composables/useToast';
 
 const toast = useToast();
+
+const profile = ref(getStoredProfile());
+const permissions = computed(() => profile.value?.permissions || []);
+const canCreateProject = computed(() => hasPermission(permissions.value, ["projects.read", "projects.write"]));
+const canCreateHR = computed(() => hasPermission(permissions.value, ["employees.read", "requests.validate_hr"]));
+const canManageStock = computed(() => hasPermission(permissions.value, ["stock.read", "stock.write"]));
+const canCreateFuel = computed(() => hasPermission(permissions.value, ["fuel_requests.read", "requests.validate_facility", "requests.validate_finance"]));
 
 const kpis = ref([
   { title: "Projets Actifs", value: "0", icon: "work", color: "text-red-600", bg: "bg-red-50" },
@@ -174,19 +181,19 @@ onMounted(async () => {
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <h2 class="text-lg font-bold text-gray-900 mb-4">Actions Rapides</h2>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <button @click="activeModal = 'project'" class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+          <button v-if="canCreateProject" @click="activeModal = 'project'" class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
             <span class="material-symbols-outlined text-[#d10f2f] mb-2">add_circle</span>
             <span class="text-sm font-medium text-gray-700">Nouveau Projet</span>
           </button>
-          <button @click="activeModal = 'hr'" class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+          <button v-if="canCreateHR" @click="activeModal = 'hr'" class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
             <span class="material-symbols-outlined text-[#d10f2f] mb-2">post_add</span>
             <span class="text-sm font-medium text-gray-700">Demande RH</span>
           </button>
-          <router-link to="/stock/movement" class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+          <router-link v-if="canManageStock" to="/stock/movement" class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
             <span class="material-symbols-outlined text-[#d10f2f] mb-2">sync_alt</span>
             <span class="text-sm font-medium text-gray-700">Mouvement Stock</span>
           </router-link>
-          <button @click="activeModal = 'fuel'" class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+          <button v-if="canCreateFuel" @click="activeModal = 'fuel'" class="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
             <span class="material-symbols-outlined text-[#d10f2f] mb-2">directions_car</span>
             <span class="text-sm font-medium text-gray-700">Demande Carburant</span>
           </button>

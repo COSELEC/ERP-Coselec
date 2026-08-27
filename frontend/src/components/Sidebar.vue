@@ -190,16 +190,15 @@ onMounted(async () => {
 
         <SidebarItem
           to="/requests"
-          icon="assignment"
-          label="Mes demandes"
+          icon="add_circle"
+          label="Créer une demande"
           :collapsed="collapsed"
         />
 
         <SidebarItem
-          v-if="canViewValidationRequests"
           to="/admin/requests"
-          icon="approval"
-          label="Validation Demandes"
+          icon="assignment"
+          label="Mes demandes"
           :collapsed="collapsed"
         />
 

@@ -15,28 +15,54 @@
       </span>
     </template>
 
-    <!-- Custom slot for Actions -->
+    <!-- Custom slot for Actions avec menu 3 points -->
     <template #actions="{ item }">
-      <div class="text-right">
+      <div class="relative flex justify-end items-center">
         <button 
-          @click="$emit('edit', item)"
-          class="font-medium text-blue-600 hover:text-blue-800 transition mr-4"
+          @click="toggleDropdown(item.id)"
+          @blur="closeDropdownDelayed"
+          class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition focus:outline-none"
+          title="Options"
         >
-          Éditer
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+          </svg>
         </button>
-        <button 
-          v-if="item.id !== currentUserId"
-          @click="$emit('delete', item)"
-          class="font-medium text-red-600 hover:text-red-800 transition"
+
+        <!-- Menu déroulant -->
+        <div 
+          v-show="openDropdownId === item.id"
+          class="absolute right-0 top-full mt-1 w-56 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-50 overflow-hidden"
         >
-          Supprimer
-        </button>
+          <div class="py-1">
+            <button 
+              @click="$emit('edit', item); openDropdownId = null"
+              class="flex w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
+            >
+              Éditer
+            </button>
+            <button 
+              @click="$emit('reset-password', item); openDropdownId = null"
+              class="flex w-full px-4 py-2 text-sm text-amber-600 hover:bg-amber-50 transition"
+            >
+              Réinitialiser le mot de passe
+            </button>
+            <button 
+              v-if="item.id !== currentUserId"
+              @click="$emit('delete', item); openDropdownId = null"
+              class="flex w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+            >
+              Supprimer
+            </button>
+          </div>
+        </div>
       </div>
     </template>
   </AppTable>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import type { User } from '@/services/userService';
 import AppTable, { type ColumnDefinition } from '@/components/common/AppTable.vue';
 
@@ -49,6 +75,7 @@ defineProps<{
 defineEmits<{
   (e: 'edit', user: User): void;
   (e: 'delete', user: User): void;
+  (e: 'reset-password', user: User): void;
 }>();
 
 const columns: ColumnDefinition[] = [
@@ -68,5 +95,17 @@ const getRoleColor = (roleName: string | undefined) => {
     case 'Direction': return 'bg-orange-100 text-orange-800';
     default: return 'bg-gray-100 text-gray-800';
   }
+};
+
+const openDropdownId = ref<number | null>(null);
+
+const toggleDropdown = (id: number) => {
+  openDropdownId.value = openDropdownId.value === id ? null : id;
+};
+
+const closeDropdownDelayed = () => {
+  setTimeout(() => {
+    openDropdownId.value = null;
+  }, 200);
 };
 </script>

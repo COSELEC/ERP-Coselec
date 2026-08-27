@@ -7,7 +7,6 @@ from app.core.database import get_db
 from app.modules.users.schemas.register import RegisterRequest
 from app.modules.users.models.user import User
 from app.models.notification import NotificationType
-
 from app.core.security.auth import (
     get_current_user,
     verify_password,
@@ -23,6 +22,9 @@ from app.modules.users.services.rbac import (
     assign_role_to_user,
 )
 from app.services.notification import create_notification
+from pydantic import BaseModel, EmailStr
+from app.modules.users.models.audit_log import AuditLog
+
 
 router = APIRouter(tags=["Authentication"])
 
@@ -166,3 +168,45 @@ def change_password(payload: ChangePasswordRequest, db: Session = Depends(get_db
     db.commit()
 
     return {"message": "Mot de passe modifié avec succès"}
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    new_password: str
+
+@router.post("/reset-password")
+def reset_password(
+    payload: ResetPasswordRequest, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    caller_roles = [r.name for r in current_user.roles]
+    if "Admin" not in caller_roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Droits insuffisants pour performer cette action"
+        )
+        
+    user = db.query(User).filter(User.email == payload.email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Utilisateur non trouvé"
+        )
+
+    user.hashed_password = hash_password(payload.new_password)
+    user.failed_login_attempts = 0
+    user.requires_password_change = True
+    user.locked_until = None
+
+    audit = AuditLog(
+        actor_id=current_user.id,
+        target_user_id=user.id,
+        action_type="PASSWORD_RESET_ADMIN",
+        old_value="***",
+        new_value="***"
+    )
+    db.add(audit)
+    db.commit()
+
+    return {"message": f"Mot de passe réinitialisé avec succès pour {user.email}"}
+    

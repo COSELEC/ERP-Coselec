@@ -3,12 +3,13 @@
     <div class="w-full flex flex-col">
         <div class="flex justify-between items-center mb-6">
           <h1 class="text-2xl font-bold mb-4 text-[#b30c27] flex items-center gap-2">
-            <span class="material-symbols-outlined">admin_panel_settings</span>
-            <span>Administration des Demandes</span>
+            <span class="material-symbols-outlined">assignment</span>
+            <span>Mes demandes</span>
           </h1>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-[0_15px_40px_rgba(127,7,28,0.10)] border border-red-100 overflow-hidden">
+        <h2 class="text-xl font-bold mb-4 mt-4 text-gray-800">Toutes mes demandes et leurs états</h2>
+        <div class="bg-white rounded-2xl shadow-[0_15px_40px_rgba(127,7,28,0.10)] border border-red-100 overflow-hidden mb-8">
           <table class="w-full">
             <thead>
               <tr class="bg-gradient-to-r from-red-100/90 to-red-50 text-left">
@@ -21,7 +22,53 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="req in requests" :key="req.id" class="border-t border-red-100/80 hover:bg-red-50/70 transition">
+              <tr v-for="req in myRequests" :key="req.id" class="border-t border-red-100/80 hover:bg-red-50/70 transition">
+                <td class="px-6 py-4 text-gray-600 font-medium">{{ req.reference || 'DEM-' + req.id }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    {{ req.type }}
+                  </span>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="text-sm font-medium text-gray-900">{{ req.payload?.reason || req.description || 'Sans objet' }}</div>
+                  <div class="text-xs text-gray-500" v-if="req.type === 'LEAVE'">
+                    Du {{ req.payload?.start_date }} au {{ req.payload?.end_date }} ({{ req.payload?.leave_type }})
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ new Date(req.created_at).toLocaleDateString() }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span :class="getStatusBadgeClass(req.status)" class="px-3 py-1 rounded-full text-xs font-medium uppercase">
+                    {{ req.status }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <span class="text-gray-400 italic text-xs">Consultation</span>
+                </td>
+              </tr>
+              <tr v-if="myRequests.length === 0">
+                <td colspan="6" class="px-6 py-8 text-center text-gray-500">Aucune demande trouvée.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 class="text-xl font-bold mb-4 mt-4 text-gray-800">Les demandes par lesquelles je suis concerné</h2>
+        <div class="bg-white rounded-2xl shadow-[0_15px_40px_rgba(127,7,28,0.10)] border border-red-100 overflow-hidden mb-8">
+          <table class="w-full">
+            <thead>
+              <tr class="bg-gradient-to-r from-red-100/90 to-red-50 text-left">
+                <th class="px-6 py-4 text-sm font-semibold text-[#7f071c]">ID</th>
+                <th class="px-6 py-4 text-sm font-semibold text-[#7f071c]">Type</th>
+                <th class="px-6 py-4 text-sm font-semibold text-[#7f071c]">Détails / Raison</th>
+                <th class="px-6 py-4 text-sm font-semibold text-[#7f071c]">Date de création</th>
+                <th class="px-6 py-4 text-sm font-semibold text-[#7f071c]">Statut</th>
+                <th class="px-6 py-4 text-sm font-semibold text-[#7f071c]">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="req in concerningRequests" :key="req.id" class="border-t border-red-100/80 hover:bg-red-50/70 transition">
                 <td class="px-6 py-4 text-gray-600 font-medium">{{ req.reference || 'DEM-' + req.id }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span class="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
@@ -60,7 +107,7 @@
                   <span v-else class="text-gray-400 italic text-xs">Traitée</span>
                 </td>
               </tr>
-              <tr v-if="requests.length === 0">
+              <tr v-if="concerningRequests.length === 0">
                 <td colspan="6" class="px-6 py-8 text-center text-gray-500">Aucune demande trouvée.</td>
               </tr>
             </tbody>
@@ -83,16 +130,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import api from '@/services/api';
 import { useToast, useStatusBadges, useFormatters } from '@/composables';
+import { getStoredProfile } from '@/services/session';
 
 const toast = useToast();
 const { getStatusBadgeClass } = useStatusBadges();
 const { formatDate } = useFormatters();
+const currentUser = getStoredProfile();
 
 const requests = ref<any[]>([]);
+
+const myRequests = computed(() => requests.value.filter(req => req.requester_id === currentUser?.id));
+const concerningRequests = computed(() => requests.value.filter(req => req.requester_id !== currentUser?.id));
 
 const rejectModalOpen = ref(false);
 const rejectionComment = ref('');

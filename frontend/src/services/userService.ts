@@ -51,6 +51,11 @@ export interface CreateUserResponse {
   temporary_password?: string;
 }
 
+export interface ResetPasswordPayload {
+  email: string;
+  new_password: string;
+}
+
 export const userService = {
   async getUsers(skip: number = 0, limit: number = 10, search?: string): Promise<UserListResponse> {
     const params = new URLSearchParams();
@@ -75,5 +80,9 @@ export const userService = {
 
   async deleteUser(id: number): Promise<void> {
     await api.delete(`/users/${id}`);
-  }
+  },
+  async adminResetPassword(payload: ResetPasswordPayload) {
+    const response = await api.post('/reset-password', payload);
+    return response.data;
+  },
 };

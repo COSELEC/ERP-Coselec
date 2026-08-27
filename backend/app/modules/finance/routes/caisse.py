@@ -196,7 +196,7 @@ def finalize_caisse(voucher_id: int, db: Session = Depends(get_db)):
             expense.amount = total_expense
             
     if voucher.generic_request_id:
-        expense = db.query(ProjectExpense).filter(ProjectExpense.reference == f"REQ-{voucher.generic_request_id}").first()
+        expense = db.query(ProjectExpense).filter(ProjectExpense.description.like(f"REQ-{voucher.generic_request_id} :%")).first()
         if expense:
             expense.status = "APPROVED"
             
