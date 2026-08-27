@@ -77,7 +77,7 @@ def _notify_creation_targets(db: Session, request: GenericRequest, requester: Us
         target_roles = {"Admin"}
 
         if request.type in {RequestType.LEAVE, RequestType.DOCUMENT}:
-            target_roles.update({"RH", "Direction"})
+            target_roles.update({"RH", "RH / Comptabilité", "Direction"})
         elif request.type in {RequestType.IT_EQUIPMENT, RequestType.IT_ACCESS, RequestType.IT_INCIDENT}:
             target_roles.update({"IT Admin", "Admin IT", "IT", "Responsable IT"})
         elif request.type in {RequestType.FACILITY_MAINTENANCE, RequestType.FACILITY_SUPPLIES, RequestType.FACILITY_BADGE}:
@@ -152,7 +152,7 @@ def _apply_row_level_filter(query, current_user: User):
 
     conditions.append(GenericRequest.requester_id == current_user.id)
 
-    if roles & {"RH"}:
+    if roles & {"RH", "RH / Comptabilité"}:
         conditions.append(GenericRequest.type == RequestType.LEAVE)
 
     if roles & {"IT Admin", "Admin IT", "IT", "Responsable IT"}:
@@ -221,6 +221,7 @@ def get_request(
         and "Admin" not in roles
         and "Direction" not in roles
         and "RH" not in roles
+        and "RH / Comptabilité" not in roles
     ):
         raise HTTPException(status_code=403, detail="Non autorisé à consulter cette requête")
 

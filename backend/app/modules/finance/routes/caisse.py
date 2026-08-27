@@ -257,7 +257,8 @@ def finalize_caisse(voucher_id: int, db: Session = Depends(get_db)):
             from app.models.notification import Notification, NotificationType
             from app.modules.users.models.user import User
             
-            rh_users = db.query(User).filter(User.roles.any(name="RH")).all()
+            from app.modules.users.models.role import Role
+            rh_users = db.query(User).filter(User.roles.any(Role.name.in_(["RH", "RH / Comptabilité"]))).all()
             for rh in rh_users:
                 notif = Notification(
                     user_id=rh.id,

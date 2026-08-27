@@ -353,9 +353,9 @@ def get_project_dashboard(project_id: int, db: Session = Depends(get_db)):
     return {
         "kpis": [
             { "title": "Progression Globale", "value": f"{progression_percent}%", "color": "text-purple-600", "bg": "bg-purple-50" },
-            { "title": "Jalons TerminÃ©s", "value": milestones_str, "color": "text-green-600", "bg": "bg-green-50" },
-            { "title": "Budget ConsommÃ©", "value": f"{budget_consumed_percent}%", "color": "text-blue-600", "bg": "bg-blue-50" },
-            { "title": "TÃ¢ches Ouvertes", "value": str(open_tasks), "color": "text-red-600", "bg": "bg-red-50" },
+            { "title": "Jalons Terminés", "value": milestones_str, "color": "text-green-600", "bg": "bg-green-50" },
+            { "title": "Budget Consommé", "value": f"{budget_consumed_percent}%", "color": "text-blue-600", "bg": "bg-blue-50" },
+            { "title": "Tâches Ouvertes", "value": str(open_tasks), "color": "text-red-600", "bg": "bg-red-50" },
         ],
         "financial_chart": {
             "labels": chart_labels,

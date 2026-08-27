@@ -9,8 +9,8 @@
         </div>
 
         <h2 class="text-xl font-bold mb-4 mt-4 text-gray-800">Toutes mes demandes et leurs états</h2>
-        <div class="bg-white rounded-2xl shadow-[0_15px_40px_rgba(127,7,28,0.10)] border border-red-100 overflow-hidden mb-8">
-          <table class="w-full">
+        <div class="bg-white rounded-2xl shadow-[0_15px_40px_rgba(127,7,28,0.10)] border border-red-100 overflow-x-auto mb-8">
+          <table class="min-w-max w-full">
             <thead>
               <tr class="bg-gradient-to-r from-red-100/90 to-red-50 text-left">
                 <th class="px-6 py-4 text-sm font-semibold text-[#7f071c]">ID</th>
@@ -55,8 +55,8 @@
         </div>
 
         <h2 class="text-xl font-bold mb-4 mt-4 text-gray-800">Les demandes par lesquelles je suis concerné</h2>
-        <div class="bg-white rounded-2xl shadow-[0_15px_40px_rgba(127,7,28,0.10)] border border-red-100 overflow-hidden mb-8">
-          <table class="w-full">
+        <div class="bg-white rounded-2xl shadow-[0_15px_40px_rgba(127,7,28,0.10)] border border-red-100 overflow-x-auto mb-8">
+          <table class="min-w-max w-full">
             <thead>
               <tr class="bg-gradient-to-r from-red-100/90 to-red-50 text-left">
                 <th class="px-6 py-4 text-sm font-semibold text-[#7f071c]">ID</th>
