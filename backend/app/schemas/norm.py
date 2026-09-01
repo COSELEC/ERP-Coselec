@@ -26,7 +26,7 @@ class NormVersionResponse(NormVersionBase):
 class NormBase(BaseModel):
     code: str
     title: str
-    category_id: int
+    category_id: Optional[int] = None
 
 class NormCreate(NormBase):
     pass

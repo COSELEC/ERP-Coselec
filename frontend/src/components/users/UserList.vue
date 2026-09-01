@@ -5,7 +5,6 @@
     :loading="loading" 
     emptyMessage="Aucun utilisateur trouvé."
   >
-    <!-- Custom slot for the Role column -->
     <template #roles="{ item }">
       <span 
         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
@@ -15,7 +14,6 @@
       </span>
     </template>
 
-    <!-- Custom slot for Actions avec menu 3 points -->
     <template #actions="{ item }">
       <div class="relative flex justify-end items-center">
         <button 
@@ -29,7 +27,6 @@
           </svg>
         </button>
 
-        <!-- Menu déroulant -->
         <div 
           v-show="openDropdownId === item.id"
           class="absolute right-0 top-full mt-1 w-56 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-50 overflow-hidden"

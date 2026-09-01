@@ -10,11 +10,13 @@ L'application est divisée en plusieurs grands modules logiques :
 
 ### 🔐 Authentification & Sécurité (RBAC)
 - Authentification par JWT avec middleware de session glissante (Sliding Session).
-- Gestion fine des rôles (Admin, RH, Direction, Finance, Logistique, Responsable Projet, etc.) et permissions.
+- Gestion fine des rôles (Admin, RH, Direction, Finance, Logistique, Responsable Projet, etc.) et permissions gérées dynamiquement.
+- **Réinitialisation de mot de passe** : Workflow complet pour les utilisateurs.
 
 ### 👥 Ressources Humaines (RH)
 - **Gestion des employés & Départements** : Répertoire complet et affectation.
-- **Contrats & Documents** : Suivi des contrats, stockage des documents avec alertes automatiques à l'expiration (Cron job quotidien).
+- **Contrats & Documents** : Suivi des contrats, stockage des documents avec alertes automatiques à l'expiration (badges visuels et Cron job quotidien).
+- **Signatures de documents** : Processus de signature intégré pour les documents RH.
 - **Pointage / Présences** : Suivi du temps de travail.
 
 ### 📝 Gestion des Demandes
@@ -30,8 +32,8 @@ L'application est divisée en plusieurs grands modules logiques :
 - **Partenaires & Fournisseurs** : Gestion des tiers.
 - **Demandes d'Achats & Bons de Commande (BC)** : Workflow d'approbation et génération/impression PDF automatisée des BC.
 
-### 🚀 Gestion de Projets
-- **Tableaux de bord (Dashboards)** : Suivi d'avancement des projets et portefeuille.
+### 🚀 Gestion de Projets & KPIs
+- **Tableaux de bord (Dashboards)** : Suivi d'avancement des projets, indicateurs de performance (KPI) et portefeuille.
 - **Tâches & Jalons (Milestones)** : Gantt et planification.
 - **Budget & Dépenses** : Suivi financier granulaire par projet.
 
@@ -87,12 +89,15 @@ ERP/
 │   ├── alembic/              # Fichiers de migration de la base de données
 │   ├── app/
 │   │   ├── core/             # Configuration, Base de données, Sécurité (JWT)
+│   │   ├── enums/            # Enumérations partagées
 │   │   ├── models/           # Modèles SQLAlchemy (Définition des tables)
 │   │   ├── modules/          # Modules "métier" (RH, Users, Requests)
+│   │   ├── repositories/     # Couche d'accès aux données
 │   │   ├── routers/          # Points d'entrée (Endpoints) de l'API
 │   │   ├── schemas/          # Schémas Pydantic pour la validation (Input/Output)
 │   │   ├── services/         # Logique métier, Génération PDF, Storage S3
 │   │   ├── tasks/            # Tâches planifiées (ex: alertes RH)
+│   │   ├── templates/        # Templates HTML/Jinja2 (ex: emails, PDF)
 │   │   └── main.py           # Point d'entrée de l'application FastAPI
 │   ├── requirements.txt      # Dépendances Python
 │   ├── Dockerfile            # Image Docker pour le backend
@@ -101,10 +106,13 @@ ERP/
 ├── frontend/                 # Application Vue.js
 │   ├── public/               # Ressources statiques
 │   ├── src/
-│   │   ├── components/       # Composants réutilisables (Sidebar, Modals, etc.)
+│   │   ├── assets/           # Ressources globales (Styles, Images)
+│   │   ├── components/       # Composants réutilisables (AppTable, AppPagination, Modals, etc.)
 │   │   ├── composables/      # Fonctions réutilisables (ex: useToast)
+│   │   ├── layouts/          # Composants de mise en page (Main, Auth)
 │   │   ├── router/           # Configuration Vue Router
 │   │   ├── services/         # Services API (Axios), Auth Session
+│   │   ├── stores/           # Gestion de l'état global (Pinia)
 │   │   └── views/            # Pages de l'application (Views)
 │   ├── package.json          # Dépendances Node.js
 │   ├── vite.config.ts        # Configuration Vite

@@ -146,14 +146,10 @@ class StorageStrategy(ABC):
     def save_file(self, file: UploadFile, path: str = "norms") -> str:
         pass
 
-class LocalStorageStrategy(StorageStrategy):
+class MinioStorageStrategy(StorageStrategy):
     def save_file(self, file: UploadFile, path: str = "norms") -> str:
-        os.makedirs(f"uploads/{path}", exist_ok=True)
-        unique_filename = f"{uuid.uuid4()}_{file.filename}"
-        file_path = f"uploads/{path}/{unique_filename}"
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-        return file_path
+        unique_filename = f"uploads/{path}/{uuid.uuid4()}_{file.filename}"
+        return upload_file_to_minio(file, unique_filename)
 
 class StorageService:
     def __init__(self, strategy: StorageStrategy):

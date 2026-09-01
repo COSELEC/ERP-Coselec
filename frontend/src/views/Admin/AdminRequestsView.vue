@@ -60,6 +60,7 @@
             <thead>
               <tr class="bg-gradient-to-r from-red-100/90 to-red-50 text-left">
                 <th class="px-6 py-4 text-sm font-semibold text-[#7f071c]">ID</th>
+                <th class="px-6 py-4 text-sm font-semibold text-[#7f071c]">Demandeur</th>
                 <th class="px-6 py-4 text-sm font-semibold text-[#7f071c]">Type</th>
                 <th class="px-6 py-4 text-sm font-semibold text-[#7f071c]">Détails / Raison</th>
                 <th class="px-6 py-4 text-sm font-semibold text-[#7f071c]">Date de création</th>
@@ -70,6 +71,9 @@
             <tbody>
               <tr v-for="req in concerningRequests" :key="req.id" class="border-t border-red-100/80 hover:bg-red-50/70 transition">
                 <td class="px-6 py-4 text-gray-600 font-medium">{{ req.reference || 'DEM-' + req.id }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">
+                  {{ req.requester_name || 'Utilisateur ' + req.requester_id }}
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span class="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                     {{ req.type }}
@@ -108,7 +112,7 @@
                 </td>
               </tr>
               <tr v-if="concerningRequests.length === 0">
-                <td colspan="6" class="px-6 py-8 text-center text-gray-500">Aucune demande trouvée.</td>
+                <td colspan="7" class="px-6 py-8 text-center text-gray-500">Aucune demande trouvée.</td>
               </tr>
             </tbody>
           </table>

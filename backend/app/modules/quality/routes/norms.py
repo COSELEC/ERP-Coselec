@@ -1,18 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app.core.database import get_db
 from app.schemas.norm import NormResponse, NormCreate, NormVersionResponse, NormCategoryResponse
 from app.models.norm import Norm
 from app.repositories.norm_repository import NormRepository
 from app.services.norm_service import NormService
-from app.services.storage import StorageService, LocalStorageStrategy
-
+from app.services.storage import StorageService, MinioStorageStrategy
 router = APIRouter(prefix="/norms", tags=["Norms (GED)"])
 
 def get_storage_service():
-    strategy = LocalStorageStrategy()
+    strategy = MinioStorageStrategy()
     return StorageService(strategy)
 
 def get_norm_service(db: Session = Depends(get_db), storage_service: StorageService = Depends(get_storage_service)):
@@ -33,7 +32,7 @@ def get_categories(repository: NormRepository = Depends(get_norm_repository)):
 def create_norm(
     code: str = Form(...),
     title: str = Form(...),
-    category_id: int = Form(...),
+    category_id: Optional[int] = Form(None),
     file: UploadFile = File(...),
     service: NormService = Depends(get_norm_service)
 ):
@@ -57,3 +56,14 @@ def delete_norm(norm_id: int, service: NormService = Depends(get_norm_service)):
     success = service.delete_norm(norm_id)
     if not success:
         raise HTTPException(status_code=404, detail="Norme non trouvée")
+
+from fastapi.responses import RedirectResponse
+from app.services.storage import get_file_url_from_minio
+
+@router.get("/{file_name:path}")
+def get_norm_file_fallback(file_name: str):
+    # Fallback for the broken norm files that were uploaded without the uploads/ prefix
+    url = get_file_url_from_minio(f"norms/{file_name}")
+    if not url:
+        raise HTTPException(status_code=404, detail="File not found")
+    return RedirectResponse(url)

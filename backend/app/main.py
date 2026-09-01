@@ -8,7 +8,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-
+from fastapi.responses import RedirectResponse
+from app.services.storage import get_file_url_from_minio
 logging.basicConfig(level=logging.INFO)
 
 from app.core.database import SessionLocal
@@ -151,8 +152,12 @@ app.include_router(daily_reports_router)
 app.include_router(quality_router)
 app.include_router(kpi_router)
 
-os.makedirs("uploads", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+@app.get("/uploads/{file_path:path}")
+def get_uploaded_file(file_path: str):
+    url = get_file_url_from_minio(f"uploads/{file_path}")
+    if not url:
+        return {"error": "File not found"}
+    return RedirectResponse(url)
 
 
 @app.get("/")

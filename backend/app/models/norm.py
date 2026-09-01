@@ -17,7 +17,7 @@ class Norm(Base):
     id = Column(Integer, primary_key=True, index=True)
     code = Column(String, index=True, nullable=False, unique=True)
     title = Column(String, index=True, nullable=False)
-    category_id = Column(Integer, ForeignKey("norm_categories.id"), nullable=False)
+    category_id = Column(Integer, ForeignKey("norm_categories.id"), nullable=True)
 
     category = relationship("NormCategory", back_populates="norms")
     versions = relationship("NormVersion", back_populates="norm", cascade="all, delete-orphan")

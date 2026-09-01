@@ -57,7 +57,6 @@ const emit = defineEmits<{
 }>();
 
 const employees = ref<any[]>(props.employeesList || []);
-const projects = ref<any[]>(props.projectsList || []);
 const milestones = ref<any[]>(props.milestonesList || []);
 
 const activeMenuId = ref<number | null>(null);

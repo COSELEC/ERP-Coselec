@@ -7,6 +7,7 @@ from datetime import date, timedelta
 
 from app.core.database import get_db
 from app.core.security.auth import get_current_user
+from app.services.storage import upload_file_to_minio
 from app.modules.users.models.user import User
 from app.models.project.daily_report import WeeklyReport, DailyReport, ReportStatus
 from app.modules.daily_reports.schemas import WeeklyReportResponse, DailyReportResponse
@@ -25,10 +26,9 @@ def save_files(files: List[UploadFile]):
         if file.filename:
             ext = file.filename.split(".")[-1]
             filename = f"{uuid.uuid4()}.{ext}"
-            filepath = os.path.join("uploads", filename)
-            with open(filepath, "wb") as f:
-                f.write(file.file.read())
-            urls.append(f"/uploads/{filename}")
+            minio_key = f"uploads/daily_reports/{filename}"
+            upload_file_to_minio(file, minio_key)
+            urls.append(f"/{minio_key}")
     return urls
 
 # ---- WEEKLY REPORTS ----

@@ -8,7 +8,7 @@
         </div>
         <button 
           @click="openCreateForm"
-          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm"
+          class="bg-red-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm"
         >
           + Nouvel Utilisateur
         </button>
@@ -51,7 +51,7 @@
           </div>
           <button 
             @click="openRoleCreateForm"
-            class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm"
+            class="bg-red-600 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm"
           >
             + Nouveau Rôle
           </button>

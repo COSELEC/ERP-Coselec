@@ -24,7 +24,7 @@
         <tr 
           v-else
           v-for="item in items" 
-          :key="item.id || Math.random()" 
+          :key="item.id" 
           @click="emit('rowClick', item)"
           class="bg-white border-b border-gray-50 hover:bg-gray-50/50 transition cursor-pointer"
         >

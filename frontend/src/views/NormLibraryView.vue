@@ -23,7 +23,7 @@ const normHistory = ref<NormVersion[]>([]);
 const previewUrl = ref("");
 const previewTitle = ref("");
 
-const newNorm = ref({ code: "", title: "", category_id: 1, file: null as File | null });
+const newNorm = ref({ code: "", title: "", category_id: null as number | null, file: null as File | null });
 const uploadData = ref({ version_number: 1, file: null as File | null });
 
 const fetchData = async () => {
@@ -36,7 +36,7 @@ const fetchData = async () => {
     ]);
     categories.value = fetchedCategories;
     norms.value = fetchedNorms;
-    if (categories.value.length > 0 && newNorm.value.category_id === 1) {
+    if (categories.value.length > 0 && newNorm.value.category_id === null) {
       newNorm.value.category_id = categories.value[0].id;
     }
   } catch (err: any) {
@@ -97,7 +97,7 @@ const handleCreateNorm = async () => {
       file: newNorm.value.file
     });
     showCreateModal.value = false;
-    newNorm.value = { code: "", title: "", category_id: categories.value[0]?.id || 1, file: null };
+    newNorm.value = { code: "", title: "", category_id: categories.value[0]?.id || null, file: null };
     await fetchData();
   } catch (err: any) {
     alert("Erreur de création");
@@ -418,7 +418,8 @@ const downloadFile = (url: string, filename: string) => {
             </div>
             <div>
                <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
-               <select v-model.number="newNorm.category_id" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none bg-white">
+               <select v-model="newNorm.category_id" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none bg-white">
+                  <option :value="null">Aucune catégorie</option>
                   <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                </select>
             </div>

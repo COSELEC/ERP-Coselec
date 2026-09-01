@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import UploadFile, HTTPException
+from typing import Optional
 from app.repositories.norm_repository import NormRepository
 from app.services.storage import StorageService
 from app.models.norm import Norm, NormVersion
@@ -34,7 +35,7 @@ class NormService:
             self.db.rollback()
             raise HTTPException(status_code=500, detail=str(e))
 
-    def create_norm_with_file(self, code: str, title: str, category_id: int, file: UploadFile) -> Norm:
+    def create_norm_with_file(self, code: str, title: str, category_id: Optional[int], file: UploadFile) -> Norm:
         try:
             file_path = self.storage_service.save_file(file, path="norms")
 
