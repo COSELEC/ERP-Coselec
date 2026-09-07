@@ -1,22 +1,4 @@
 services:
-  db:
-    image: postgres:15-alpine
-    container_name: erp-postgres
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: erp_db
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   backend:
     build:
       context: ./backend
@@ -25,16 +7,12 @@ services:
     restart: always
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
-      # Use the internal docker network hostname "db" to connect
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/erp_db
-      # Example default origins. You might want to pass these dynamically if needed.
-      - CORS_ALLOW_ORIGINS=http://localhost,http://localhost:5173,http://localhost:80
-    depends_on:
-      db:
-        condition: service_healthy
+      # Autorise les requêtes provenant de ton navigateur vers l'EC2
+      - CORS_ALLOW_ORIGINS=http://localhost,http://localhost:5173,http://localhost:80,http://15.224.107.108
     volumes:
-      # Optional: mount a directory for uploads if they are stored locally
       - ./backend/uploads:/app/uploads
 
   frontend:
@@ -42,14 +20,11 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        # For a local docker-compose environment, the browser reaches the backend via localhost:8000
-        - VITE_API_BASE_URL=http://localhost:8000
+        # L'adresse que ton navigateur va appeler pour joindre le backend FastAPI
+        - VITE_API_BASE_URL=http://15.224.107.108:8000
     container_name: erp-frontend
     restart: always
     ports:
       - "80:80"
     depends_on:
       - backend
-
-volumes:
-  postgres_data:

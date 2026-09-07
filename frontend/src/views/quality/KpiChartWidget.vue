@@ -3,14 +3,10 @@ import { computed } from 'vue';
 import type { KPIIndicator } from '@/services/kpi';
 import VueApexCharts from "vue3-apexcharts";
 
-const formatKpiValue = (val: number, targetRaw?: string | null) => {
+const formatKpiValue = (val: number, isPct: boolean) => {
   if (val === null || val === undefined) return '';
-  const hasPercent = targetRaw?.includes('%');
   
-  // Appliquer le formatage en pourcentage pour toute valeur entre 0 et 1 inclus
-  const isFraction = val >= 0 && val <= 1;
-  
-  if (hasPercent || isFraction) {
+  if (isPct) {
     const displayVal = (val >= 0 && val <= 1) ? Number((val * 100).toFixed(1)) : val;
     return `${displayVal}%`;
   }
@@ -26,6 +22,11 @@ const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août',
 
 const targetConfig = computed(() => {
   return props.indicator.yearly_targets.find(t => t.year === props.year);
+});
+
+const isPercentageKpi = computed(() => {
+  if (targetConfig.value?.target_raw?.includes('%')) return true;
+  return props.indicator.name.toLowerCase().includes('taux');
 });
 
 const chartSeries = computed(() => {
@@ -117,7 +118,7 @@ const chartOptions = computed(() => {
     dataLabels: {
       enabled: true,
       formatter: function (val: number) {
-        return formatKpiValue(val, target?.target_raw);
+        return formatKpiValue(val, isPercentageKpi.value);
       },
       style: {
         fontSize: '10px',
@@ -132,7 +133,7 @@ const chartOptions = computed(() => {
     yaxis: {
       labels: {
         formatter: function (val: number) {
-          return formatKpiValue(val, target?.target_raw);
+          return formatKpiValue(val, isPercentageKpi.value);
         },
         style: { colors: '#6b7280' }
       }
@@ -146,7 +147,7 @@ const chartOptions = computed(() => {
     tooltip: {
       y: {
         formatter: function (val: number) {
-          return formatKpiValue(val, target?.target_raw);
+          return formatKpiValue(val, isPercentageKpi.value);
         }
       }
     }

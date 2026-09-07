@@ -4,16 +4,9 @@ FROM python:3.14-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Environment Variables (Hardcoded to bypass manual Render dashboard entry)
-ENV SECRET_KEY="super-secret-key-12345"
-ENV MAIL_SERVER="smtp.resend.com"
-ENV MAIL_PORT="465"
-ENV MAIL_USERNAME="resend"
-# IMPORTANT: Set MAIL_PASSWORD to your Resend API Key in Render ENV vars
-ENV MAIL_PASSWORD=""
-ENV MAIL_FROM="onboarding@resend.dev"
-ENV MAIL_STARTTLS="false"
-ENV MAIL_SSL_TLS="true"
+# Environment Variables
+# In production (e.g., AWS), inject these at runtime via Secrets Manager or task definitions.
+# Locally, these can be provided via a .env file.
 
 WORKDIR /app
 
@@ -25,6 +18,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 
-EXPOSE 10000
+EXPOSE 8000
 
-CMD ["gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:10000", "--timeout", "120"]
+CMD ["gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--timeout", "120"]

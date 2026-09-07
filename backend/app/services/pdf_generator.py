@@ -11,6 +11,24 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from typing import Any
 from app.services.storage import upload_buffer_to_minio
 
+def get_logo_path() -> str | None:
+    """Resolve the absolute path to the company logo."""
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    candidates = [
+        os.path.join(base_dir, "static", "logo_coselec.png"),
+        os.path.join(base_dir, "static", "logo_coselec.jpg"),
+        os.path.join(base_dir, "static", "logo_coselec.jfif"),
+        os.path.join(base_dir, "assets", "logo_coselec.png"),
+        os.path.join(base_dir, "assets", "logo_coselec.jpg"),
+        os.path.join(os.path.dirname(__file__), "../../../frontend/public/logo_coselec.png"),
+        os.path.join(os.path.dirname(__file__), "../../../frontend/public/logo_coselec.jfif"),
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            return p
+    return None
+
+
 class CoselecPdfBuilder:
     """Builder générique pour tous les documents PDF de l'ERP Coselec."""
     
@@ -28,9 +46,9 @@ class CoselecPdfBuilder:
         self.styles = getSampleStyleSheet()
         self.elements = []
     
-    def add_logo(self, width: int = 80, height: int = 80, centered: bool = True, space_after: int = 20):
-        logo_path = os.path.join(os.path.dirname(__file__), "../../../frontend/public/logo_coselec.jfif")
-        if os.path.exists(logo_path):
+    def add_logo(self, width: int = 70, height: int = 70, centered: bool = True, space_after: int = 15):
+        logo_path = get_logo_path()
+        if logo_path:
             img = Image(logo_path, width=width, height=height)
             if centered:
                 t = Table([[img]], colWidths=[510])
@@ -141,10 +159,11 @@ def _build_dmcar_table_data(request: Any) -> Table:
     styles = getSampleStyleSheet()
     title_p = Paragraph("DEMANDE DE CARBURANT", ParagraphStyle('TitleStyle', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=14, alignment=1))
     
-    logo_p = Paragraph("GROUPE<br/><b>Y</b><br/>COSELEC", ParagraphStyle('LogoStyle', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=12, textColor=colors.red, alignment=1))
-    logo_path = os.path.join(os.path.dirname(__file__), "../../../frontend/public/logo_coselec.jfif")
-    if os.path.exists(logo_path):
-        logo_p = Image(logo_path, width=60, height=60)
+    logo_path = get_logo_path()
+    if logo_path:
+        logo_p = Image(logo_path, width=45, height=45)
+    else:
+        logo_p = Paragraph("GROUPE<br/><b>Y</b><br/>COSELEC", ParagraphStyle('LogoStyle', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=12, textColor=colors.red, alignment=1))
         
     payload = request.payload or {}
     data = [
@@ -160,7 +179,7 @@ def _build_dmcar_table_data(request: Any) -> Table:
         [f"QUANTITE DE CARBURANT ............... {payload.get('fuel_quantity', '')} L", "", "", "", ""],
     ]
     
-    t_main = Table(data, colWidths=[130, 95, 95, 95, 95], rowHeights=[40, 20, 20, 20, 25, 25, 25, 25, 25, 25])
+    t_main = Table(data, colWidths=[130, 95, 95, 95, 95], rowHeights=[50, 20, 20, 20, 25, 25, 25, 25, 25, 25])
     t_main.setStyle(TableStyle([
         ('SPAN', (1, 0), (4, 0)),
         ('ALIGN', (0, 0), (4, 0), 'CENTER'),
@@ -251,7 +270,7 @@ def generate_caisse_pdf(voucher) -> str:
     filename = f"caisse_vouchers/CAISSE_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
     builder = CoselecPdfBuilder(filename)
     
-    builder.add_logo()
+    builder.add_logo(width=70, height=70, space_after=10)
     builder.add_title('COSELEC &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "A"', font_size=12, space_after=10)
     
     dep_header = Paragraph("PIECE DE CAISSE / DEPENSE", ParagraphStyle('H', parent=builder.styles['Normal'], fontName='Helvetica-Bold', fontSize=10, alignment=1, backColor=colors.lightgrey))
@@ -580,22 +599,26 @@ def _build_inventory_header(title: str, doc_ref: str, form_number: str) -> Table
     """Standard header: Left=Logo, Center=Title, Right=Doc Ref & Form Number in red"""
     styles = getSampleStyleSheet()
     
-    logo_style = ParagraphStyle('LogoStyle', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=14, textColor=colors.red)
-    left_p = Paragraph("GROUPE<br/><b>Y</b><br/>COSELEC", logo_style)
+    logo_path = get_logo_path()
+    if logo_path:
+        left_p = Image(logo_path, width=50, height=50)
+    else:
+        logo_style = ParagraphStyle('LogoStyle', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=14, textColor=colors.red)
+        left_p = Paragraph("GROUPE<br/><b>Y</b><br/>COSELEC", logo_style)
     
     title_p = Paragraph(f"<b>{title}</b>", ParagraphStyle('TitleStyle', parent=styles['Normal'], alignment=1, fontSize=14))
     
     ref_style = ParagraphStyle('RefStyle', parent=styles['Normal'], alignment=2, textColor=colors.red, fontSize=10, fontName='Helvetica-Bold')
     right_p = Paragraph(f"{doc_ref}<br/>{form_number}", ref_style)
     
-    t = Table([[left_p, title_p, right_p]], colWidths=[100, 310, 100])
+    t = Table([[left_p, title_p, right_p]], colWidths=[100, 310, 100], rowHeights=[60])
     t.setStyle(TableStyle([
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('BOX', (0,0), (-1,-1), 1, colors.black),
         ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 10),
-        ('TOPPADDING', (0,0), (-1,-1), 10),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+        ('TOPPADDING', (0,0), (-1,-1), 5),
     ]))
     return t
 
