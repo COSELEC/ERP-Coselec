@@ -39,8 +39,7 @@ const handlePhotoUpload = async (event: Event) => {
     
     isUploadingPhoto.value = true;
     try {
-        if (!profile.value) return;
-        const res = await api.post(`/employees/${profile.value.id}/photo`, formData, {
+        const res = await api.post('/me/photo', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         photoUrl.value = res.data.photo_url;
@@ -61,8 +60,7 @@ const handlePhotoUpload = async (event: Event) => {
 const handleDeletePhoto = async () => {
     if (!confirm("Voulez-vous vraiment supprimer votre photo de profil ?")) return;
     try {
-        if (!profile.value) return;
-        await api.delete(`/employees/${profile.value.id}/photo`);
+        await api.delete('/me/photo');
         photoUrl.value = null;
         if (profile.value) {
             profile.value.photo_url = null;

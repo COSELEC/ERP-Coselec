@@ -70,6 +70,7 @@ export async function refreshCurrentUserProfile(): Promise<CurrentUserProfile> {
     id: data.id,
     name: data.name,
     email: data.email,
+    photo_url: data.photo_url || null,
     roles: Array.isArray(data.roles) ? data.roles : [],
     permissions: Array.isArray(data.permissions) ? data.permissions : [],
   };

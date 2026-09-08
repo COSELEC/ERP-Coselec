@@ -9,6 +9,9 @@ export function resolveStorageUrl(path?: string | null): string {
   if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
     return path;
   }
+  if (path.startsWith('/avatars/') || path.startsWith('avatars/') || path.startsWith('/assets/')) {
+    return path.startsWith('/') ? path : `/${path}`;
+  }
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
   const rawBase = api.defaults.baseURL || '';
   // If rawBase is empty or relative "/api", use "/storage/..." or "/api/storage/..."
