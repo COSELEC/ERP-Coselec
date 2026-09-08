@@ -198,15 +198,7 @@ onMounted(async () => {
         <SidebarItem
           to="/admin/requests"
           icon="assignment"
-          label="Mes demandes"
-          :collapsed="collapsed"
-        />
-
-        <SidebarItem
-          v-if="canViewFuelRequests"
-          to="/fuel-requests"
-          icon="local_gas_station"
-          label="Demandes Carburant"
+          label="Toutes les demandes"
           :collapsed="collapsed"
         />
       </div>

@@ -3,12 +3,16 @@
     
     <!-- HEADER -->
     <div>
-      <h2 class="text-2xl font-black tracking-tight text-gray-900">Nouvelle demande Facilities</h2>
-      <p class="mt-2 text-sm text-gray-500">Sélectionnez la catégorie de votre besoin en logistique, matériel ou maintenance.</p>
+      <h2 class="text-2xl font-black tracking-tight text-gray-900">
+        {{ mode === 'site' ? 'Demande de Matériel de Chantier' : (mode === 'repair' ? 'Demande Réparation & Matériel (Bureau)' : 'Nouvelle demande Facilities') }}
+      </h2>
+      <p class="mt-2 text-sm text-gray-500">
+        {{ mode === 'site' ? 'Demande d\'outillage, équipements de sécurité (EPI), machines et fournitures pour un chantier spécifique.' : (mode === 'repair' ? 'Maintenance des locaux, réparations techniques (clim, plomberie, électricité) ou fournitures de bureau.' : 'Sélectionnez la catégorie de votre besoin en logistique, matériel ou maintenance.') }}
+      </p>
     </div>
 
-    <!-- MAIN CATEGORY SELECTION -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <!-- MAIN CATEGORY SELECTION (Hidden in site mode, shown in repair or all mode) -->
+    <div v-if="mode !== 'site'" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <label 
         class="group relative flex cursor-pointer rounded-3xl border-2 p-5 transition-all duration-300 ease-out hover:shadow-lg"
         :class="requestPayload.category === 'MAINTENANCE' ? 'border-red-600 bg-red-50/50 shadow-md' : 'border-gray-100 bg-white hover:border-red-200'"
@@ -23,7 +27,7 @@
           </div>
           <div>
             <h3 class="text-base font-bold text-gray-900">Intervention / Réparation</h3>
-            <p class="mt-1 text-xs font-medium text-gray-500 leading-relaxed">Problème de clim, électricité, aménagement, nettoyage, etc.</p>
+            <p class="mt-1 text-xs font-medium text-gray-500 leading-relaxed">Problème de clim, électricité, aménagement, nettoyage des locaux, etc.</p>
           </div>
         </div>
         <div 
@@ -45,8 +49,8 @@
             <span class="material-symbols-outlined text-[24px]">inventory_2</span>
           </div>
           <div>
-            <h3 class="text-base font-bold text-gray-900">Matériel & Fournitures</h3>
-            <p class="mt-1 text-xs font-medium text-gray-500 leading-relaxed">Demande de ramettes, stylos, outils, EPI ou retour matériel.</p>
+            <h3 class="text-base font-bold text-gray-900">Matériel & Fournitures Bureau</h3>
+            <p class="mt-1 text-xs font-medium text-gray-500 leading-relaxed">Demande de ramettes, papeterie, petit matériel ou consommables bureau.</p>
           </div>
         </div>
         <div 
@@ -133,9 +137,20 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div v-if="mode === 'site'">
+              <label class="mb-2 block text-sm font-semibold text-gray-700">Chantier / Projet concerné *</label>
+              <select v-model="requestPayload.supplies.project_id" required class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-red-400 focus:ring-4 focus:ring-red-100">
+                <option :value="null" disabled>-- Sélectionner le chantier --</option>
+                <option v-for="prj in projects" :key="prj.id" :value="prj.id">{{ prj.name }}</option>
+              </select>
+            </div>
 
-            
-            <div>
+            <div v-else-if="mode === 'repair'">
+              <label class="mb-2 block text-sm font-semibold text-gray-700">Destination</label>
+              <input type="text" value="Usage interne (Bureau / Siège)" disabled class="w-full rounded-2xl border border-gray-200 bg-gray-100 px-4 py-3 text-sm text-gray-600 outline-none cursor-not-allowed" />
+            </div>
+
+            <div v-else>
               <label class="mb-2 block text-sm font-semibold text-gray-700">Destination (Lieu / Projet)</label>
               <div class="flex flex-col gap-2">
                 <select v-model="requestPayload.supplies.location_type" class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-red-400 focus:ring-4 focus:ring-red-100">
@@ -222,9 +237,22 @@
 
 <script setup lang="ts">
 import { reactive, ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { employeeService } from '@/services/employees'
 import { useToast } from '@/composables/useToast'
 import api from '@/services/api'
+
+const props = withDefaults(
+  defineProps<{
+    mode?: 'repair' | 'site' | 'all';
+  }>(),
+  {
+    mode: 'all'
+  }
+);
+
+const emit = defineEmits(['submitted']);
+const router = useRouter();
 
 const toast = useToast()
 const isSubmitting = ref(false)
@@ -258,7 +286,7 @@ onMounted(async () => {
 })
 
 const getInitialPayload = () => ({
-  category: '', 
+  category: props.mode === 'site' ? 'SUPPLIES' : (props.mode === 'repair' ? 'MAINTENANCE' : ''), 
   maintenance: {
     location_type: 'bureau',
     project_id: null,
@@ -268,7 +296,7 @@ const getInitialPayload = () => ({
   },
   supplies: {
     is_return: false,
-    location_type: 'bureau',
+    location_type: props.mode === 'site' ? 'chantier' : 'bureau',
     project_id: null,
     items: [{ category_id: null, product_id: null, designation: '', quantity: 1 }],
     justification: ''
@@ -334,10 +362,18 @@ const submitFacilityRequest = async () => {
 
 
 
+    if (props.mode === 'site' && !requestPayload.supplies.project_id) {
+      toast.error("Veuillez sélectionner un projet / chantier.");
+      isSubmitting.value = false;
+      return;
+    }
+
     await api.post('/requests/', finalPayload);
     
-    toast.success("Demande Facility envoyée avec succès.");
+    toast.success("Demande envoyée avec succès.");
     resetForm();
+    emit('submitted');
+    router.push('/admin/requests');
     
   } catch (error) {
     console.error(error);

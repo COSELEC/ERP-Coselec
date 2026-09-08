@@ -89,9 +89,7 @@ const routes = [
   },
   {
     path: "/fuel-requests",
-    name: "fuel-requests",
-    component: () => import("../views/requests/FuelRequestsView.vue"),
-    meta: { requiredPermissions: ["fuel_requests.read"] }
+    redirect: "/admin/requests?category=fuel"
   },
   {
     path: "/quality",
@@ -140,7 +138,7 @@ const routes = [
     meta: { requiredPermissions: ["dashboard.read"] }
   },
   {
-    path: "/requests/:section(hr|it|facilities)",
+    path: "/requests/:section(hr|it|facilities|facilities-site|fuel)",
     name: "request-form",
     component: () => import("../views/RequestFormView.vue"),
     props: true

@@ -37,9 +37,7 @@
             <tr v-for="assign in hrAssignments" :key="assign.id" class="hover:bg-gray-50 transition-colors">
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-full bg-red-100 text-[#d10f2f] flex items-center justify-center font-bold text-sm">
-                    {{ assign.user?.first_name?.[0] || '?' }}
-                  </div>
+                  <UserAvatar :user="assign.user" size="sm" />
                   <div>
                     <div class="font-bold text-gray-900">{{ assign.user?.first_name }} {{ assign.user?.last_name }}</div>
                     <div class="text-xs text-gray-500">{{ assign.user?.position || 'N/A' }}</div>
@@ -187,6 +185,7 @@
 import { ref, onMounted, watch } from 'vue';
 import api from '@/services/api';
 import { useToast } from '@/composables/useToast';
+import UserAvatar from '@/components/common/UserAvatar.vue';
 
 const props = defineProps<{
   projectId: number | string | null

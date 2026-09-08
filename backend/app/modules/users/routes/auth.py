@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -129,9 +129,38 @@ def me(current_user: User = Depends(get_current_user)):
         "id": current_user.id,
         "name": current_user.name,
         "email": current_user.email,
+        "photo_url": current_user.photo_url,
         "roles": [role.name for role in current_user.roles],
         "permissions": list(permissions)
     }
+
+@router.post("/me/photo")
+async def upload_my_photo(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    from app.services.storage import upload_file_to_minio
+    import uuid
+    
+    ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+    filename = f"photos/{current_user.id}_{uuid.uuid4().hex}.{ext}"
+    
+    file_url = upload_file_to_minio(file, filename)
+    
+    current_user.photo_url = file_url
+    db.commit()
+    
+    return {"photo_url": file_url}
+
+@router.delete("/me/photo")
+def delete_my_photo(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    current_user.photo_url = None
+    db.commit()
+    return {"message": "Photo supprimée avec succès"}
 
 @router.post("/logout")
 def logout():

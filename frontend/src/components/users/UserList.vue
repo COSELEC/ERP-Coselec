@@ -5,6 +5,13 @@
     :loading="loading" 
     emptyMessage="Aucun utilisateur trouvé."
   >
+    <template #name="{ item }">
+      <div class="flex items-center gap-3">
+        <UserAvatar :user="item" size="sm" />
+        <span class="font-medium text-gray-900">{{ item.name || (item.first_name ? item.first_name + ' ' + (item.last_name || '') : item.email) }}</span>
+      </div>
+    </template>
+
     <template #roles="{ item }">
       <span 
         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
@@ -62,6 +69,7 @@
 import { ref } from 'vue';
 import type { User } from '@/services/userService';
 import AppTable, { type ColumnDefinition } from '@/components/common/AppTable.vue';
+import UserAvatar from '@/components/common/UserAvatar.vue';
 
 defineProps<{
   users: User[];

@@ -22,6 +22,7 @@ export interface ChatUser {
   id: number;
   name: string;
   email: string;
+  photo_url?: string | null;
 }
 
 export interface ChatRoom {

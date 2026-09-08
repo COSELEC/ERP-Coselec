@@ -69,7 +69,7 @@ def get_chat_users(
 ):
     """Fetch available users to chat with."""
     users = db.query(User).filter(User.id != current_user.id, User.is_active == True).all()
-    return [{"id": u.id, "name": u.name, "email": u.email} for u in users]
+    return [{"id": u.id, "name": u.name, "email": u.email, "photo_url": u.photo_url} for u in users]
 
 @router.get("/rooms")
 def get_user_rooms(

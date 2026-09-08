@@ -9,6 +9,7 @@ import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { employeeService } from '@/services/employees';
 import AppLayout from '@/layouts/AppLayout.vue';
+import UserAvatar from '@/components/common/UserAvatar.vue';
 
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
@@ -72,7 +73,8 @@ const buildGraph = (rootNodes: any[]) => {
         email: current.email,
         phone: current.phone,
         matricule: current.matricule,
-        status: current.status
+        status: current.status,
+        photo_url: current.photo_url
       }
     });
     
@@ -232,9 +234,7 @@ onMounted(() => {
             <div class="p-4">
               <!-- Header: Avatar & Info -->
               <div class="flex items-center gap-3 mb-3">
-                <div class="w-12 h-12 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-lg font-bold text-gray-600">
-                  {{ props.data.name.charAt(0) }}
-                </div>
+                <UserAvatar :photo-url="props.data.photo_url" :name="props.data.name" size="md" />
                 <div>
                   <h3 class="text-sm font-bold text-gray-900 truncate w-32" :title="props.data.name">{{ props.data.name }}</h3>
                   <p class="text-xs text-red-600 font-medium truncate w-32" :title="props.data.position">{{ props.data.position }}</p>
@@ -270,9 +270,7 @@ onMounted(() => {
         <!-- Modal Body -->
         <div class="p-6" v-if="selectedNode">
           <div class="flex items-center gap-4 mb-6">
-            <div class="w-16 h-16 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-2xl font-bold text-gray-600 shadow-sm">
-              {{ selectedNode.name ? selectedNode.name.charAt(0) : '?' }}
-            </div>
+            <UserAvatar :photo-url="selectedNode.photo_url" :name="selectedNode.name" size="xl" />
             <div>
               <h4 class="text-xl font-bold text-gray-900">{{ selectedNode.name }}</h4>
               <p class="text-red-600 font-medium">{{ selectedNode.position }}</p>

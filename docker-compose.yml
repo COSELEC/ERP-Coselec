@@ -10,8 +10,8 @@ services:
     env_file:
       - .env
     environment:
-      # Autorise les requêtes provenant de ton navigateur vers l'EC2
-      - CORS_ALLOW_ORIGINS=http://localhost,http://localhost:5173,http://localhost:80,http://15.224.107.108
+      # Autorise les requetes provenant du navigateur vers le backend
+      - CORS_ALLOW_ORIGINS=${CORS_ALLOW_ORIGINS:-http://localhost,http://localhost:5173,http://localhost:80,http://35.181.155.29,http://35.181.155.29:80,http://erp.groupecoselec.com,https://erp.groupecoselec.com}
     volumes:
       - ./backend/uploads:/app/uploads
 
@@ -20,8 +20,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        # L'adresse que ton navigateur va appeler pour joindre le backend FastAPI
-        - VITE_API_BASE_URL=http://15.224.107.108:8000
+        # L'adresse que le navigateur va appeler pour joindre le backend FastAPI
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://35.181.155.29:8000}
     container_name: erp-frontend
     restart: always
     ports:

@@ -118,7 +118,7 @@ allow_origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1|0\.0\.0\.0|.*\.vercel\.app|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}|192\.190\.100\.\d{1,3})(:\d+)?$",
+    allow_origin_regex=r"^https?://(.*\.groupecoselec\.com|groupecoselec\.com|localhost|127\.0\.0\.1|0\.0\.0\.0|.*\.vercel\.app|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -155,6 +155,15 @@ app.include_router(kpi_router)
 @app.get("/uploads/{file_path:path}")
 def get_uploaded_file(file_path: str):
     url = get_file_url_from_minio(f"uploads/{file_path}")
+    if not url:
+        return {"error": "File not found"}
+    return RedirectResponse(url)
+
+
+@app.get("/storage/{file_path:path}")
+@app.get("/api/storage/{file_path:path}")
+def get_storage_file(file_path: str):
+    url = get_file_url_from_minio(file_path)
     if not url:
         return {"error": "File not found"}
     return RedirectResponse(url)

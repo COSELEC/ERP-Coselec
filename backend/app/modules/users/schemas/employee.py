@@ -15,6 +15,7 @@ class EmployeeCreate(BaseModel):
     manager_id: Optional[int] = None
     supervised_employee_ids: Optional[list[int]] = None
     is_active: Optional[bool] = True
+    photo_url: Optional[str] = None
 
 
 class EmployeeUpdate(BaseModel):
@@ -29,6 +30,7 @@ class EmployeeUpdate(BaseModel):
     manager_id: Optional[int] = None
     supervised_employee_ids: Optional[list[int]] = None
     is_active: Optional[bool] = None
+    photo_url: Optional[str] = None
 
 
 class EmployeeResponse(BaseModel):
@@ -45,6 +47,7 @@ class EmployeeResponse(BaseModel):
     supervised_employee_ids: Optional[list[int]] = []
     is_active: Optional[bool] = True
     signature_url: Optional[str] = None
+    photo_url: Optional[str] = None
     has_expiring_documents: Optional[bool] = False
 
     class Config:
@@ -62,4 +65,5 @@ class OrgChartNode(BaseModel):
     matricule: Optional[str] = None
     status: Optional[str] = None
     manager_id: Optional[int] = None
+    photo_url: Optional[str] = None
     children: list['OrgChartNode'] = []

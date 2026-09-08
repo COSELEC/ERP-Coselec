@@ -19,7 +19,13 @@
             <ITRequestForm />
           </div>
           <div v-else-if="props.section === 'facilities'" class="px-6 py-8 lg:px-10 lg:py-10">
-            <FacilityRequestForm />
+            <FacilityRequestForm mode="repair" />
+          </div>
+          <div v-else-if="props.section === 'facilities-site'" class="px-6 py-8 lg:px-10 lg:py-10">
+            <FacilityRequestForm mode="site" />
+          </div>
+          <div v-else-if="props.section === 'fuel'" class="px-6 py-8 lg:px-10 lg:py-10">
+            <FuelRequestForm />
           </div>
           <div v-else class="grid gap-8 px-6 py-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-10 lg:py-10">
             <form class="space-y-5" @submit.prevent="submitRequest">
@@ -124,6 +130,7 @@ import { RouterLink } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import ITRequestForm from '@/components/requests/ITRequestForm.vue';
 import FacilityRequestForm from '@/components/requests/FacilityRequestForm.vue';
+import FuelRequestForm from '@/components/requests/FuelRequestForm.vue';
 import { employeeService } from '@/services/employees';
 import { useToast } from '@/composables/useToast';
 
@@ -141,7 +148,7 @@ onMounted(async () => {
 });
 
 const props = defineProps<{
-  section: 'hr' | 'it' | 'facilities';
+  section: 'hr' | 'it' | 'facilities' | 'facilities-site' | 'fuel';
 }>();
 
 const sectionMeta = computed(() => {
@@ -174,22 +181,50 @@ const sectionMeta = computed(() => {
       ]
     },
     facilities: {
-      eyebrow: 'Demande Facilities',
-      title: 'Créer une demande Facilities',
+      eyebrow: 'Facilities - Locaux & Matériel',
+      title: 'Réparation & Matériel de bureau',
       icon: 'home_repair_service',
-      description: 'Dépose une demande liée aux locaux, badge, maintenance, salles, matériel ou logistique.',
-      subjectPlaceholder: 'Ex: Climatisation salle projet en panne',
+      description: 'Maintenance des locaux, réparations (clim, électricité, plomberie) et fournitures / matériel de bureau.',
+      subjectPlaceholder: 'Ex: Climatisation salle réunion en panne',
       descriptionPlaceholder: 'Précise le lieu, le matériel concerné et l’action attendue.',
-      helpText: 'Les demandes Facilities sont traitées selon le lieu, le service et la criticité du besoin.',
+      helpText: 'Les demandes de réparation et fournitures internes sont gérées par les services généraux.',
       hints: [
-        'Indique la zone ou le bâtiment.',
-        'Précise s’il s’agit d’une urgence opérationnelle.',
-        'Ajoute les informations d’accès si une intervention est requise.'
+        'Indique la zone, le bureau ou le bâtiment concerné.',
+        'Précise le degré d’urgence pour l’intervention.',
+        'Ajoute les références du matériel si nécessaire.'
+      ]
+    },
+    'facilities-site': {
+      eyebrow: 'Facilities - Chantier',
+      title: 'Matériel & Équipements de Chantier',
+      icon: 'construction',
+      description: 'Demande d’outillage, équipements de protection (EPI), machines et fournitures pour un chantier spécifique.',
+      subjectPlaceholder: 'Ex: Outillage et EPI pour chantier Agadir',
+      descriptionPlaceholder: 'Détaillez le besoin pour le chantier et la date de mise à disposition souhaitée.',
+      helpText: 'Cette demande est directement rattachée à un projet de chantier pour le suivi des allocations.',
+      hints: [
+        'Sélectionnez obligatoirement le projet concerné.',
+        'Indiquez les quantités requises pour chaque équipement.',
+        'Précisez s’il s’agit d’une dotation ou d’un retour magasin.'
+      ]
+    },
+    fuel: {
+      eyebrow: 'Demande de Carburant',
+      title: 'Demande de Carburant (DMCAR)',
+      icon: 'local_gas_station',
+      description: 'Demande de bon ou dotation de carburant pour véhicule de société, mission ou déplacement professionnel.',
+      subjectPlaceholder: 'Ex: Déplacement chantier pour suivi travaux',
+      descriptionPlaceholder: 'Précisez la destination, le véhicule et le kilométrage.',
+      helpText: 'Toute demande de carburant fait l’objet d’une validation hiérarchique et financière.',
+      hints: [
+        'Renseignez le matricule exact du véhicule.',
+        'Indiquez le relevé kilométrique actuel.',
+        'Rattachez la demande à un numéro d’affaire ou projet si applicable.'
       ]
     }
   } as const;
 
-  return map[props.section];
+  return map[props.section] || map.hr;
 });
 
 const form = reactive({

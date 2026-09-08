@@ -9,6 +9,7 @@ import {
 } from "@/services/session";
 import { logout as logoutRequest } from "@/services/auth";
 import { useNotificationsWS } from "@/composables/useNotificationsWS";
+import UserAvatar from "@/components/common/UserAvatar.vue";
 
 const router = useRouter();
 const isOpen = ref(false);
@@ -69,6 +70,11 @@ onMounted(() => {
     
     document.addEventListener("click", handleDocumentClick);
     window.addEventListener("notifications:refresh", handleNotificationsRefresh);
+    window.addEventListener("profile:updated", () => {
+        refreshCurrentUserProfile().then((value) => {
+            profile.value = value;
+        });
+    });
 
     refreshCurrentUserProfile()
         .then((value) => {
@@ -187,9 +193,7 @@ async function logout() {
                 class="group flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-red-200 bg-white hover:bg-red-50 hover:border-red-400 transition-all duration-200 shadow-sm cursor-pointer"
                 title="Accéder à mon profil"
             >
-                <div class="w-8 h-8 rounded-full bg-[#d10f2f] group-hover:bg-[#b00c26] text-white font-bold text-sm flex items-center justify-center shadow-inner transition-colors duration-200">
-                    {{ currentUserInitial }}
-                </div>
+                <UserAvatar :user="profile" size="sm" />
                 <div class="hidden sm:flex flex-col text-left">
                     <span class="text-xs font-semibold text-gray-800 group-hover:text-[#d10f2f] transition-colors leading-tight">
                         {{ currentUserName }}

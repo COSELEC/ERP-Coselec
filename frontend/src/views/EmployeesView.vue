@@ -29,9 +29,7 @@
           
           <template #first_name="{ item }">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-red-100 text-[#d10f2f] flex items-center justify-center font-semibold">
-                {{ item.first_name ? item.first_name[0].toUpperCase() : (item.email ? item.email[0].toUpperCase() : '?') }}
-              </div>
+              <UserAvatar :user="item" size="md" />
               <div>
                 <p class="font-medium text-gray-900 flex items-center gap-2">
                   {{ item.first_name || 'Inconnu' }} {{ item.last_name || '' }}
@@ -215,8 +213,12 @@
       <div class="fixed inset-y-0 right-0 z-50 w-full max-w-3xl bg-gradient-to-b from-red-50 to-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col border-l border-red-100" :class="isSlideOverOpen ? 'translate-x-0' : 'translate-x-full'">
         <div v-if="selectedEmployee" class="px-6 py-6 bg-white border-b border-red-100 flex justify-between items-start shadow-sm z-10">
           <div class="flex items-center gap-4">
-            <div class="w-14 h-14 rounded-full bg-red-100 text-[#d10f2f] flex items-center justify-center text-xl font-bold">
-              {{ selectedEmployee.first_name ? selectedEmployee.first_name[0].toUpperCase() : '' }}{{ selectedEmployee.last_name ? selectedEmployee.last_name[0].toUpperCase() : '' }}
+            <div class="relative group">
+              <UserAvatar :user="selectedEmployee" size="lg" />
+              <label v-if="canUpdateEmployee" class="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition text-white" title="Modifier la photo">
+                <span class="material-symbols-outlined text-sm">photo_camera</span>
+                <input type="file" class="hidden" accept="image/*" @change="handleDrawerPhotoUpload" />
+              </label>
             </div>
             <div>
               <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -329,6 +331,7 @@ import EmployeeContracts from "@/components/employees/EmployeeContracts.vue";
 import EmployeeDocuments from "@/components/employees/EmployeeDocuments.vue";
 import EmployeeLeaves from "@/components/employees/EmployeeLeaves.vue";
 import EmployeeProjects from "@/components/employees/EmployeeProjects.vue";
+import UserAvatar from "@/components/common/UserAvatar.vue";
 
 interface Employee {
   id: number;
@@ -344,6 +347,8 @@ interface Employee {
   supervised_employee_ids?: number[];
   is_active?: boolean;
   has_expiring_documents?: boolean;
+  photo_url?: string | null;
+  signature_url?: string | null;
 }
 
 const showCreateModal = ref(false);
@@ -458,6 +463,30 @@ const openEditModal = async (employee: Employee) => {
   }
   
   showEditModal.value = true;
+};
+
+const handleDrawerPhotoUpload = async (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  if (!target.files || !target.files[0] || !selectedEmployee.value) return;
+  const file = target.files[0];
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    const res = await api.post(`/employees/${selectedEmployee.value.id}/photo`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    selectedEmployee.value.photo_url = res.data.photo_url;
+    const empInList = employees.value.find(emp => emp.id === selectedEmployee.value?.id);
+    if (empInList) {
+      empInList.photo_url = res.data.photo_url;
+    }
+    toast.success("Photo de profil mise à jour !");
+  } catch (error) {
+    console.error("Erreur lors du téléversement de la photo", error);
+    toast.error("Impossible de mettre à jour la photo.");
+  } finally {
+    target.value = '';
+  }
 };
 
 async function submitEmployee() {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { ChatService, type Message, type ChatRoom, type ChatUser } from '@/services/chat';
+import UserAvatar from '@/components/common/UserAvatar.vue';
 
 const emit = defineEmits(['close']);
 
@@ -221,9 +222,7 @@ onUnmounted(() => {
                       :class="['w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center justify-between', isGroupMode && selectedUserIds.includes(u.id) ? 'bg-red-50 border border-red-200' : 'hover:bg-gray-50 border border-transparent']"
                       :disabled="isCreatingRoom">
                 <div class="flex items-center gap-2 overflow-hidden">
-                  <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-[#b30c27] font-bold shrink-0">
-                    {{ u.name.charAt(0).toUpperCase() }}
-                  </div>
+                  <UserAvatar :photo-url="u.photo_url" :name="u.name" size="sm" />
                   <div class="overflow-hidden">
                     <p class="text-sm font-medium text-gray-800 truncate">{{ u.name }}</p>
                     <p class="text-[10px] text-gray-400 truncate">{{ u.email }}</p>

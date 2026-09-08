@@ -16,6 +16,7 @@ class UserBase(BaseModel):
     email: EmailStr
     department_id: Optional[int] = None
     manager_id: Optional[int] = None
+    photo_url: Optional[str] = None
 
 class UserCreate(UserBase):
     role_name: str 
@@ -29,6 +30,7 @@ class UserUpdate(BaseModel):
     role_name: Optional[str] = None
     department_id: Optional[int] = None
     manager_id: Optional[int] = None
+    photo_url: Optional[str] = None
 
 class UserResponse(UserBase):
     id: int

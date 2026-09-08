@@ -69,6 +69,7 @@ def get_org_chart(
             matricule=emp.matricule,
             status=emp.status,
             manager_id=emp.manager_id,
+            photo_url=emp.photo_url,
             children=[]
         )
         
@@ -94,7 +95,7 @@ async def upload_employee_signature(
     if not employee:
         raise HTTPException(status_code=404, detail="Employé introuvable")
         
-    ext = file.filename.split('.')[-1]
+    ext = file.filename.split('.')[-1] if '.' in file.filename else 'png'
     filename = f"signatures/{user_id}_{uuid.uuid4().hex}.{ext}"
     
     file_url = upload_file_to_minio(file, filename)
@@ -103,6 +104,43 @@ async def upload_employee_signature(
     db.commit()
     
     return {"signature_url": file_url}
+
+@router.post("/{user_id}/photo")
+async def upload_employee_photo(
+    user_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    from app.services.storage import upload_file_to_minio
+    import uuid
+    
+    employee = db.query(User).filter(User.id == user_id).first()
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employé introuvable")
+        
+    ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+    filename = f"photos/{user_id}_{uuid.uuid4().hex}.{ext}"
+    
+    file_url = upload_file_to_minio(file, filename)
+    
+    employee.photo_url = file_url
+    db.commit()
+    
+    return {"photo_url": file_url}
+
+@router.delete("/{user_id}/photo")
+def delete_employee_photo(
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+    employee = db.query(User).filter(User.id == user_id).first()
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employé introuvable")
+        
+    employee.photo_url = None
+    db.commit()
+    
+    return {"message": "Photo supprimée avec succès"}
 
 @router.get(
     "/{employee_id}",

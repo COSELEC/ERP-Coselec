@@ -3,22 +3,76 @@ import { ref, onMounted } from 'vue';
 import { getStoredProfile } from '@/services/session';
 import api from '@/services/api';
 import AppLayout from '@/layouts/AppLayout.vue';
+import UserAvatar from '@/components/common/UserAvatar.vue';
 
 const profile = ref(getStoredProfile());
 const fileInput = ref<HTMLInputElement | null>(null);
+const photoInput = ref<HTMLInputElement | null>(null);
 const signatureUrl = ref<string | null>(null);
+const photoUrl = ref<string | null>(null);
 const isUploading = ref(false);
+const isUploadingPhoto = ref(false);
 
 onMounted(async () => {
     if (profile.value) {
         try {
             const res = await api.get(`/employees/${profile.value.id}`);
             signatureUrl.value = res.data.signature_url;
+            photoUrl.value = res.data.photo_url;
         } catch (error) {
             console.error("Failed to load user profile", error);
         }
     }
 });
+
+const triggerPhotoInput = () => {
+    photoInput.value?.click();
+};
+
+const handlePhotoUpload = async (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    if (!target.files || target.files.length === 0) return;
+    
+    const file = target.files[0]!;
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    isUploadingPhoto.value = true;
+    try {
+        if (!profile.value) return;
+        const res = await api.post(`/employees/${profile.value.id}/photo`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        photoUrl.value = res.data.photo_url;
+        if (profile.value) {
+            profile.value.photo_url = res.data.photo_url;
+        }
+        window.dispatchEvent(new Event('profile:updated'));
+        alert("Photo de profil mise à jour avec succès !");
+    } catch (error) {
+        console.error("Erreur lors de l'upload de la photo", error);
+        alert("Erreur lors de l'upload de la photo de profil.");
+    } finally {
+        isUploadingPhoto.value = false;
+        target.value = '';
+    }
+};
+
+const handleDeletePhoto = async () => {
+    if (!confirm("Voulez-vous vraiment supprimer votre photo de profil ?")) return;
+    try {
+        if (!profile.value) return;
+        await api.delete(`/employees/${profile.value.id}/photo`);
+        photoUrl.value = null;
+        if (profile.value) {
+            profile.value.photo_url = null;
+        }
+        window.dispatchEvent(new Event('profile:updated'));
+    } catch (error) {
+        console.error("Erreur lors de la suppression de la photo", error);
+        alert("Erreur lors de la suppression de la photo.");
+    }
+};
 
 const triggerFileInput = () => {
     fileInput.value?.click();
@@ -91,6 +145,47 @@ const handleChangePassword = async () => {
   <div class="p-8 max-w-4xl mx-auto space-y-6">
     <h1 class="text-3xl font-bold text-gray-900 mb-8">Mon Profil</h1>
     
+    <!-- Photo de profil -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="p-6">
+            <h2 class="text-xl font-semibold mb-2 text-gray-800">Photo de profil</h2>
+            <p class="text-sm text-gray-500 mb-6">
+                Votre photo apparaîtra sur votre avatar dans la barre de navigation, l'organigramme, la liste des employés et les demandes.
+            </p>
+            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                <UserAvatar 
+                    :photo-url="photoUrl" 
+                    :name="profile?.name || profile?.first_name + ' ' + profile?.last_name" 
+                    size="2xl" 
+                />
+                <div class="flex flex-col gap-3 justify-center text-center sm:text-left">
+                    <input type="file" ref="photoInput" class="hidden" accept="image/png,image/jpeg,image/webp,image/jpg" @change="handlePhotoUpload" />
+                    <div class="flex flex-wrap gap-2 justify-center sm:justify-start">
+                        <button 
+                            type="button"
+                            @click="triggerPhotoInput" 
+                            :disabled="isUploadingPhoto"
+                            class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 transition flex items-center gap-2 shadow-sm disabled:opacity-50"
+                        >
+                            <span class="material-symbols-outlined text-base">{{ isUploadingPhoto ? 'sync' : 'photo_camera' }}</span>
+                            {{ isUploadingPhoto ? 'Téléchargement...' : (photoUrl ? 'Changer la photo' : 'Ajouter une photo') }}
+                        </button>
+                        <button 
+                            v-if="photoUrl"
+                            type="button"
+                            @click="handleDeletePhoto"
+                            class="px-4 py-2 border border-gray-200 text-red-600 hover:bg-red-50 text-sm font-medium rounded-xl transition flex items-center gap-1.5"
+                        >
+                            <span class="material-symbols-outlined text-base">delete</span>
+                            Supprimer
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-400">Formats supportés : JPG, PNG, WEBP. Poids conseillé max 2Mo.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="p-6">
             <h2 class="text-xl font-semibold mb-4 text-gray-800">Informations Personnelles</h2>
