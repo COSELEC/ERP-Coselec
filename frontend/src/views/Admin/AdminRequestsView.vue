@@ -108,15 +108,15 @@
 
       <!-- Requests Table -->
       <div class="bg-white rounded-3xl shadow-[0_15px_40px_rgba(127,7,28,0.06)] border border-red-100 overflow-hidden">
-        <div class="overflow-x-auto min-h-[300px] relative">
+        <div class="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] min-h-[300px] relative">
           
           <div v-if="loading" class="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-10">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d10f2f]"></div>
           </div>
 
-          <table class="w-full text-left">
-            <thead>
-              <tr class="bg-gradient-to-r from-red-100/80 to-red-50/60 text-left border-b border-red-100">
+          <table class="w-full text-left relative">
+            <thead class="sticky top-0 z-20 shadow-xs">
+              <tr class="bg-[#fcf3f4] text-left border-b border-red-100">
                 <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#7f071c]">Réf / Date</th>
                 <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#7f071c]">Catégorie</th>
                 <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#7f071c]">Demandeur</th>
