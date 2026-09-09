@@ -1,9 +1,9 @@
 <template>
   <AppLayout>
-    <div class="w-full flex flex-col space-y-5 pb-28">
+    <div class="w-full h-full flex flex-col gap-4 min-h-0">
       
-      <!-- Top Header -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <!-- Top Header (shrinks to fit) -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
         <div>
           <h1 class="text-2xl sm:text-3xl font-black text-gray-900 flex items-center gap-3">
             <div class="p-2 bg-red-100 text-[#d10f2f] rounded-2xl flex items-center justify-center">
@@ -27,8 +27,8 @@
         </div>
       </div>
 
-      <!-- Categories & Scope Toolbar -->
-      <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)] border border-red-100 space-y-3 sm:space-y-4">
+      <!-- Categories & Scope Toolbar (shrinks to fit) -->
+      <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)] border border-red-100 space-y-3 sm:space-y-4 shrink-0">
         
         <!-- Category Tabs -->
         <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 border-b border-gray-100 pb-3 sm:pb-4">
@@ -106,15 +106,15 @@
         </div>
       </div>
 
-      <!-- Requests Table -->
-      <div class="bg-white rounded-3xl shadow-[0_15px_40px_rgba(127,7,28,0.06)] border border-red-100 overflow-hidden">
-        <div class="overflow-x-auto relative min-h-[200px]">
+      <!-- Requests Table (grows to fill remaining space, scrolls internally) -->
+      <div class="flex-1 min-h-0 flex flex-col bg-white rounded-3xl shadow-[0_15px_40px_rgba(127,7,28,0.06)] border border-red-100 overflow-hidden mb-4">
+        <div class="flex-1 min-h-0 overflow-y-auto overflow-x-auto relative">
           
           <div v-if="loading" class="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-10">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d10f2f]"></div>
           </div>
 
-          <table class="w-full text-left relative">
+          <table class="w-full text-left">
             <thead class="sticky top-0 z-20 shadow-xs">
               <tr class="bg-[#fcf3f4] text-left border-b border-red-100">
                 <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#7f071c]">Réf / Date</th>
