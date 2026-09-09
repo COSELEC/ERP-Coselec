@@ -205,11 +205,11 @@ const handleImportExcel = async (file: File) => {
         </div>
       </div>
 
-      <div v-if="loading" class="flex justify-center items-center py-12">
+      <div v-if="loading" class="flex justify-center items-center py-6 sm:py-8">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d10f2f]"></div>
       </div>
 
-      <div v-else-if="!selectedProjectId" class="text-center py-12 text-gray-500">Aucun projet disponible.</div>
+      <div v-else-if="!selectedProjectId" class="text-center py-6 sm:py-8 text-gray-500">Aucun projet disponible.</div>
 
       <template v-else>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -252,7 +252,7 @@ const handleImportExcel = async (file: File) => {
                 ></l-marker>
               </l-map>
               <div v-else class="flex flex-col items-center justify-center h-full text-gray-500 bg-gray-50 px-4 text-center">
-                <span class="material-symbols-outlined text-4xl mb-2 text-gray-400">location_off</span>
+                <span class="material-symbols-outlined text-2xl mb-2 text-gray-400">location_off</span>
                 <p>Aucune localisation définie pour ce projet.</p>
               </div>
             </div>

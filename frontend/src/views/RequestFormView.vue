@@ -1,13 +1,13 @@
 <template>
   <AppLayout>
-    <div class="min-h-screen bg-[linear-gradient(180deg,_#fff_0%,_#fff8f9_100%)] px-6 py-8 lg:px-8">
+    <div class="h-full bg-[linear-gradient(180deg,_#fff_0%,_#fff8f9_100%)] px-6 py-8 lg:px-8">
       <section class="mx-auto max-w-4xl">
         <div class="overflow-hidden rounded-[30px] border border-red-100 bg-white shadow-[0_18px_50px_rgba(127,7,28,0.12)]">
-          <div class="bg-gradient-to-r from-[#d10f2f] to-[#97091f] px-6 py-8 text-white sm:px-10">
+          <div class="bg-gradient-to-r from-[#d10f2f] to-[#97091f] px-6 py-8 text-white sm:px-4 sm:px-6">
             <p class="text-xs font-semibold uppercase tracking-[0.4em] text-white/80">
               {{ sectionMeta.eyebrow }}
             </p>
-            <h1 class="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
+            <h1 class="mt-3 text-3xl font-black tracking-tight sm:text-2xl">
               {{ sectionMeta.title }}
             </h1>
             <p class="mt-3 max-w-2xl text-sm leading-6 text-white/85 sm:text-base">
@@ -15,19 +15,19 @@
             </p>
           </div>
 
-          <div v-if="props.section === 'it'" class="px-6 py-8 lg:px-10 lg:py-10">
+          <div v-if="props.section === 'it'" class="px-6 py-8 lg:px-4 sm:px-6 lg:py-4 sm:py-6">
             <ITRequestForm />
           </div>
-          <div v-else-if="props.section === 'facilities'" class="px-6 py-8 lg:px-10 lg:py-10">
+          <div v-else-if="props.section === 'facilities'" class="px-6 py-8 lg:px-4 sm:px-6 lg:py-4 sm:py-6">
             <FacilityRequestForm mode="repair" />
           </div>
-          <div v-else-if="props.section === 'facilities-site'" class="px-6 py-8 lg:px-10 lg:py-10">
+          <div v-else-if="props.section === 'facilities-site'" class="px-6 py-8 lg:px-4 sm:px-6 lg:py-4 sm:py-6">
             <FacilityRequestForm mode="site" />
           </div>
-          <div v-else-if="props.section === 'fuel'" class="px-6 py-8 lg:px-10 lg:py-10">
+          <div v-else-if="props.section === 'fuel'" class="px-6 py-8 lg:px-4 sm:px-6 lg:py-4 sm:py-6">
             <FuelRequestForm />
           </div>
-          <div v-else class="grid gap-8 px-6 py-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-10 lg:py-10">
+          <div v-else class="grid gap-8 px-6 py-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-4 sm:px-6 lg:py-4 sm:py-6">
             <form class="space-y-5" @submit.prevent="submitRequest">
               <div>
                 <label class="mb-2 block text-sm font-semibold text-gray-700">Sujet / Raison</label>

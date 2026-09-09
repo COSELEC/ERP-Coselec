@@ -89,7 +89,7 @@ onMounted(() => {
       </div>
 
       <!-- Main Content -->
-      <div class="flex-1 overflow-auto p-8">
+      <div class="flex-1 overflow-auto p-4 sm:p-6">
         <div v-if="loading" class="flex justify-center items-center h-64">
           <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d10f2f]"></div>
         </div>

@@ -175,7 +175,7 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div v-if="loading" class="flex justify-center items-center py-12">
+      <div v-if="loading" class="flex justify-center items-center py-6 sm:py-8">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d10f2f]"></div>
       </div>
 
@@ -183,7 +183,7 @@ onMounted(async () => {
         {{ error }}
       </div>
 
-      <div v-else-if="!selectedProjectId" class="text-center py-12 text-gray-500">Aucun projet disponible.</div>
+      <div v-else-if="!selectedProjectId" class="text-center py-6 sm:py-8 text-gray-500">Aucun projet disponible.</div>
 
       <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Budgets Table -->

@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="min-h-screen bg-gray-50 p-8">
+    <div class="h-full bg-gray-50 p-4 sm:p-6">
       <header class="mb-10 flex justify-between items-end">
         <div>
           <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Gestion des Utilisateurs</h1>

@@ -1,13 +1,13 @@
 <template>
   <AppLayout>
-    <div class="w-full h-full flex flex-col gap-4 min-h-0">
+    <div class="w-full space-y-4 pb-20">
       
-      <!-- Top Header (shrinks to fit) -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
+      <!-- Top Header -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 class="text-2xl sm:text-3xl font-black text-gray-900 flex items-center gap-3">
-            <div class="p-2 bg-red-100 text-[#d10f2f] rounded-2xl flex items-center justify-center">
-              <span class="material-symbols-outlined text-2xl">assignment</span>
+          <h1 class="text-xl sm:text-2xl font-black text-gray-900 flex items-center gap-2">
+            <div class="p-1.5 bg-red-100 text-[#d10f2f] rounded-xl flex items-center justify-center">
+              <span class="material-symbols-outlined text-xl">assignment</span>
             </div>
             <span>Gestion des demandes</span>
           </h1>
@@ -28,10 +28,10 @@
       </div>
 
       <!-- Categories & Scope Toolbar (shrinks to fit) -->
-      <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)] border border-red-100 space-y-3 sm:space-y-4 shrink-0">
+      <div class="bg-white rounded-2xl p-3 sm:p-4 shadow-[0_10px_30px_rgba(15,23,42,0.04)] border border-red-100 space-y-2.5">
         
         <!-- Category Tabs -->
-        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 border-b border-gray-100 pb-3 sm:pb-4">
+        <div class="flex flex-wrap items-center gap-1.5 border-b border-gray-100 pb-2.5">
           <button
             v-for="cat in categoryTabs"
             :key="cat.key"
@@ -106,24 +106,24 @@
         </div>
       </div>
 
-      <!-- Requests Table (grows to fill remaining space, scrolls internally) -->
-      <div class="flex-1 min-h-0 flex flex-col bg-white rounded-3xl shadow-[0_15px_40px_rgba(127,7,28,0.06)] border border-red-100 overflow-hidden mb-4">
-        <div class="flex-1 min-h-0 overflow-y-auto overflow-x-auto relative">
+      <!-- Requests Table -->
+      <div class="bg-white rounded-2xl shadow-[0_15px_40px_rgba(127,7,28,0.06)] border border-red-100 overflow-hidden">
+        <div class="overflow-x-auto relative">
           
           <div v-if="loading" class="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-10">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d10f2f]"></div>
           </div>
 
           <table class="w-full text-left">
-            <thead class="sticky top-0 z-20 shadow-xs">
+            <thead>
               <tr class="bg-[#fcf3f4] text-left border-b border-red-100">
-                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#7f071c]">Réf / Date</th>
-                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#7f071c]">Catégorie</th>
-                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#7f071c]">Demandeur</th>
-                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#7f071c]">Détails & Objet</th>
-                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#7f071c]">Statut</th>
-                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#7f071c]">Document</th>
-                <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[#7f071c] text-right">Actions</th>
+                <th class="px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-[#7f071c]">Réf / Date</th>
+                <th class="px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-[#7f071c]">Catégorie</th>
+                <th class="px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-[#7f071c]">Demandeur</th>
+                <th class="px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-[#7f071c]">Détails & Objet</th>
+                <th class="px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-[#7f071c]">Statut</th>
+                <th class="px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-[#7f071c]">Document</th>
+                <th class="px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-[#7f071c] text-right">Actions</th>
               </tr>
             </thead>
 
@@ -134,13 +134,13 @@
                 class="hover:bg-red-50/50 transition-colors duration-150"
               >
                 <!-- Réf & Date -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="font-bold text-gray-900 text-sm">{{ req.reference || 'DEM-' + String(req.id).padStart(4, '0') }}</div>
-                  <div class="text-[11px] text-gray-400 mt-0.5">{{ formatDate(req.created_at) }}</div>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <div class="font-bold text-gray-900 text-xs">{{ req.reference || 'DEM-' + String(req.id).padStart(4, '0') }}</div>
+                  <div class="text-[10px] text-gray-400 mt-0.5">{{ formatDate(req.created_at) }}</div>
                 </td>
 
                 <!-- Catégorie badge -->
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-4 py-2.5 whitespace-nowrap">
                   <span 
                     class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
                     :class="getCategoryBadgeClass(req)"
@@ -151,7 +151,7 @@
                 </td>
 
                 <!-- Demandeur -->
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-4 py-2.5 whitespace-nowrap">
                   <div class="flex items-center gap-2.5">
                     <UserAvatar 
                       :name="req.requester_name" 
@@ -166,7 +166,7 @@
                 </td>
 
                 <!-- Détails selon le type -->
-                <td class="px-6 py-4">
+                <td class="px-4 py-2.5">
                   <!-- CARBURANT -->
                   <div v-if="req.type === 'FUEL'" class="space-y-1">
                     <div class="text-sm font-bold text-gray-900">
@@ -233,14 +233,14 @@
                 </td>
 
                 <!-- Statut -->
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-4 py-2.5 whitespace-nowrap">
                   <span :class="getStatusBadgeClass(req.status)" class="px-3 py-1 rounded-full text-xs font-bold uppercase">
                     {{ req.status }}
                   </span>
                 </td>
 
                 <!-- Document / PDF -->
-                <td class="px-6 py-4 whitespace-nowrap text-xs">
+                <td class="px-4 py-2.5 whitespace-nowrap text-xs">
                   <a 
                     v-if="req.type === 'FUEL'"
                     :href="getPdfUrl(req)" 
@@ -264,7 +264,7 @@
                 </td>
 
                 <!-- Actions -->
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td class="px-4 py-2.5 whitespace-nowrap text-right text-sm font-medium">
                   
                   <!-- ACTIONS SPECIFIQUES CARBURANT -->
                   <div v-if="req.type === 'FUEL'" class="inline-flex items-center gap-1.5">

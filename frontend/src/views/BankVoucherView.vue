@@ -5,7 +5,7 @@
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <span class="material-symbols-outlined text-[#d10f2f] text-4xl">account_balance</span>
+            <span class="material-symbols-outlined text-[#d10f2f] text-2xl">account_balance</span>
             Pièce de Banque
           </h2>
           <p class="text-gray-500 mt-1">Créez une nouvelle pièce de banque liée à une pièce de caisse validée.</p>
@@ -14,7 +14,7 @@
       
       <form @submit.prevent="submitVoucher" class="space-y-8">
         
-        <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+        <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100">
           <div class="flex items-center gap-2 mb-6 pb-4 border-b border-gray-100">
             <span class="material-symbols-outlined text-[#d10f2f]">info</span>
             <h3 class="text-lg font-bold text-gray-900">Informations Générales</h3>
@@ -120,7 +120,7 @@
         </div>
 
         <!-- Montants Card -->
-        <div class="bg-gradient-to-br from-[#fff5f6] to-white p-8 rounded-2xl shadow-sm border border-[#ffe0e4]">
+        <div class="bg-gradient-to-br from-[#fff5f6] to-white p-4 sm:p-6 rounded-2xl shadow-sm border border-[#ffe0e4]">
           <div class="flex items-center gap-2 mb-6 pb-4 border-b border-[#ffe0e4]">
             <span class="material-symbols-outlined text-[#d10f2f]">payments</span>
             <h3 class="text-lg font-bold text-gray-900">Détails du Montant</h3>
@@ -144,7 +144,7 @@
         </div>
 
         <!-- Imputations Analytiques Card -->
-        <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+        <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100">
           <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
             <div class="flex items-center gap-2">
               <span class="material-symbols-outlined text-[#d10f2f]">account_tree</span>
@@ -190,8 +190,8 @@
                   </td>
                 </tr>
                 <tr v-if="form.allocations.length === 0">
-                  <td colspan="6" class="px-6 py-12 text-center text-gray-500 bg-gray-50/50">
-                    <span class="material-symbols-outlined text-4xl text-gray-300 mb-2 block">receipt_long</span>
+                  <td colspan="6" class="px-6 py-6 sm:py-8 text-center text-gray-500 bg-gray-50/50">
+                    <span class="material-symbols-outlined text-2xl text-gray-300 mb-2 block">receipt_long</span>
                     Aucune imputation. Vous devez ventiler le montant du chèque.
                   </td>
                 </tr>
@@ -299,8 +299,8 @@
               </td>
             </tr>
             <tr v-if="sortedHistory.length === 0">
-              <td colspan="7" class="px-6 py-12 text-center text-gray-500">
-                <span class="material-symbols-outlined text-4xl text-gray-300 mb-2 block">history</span>
+              <td colspan="7" class="px-6 py-6 sm:py-8 text-center text-gray-500">
+                <span class="material-symbols-outlined text-2xl text-gray-300 mb-2 block">history</span>
                 Aucune pièce générée
               </td>
             </tr>

@@ -198,7 +198,7 @@ const downloadFile = (url: string, filename: string) => {
 
 <template>
   <AppLayout>
-    <div class="min-h-screen bg-gray-50/50 p-8">
+    <div class="h-full bg-gray-50/50 p-4 sm:p-6">
       <div class="max-w-7xl mx-auto space-y-6">
         
         <!-- Header Section -->
@@ -345,7 +345,7 @@ const downloadFile = (url: string, filename: string) => {
                   </td>
                 </tr>
                 <tr v-if="filteredNorms.length === 0">
-                  <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                  <td colspan="6" class="px-6 py-6 sm:py-8 text-center text-gray-500">
                     Aucune norme ne correspond à vos critères.
                   </td>
                 </tr>
@@ -359,7 +359,7 @@ const downloadFile = (url: string, filename: string) => {
       <!-- Modals -->
       
       <!-- Preview Modal -->
-      <div v-if="showPreviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-6 md:p-12">
+      <div v-if="showPreviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-6 md:p-6 sm:p-8">
         <!-- Backdrop -->
         <div class="absolute inset-0 bg-gray-900/80 backdrop-blur-sm" @click="showPreviewModal = false"></div>
         
@@ -382,8 +382,8 @@ const downloadFile = (url: string, filename: string) => {
           <div class="flex-1 bg-gray-100 relative">
             <template v-if="previewIsUnsupported">
               <div class="absolute inset-0 flex flex-col items-center justify-center p-4">
-                <div class="text-center p-8 bg-white rounded-xl shadow-sm border border-gray-200 max-w-lg w-full">
-                  <span class="material-symbols-outlined text-gray-400 text-5xl mb-4">description</span>
+                <div class="text-center p-4 sm:p-6 bg-white rounded-xl shadow-sm border border-gray-200 max-w-lg w-full">
+                  <span class="material-symbols-outlined text-gray-400 text-3xl mb-4">description</span>
                   <h4 class="text-lg font-medium text-gray-900 mb-2">Aperçu non disponible</h4>
                   <p class="text-sm text-gray-500 mb-6">Les fichiers Microsoft Office (Word, Excel...) ne peuvent pas être lus directement dans le navigateur.</p>
                   <button @click="downloadFile(previewUrl, previewTitle)" class="px-5 py-2.5 bg-red-600 text-white font-medium hover:bg-red-700 rounded-xl transition shadow-sm shadow-red-200 flex items-center justify-center gap-2 mx-auto">

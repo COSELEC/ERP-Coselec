@@ -201,7 +201,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <div v-if="loading && !reservations.length" class="flex justify-center items-center py-12">
+        <div v-if="loading && !reservations.length" class="flex justify-center items-center py-6 sm:py-8">
           <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d10f2f]"></div>
         </div>
 

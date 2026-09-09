@@ -140,7 +140,7 @@ const handleChangePassword = async () => {
 
 <template>
 <AppLayout>
-  <div class="p-8 max-w-4xl mx-auto space-y-6">
+  <div class="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
     <h1 class="text-3xl font-bold text-gray-900 mb-8">Mon Profil</h1>
     
     <!-- Photo de profil -->

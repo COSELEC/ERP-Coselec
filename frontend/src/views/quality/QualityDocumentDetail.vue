@@ -293,7 +293,7 @@ const deleteDocument = async () => {
       </div>
 
       <!-- Main Content -->
-      <div class="flex-1 overflow-auto p-8">
+      <div class="flex-1 overflow-auto p-4 sm:p-6">
         <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           <!-- Left Column (Validation & Reviews) -->

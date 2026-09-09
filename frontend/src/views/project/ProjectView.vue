@@ -1,7 +1,7 @@
 <template>
   <div class="project-view-root w-full">
     <AppLayout>
-      <div class="flex flex-col w-full gap-8 p-8">
+      <div class="flex flex-col w-full gap-8 p-4 sm:p-6">
         
         <div class="flex items-center justify-between w-full">
           <div class="flex items-center space-x-4">

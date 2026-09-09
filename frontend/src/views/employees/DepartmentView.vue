@@ -219,7 +219,7 @@ onMounted(async () => {
 
 <template>
   <AppLayout>
-    <div class="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen font-sans">
+    <div class="p-6 max-w-7xl mx-auto bg-gray-50 h-full font-sans">
       <!-- Top Header Row -->
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between border-b border-gray-200 pb-5 mb-6 bg-white p-5 rounded-2xl shadow-xs gap-4">
         <div class="flex items-center space-x-3.5">
@@ -327,14 +327,14 @@ onMounted(async () => {
         </div>
 
         <!-- Loading State -->
-        <div v-if="isLoading" class="py-16 text-center text-gray-500">
+        <div v-if="isLoading" class="py-6 sm:py-8 text-center text-gray-500">
           <div class="inline-block animate-spin w-8 h-8 border-3 border-red-600 border-t-transparent rounded-full mb-3"></div>
           <p class="text-sm font-medium">Chargement du planning...</p>
         </div>
 
         <!-- Empty State -->
-        <div v-else-if="sortedEmployees.length === 0" class="py-16 text-center text-gray-400">
-          <span class="material-symbols-outlined text-4xl mb-2 text-gray-300">group_off</span>
+        <div v-else-if="sortedEmployees.length === 0" class="py-6 sm:py-8 text-center text-gray-400">
+          <span class="material-symbols-outlined text-2xl mb-2 text-gray-300">group_off</span>
           <p class="text-sm font-medium">Aucun collaborateur trouvé pour les critères sélectionnés.</p>
         </div>
 

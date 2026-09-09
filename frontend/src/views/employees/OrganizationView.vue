@@ -168,7 +168,7 @@ onMounted(() => {
 
 <template>
   <AppLayout>
-    <div class="h-[calc(100vh-6rem)] w-full bg-gray-50 flex flex-col p-4">
+    <div class="h-[100%] w-full bg-gray-50 flex flex-col p-4">
     
     <!-- Header & Actions -->
     <div class="flex justify-between items-center mb-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">

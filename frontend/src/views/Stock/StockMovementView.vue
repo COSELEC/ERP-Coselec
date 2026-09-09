@@ -24,7 +24,7 @@
     <!-- Error State -->
     <div v-else-if="errorMessage" class="flex items-center justify-center py-20">
       <div class="flex flex-col items-center gap-4 text-center max-w-md">
-        <span class="material-symbols-outlined text-4xl text-red-400">error_outline</span>
+        <span class="material-symbols-outlined text-2xl text-red-400">error_outline</span>
         <p class="text-sm text-red-600 font-medium">{{ errorMessage }}</p>
         <button @click="initPage" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors">Réessayer</button>
       </div>
@@ -214,7 +214,7 @@
                 </td>
               </tr>
               <tr v-if="movements.length === 0">
-                <td colspan="5" class="px-6 py-12 text-center text-gray-400 font-medium">
+                <td colspan="5" class="px-6 py-6 sm:py-8 text-center text-gray-400 font-medium">
                   Aucun mouvement enregistré sur votre base pour le moment.
                 </td>
               </tr>

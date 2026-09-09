@@ -109,7 +109,7 @@ const handleImported = () => {
       </div>
 
       <!-- Content -->
-      <div class="flex-1 overflow-y-auto p-8">
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6">
         <div v-if="loading" class="h-full flex justify-center items-center">
           <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-[#d10f2f]"></div>
         </div>

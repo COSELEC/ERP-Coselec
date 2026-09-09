@@ -18,11 +18,11 @@
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         
-        <div v-if="loading" class="p-12 text-center text-gray-500">
+        <div v-if="loading" class="p-6 sm:p-8 text-center text-gray-500">
           Chargement de la matrice...
         </div>
         
-        <div v-else-if="matrixData.rows.length === 0" class="p-12 text-center text-gray-500">
+        <div v-else-if="matrixData.rows.length === 0" class="p-6 sm:p-8 text-center text-gray-500">
           Aucune donnée disponible.
         </div>
         

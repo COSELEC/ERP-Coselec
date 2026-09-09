@@ -1,20 +1,20 @@
 <template>
   <AppLayout>
-    <div class="w-full flex flex-col relative h-full">
-      <h1 class="text-2xl font-bold mb-4 text-[#b30c27] flex items-center gap-2">
+    <div class="w-full space-y-4 pb-20">
+      <h1 class="text-xl sm:text-2xl font-bold text-[#b30c27] flex items-center gap-2">
         <span class="material-symbols-outlined">badge</span>
         <span>Gestion des employés</span>
       </h1>
       <button
         v-if="canCreateEmployee"
         @click="openCreateModal"
-        class="bg-[#d10f2f] w-max text-white px-4 py-2 rounded-xl hover:bg-[#97091f] shadow-[0_10px_30px_rgba(209,15,47,0.28)] transition flex items-center gap-2 mb-6"
+        class="bg-[#d10f2f] w-max text-white px-4 py-2 rounded-xl hover:bg-[#97091f] shadow-[0_10px_30px_rgba(209,15,47,0.28)] transition flex items-center gap-2 mb-2"
       >
         <span class="material-symbols-outlined">person_add</span>
         <span>Ajouter un employé</span>
       </button>
 
-      <div class="bg-white rounded-2xl shadow-[0_15px_40px_rgba(127,7,28,0.10)] border border-red-100 overflow-auto">
+      <div class="bg-white rounded-2xl shadow-[0_15px_40px_rgba(127,7,28,0.10)] border border-red-100 overflow-x-auto">
         <AppTable 
           :columns="tableColumns" 
           :items="sortedEmployees" 

@@ -231,7 +231,7 @@ onBeforeUnmount(() => {
 
 <template>
   <AppLayout>
-  <div class="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen font-sans">
+  <div class="p-6 max-w-7xl mx-auto bg-gray-50 h-full font-sans">
     
     <!-- Top Action Toolbar -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 pb-5 mb-6 bg-white p-4 rounded-xl shadow-xs gap-4">
@@ -264,7 +264,7 @@ onBeforeUnmount(() => {
     <!-- Error State -->
     <div v-else-if="errorMessage" class="flex items-center justify-center py-20 w-full">
       <div class="flex flex-col items-center gap-4 text-center max-w-md">
-        <span class="material-symbols-outlined text-4xl text-red-400">error_outline</span>
+        <span class="material-symbols-outlined text-2xl text-red-400">error_outline</span>
         <p class="text-sm text-red-600 font-medium">{{ errorMessage }}</p>
         <button @click="fetchData" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors">Réessayer</button>
       </div>
@@ -364,7 +364,7 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- Empty Total Canvas State -->
-      <div v-if="canvasBoards.length === 0" class="text-center w-full py-16 text-gray-400">
+      <div v-if="canvasBoards.length === 0" class="text-center w-full py-6 sm:py-8 text-gray-400">
         <p class="text-base font-medium">Créez votre première catégorie pour initialiser le canevas matériel</p>
       </div>
     </div>

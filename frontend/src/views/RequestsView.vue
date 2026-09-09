@@ -1,14 +1,14 @@
 <template>
   <AppLayout>
-    <div class="min-h-screen bg-[linear-gradient(180deg,_#fff_0%,_#fff8f9_100%)] px-6 py-8 lg:px-8">
+    <div class="h-full bg-[linear-gradient(180deg,_#fff_0%,_#fff8f9_100%)] px-6 py-8 lg:px-8">
       <section class="mx-auto max-w-7xl">
         <div class="overflow-hidden rounded-[30px] border border-red-100 bg-white shadow-[0_18px_50px_rgba(127,7,28,0.12)]">
-          <div class="bg-gradient-to-r from-[#d10f2f] to-[#97091f] px-6 py-10 text-white sm:px-10">
+          <div class="bg-gradient-to-r from-[#d10f2f] to-[#97091f] px-6 py-4 sm:py-6 text-white sm:px-4 sm:px-6">
             <div class="mx-auto max-w-4xl text-center">
               <p class="text-xs font-semibold uppercase tracking-[0.4em] text-white/80">
                 Demandes internes unifiées
               </p>
-              <h1 class="mt-4 text-3xl font-black tracking-tight sm:text-5xl">
+              <h1 class="mt-4 text-3xl font-black tracking-tight sm:text-3xl">
                 Portail des demandes internes
               </h1>
               <p class="mx-auto mt-4 max-w-2xl text-sm leading-6 text-white/85 sm:text-base">
@@ -26,7 +26,7 @@
             </div>
           </div>
 
-          <div class="px-6 py-8 sm:px-10 sm:py-10">
+          <div class="px-6 py-8 sm:px-4 sm:px-6 sm:py-4 sm:py-6">
             <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <RouterLink
                 v-for="section in requestSections"
