@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="w-full flex flex-col space-y-6">
+    <div class="w-full flex flex-col space-y-5 pb-28">
       
       <!-- Top Header -->
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -28,15 +28,15 @@
       </div>
 
       <!-- Categories & Scope Toolbar -->
-      <div class="bg-white rounded-3xl p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)] border border-red-100 space-y-4">
+      <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)] border border-red-100 space-y-3 sm:space-y-4">
         
         <!-- Category Tabs -->
-        <div class="flex flex-wrap items-center gap-2 border-b border-gray-100 pb-4">
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 border-b border-gray-100 pb-3 sm:pb-4">
           <button
             v-for="cat in categoryTabs"
             :key="cat.key"
             @click="activeCategory = cat.key"
-            class="px-4 py-2 rounded-2xl text-xs font-bold transition flex items-center gap-2"
+            class="px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl text-xs font-bold transition flex items-center gap-1.5 sm:gap-2"
             :class="activeCategory === cat.key ? 'bg-red-600 text-white shadow-md shadow-red-200' : 'bg-gray-50 text-gray-600 hover:bg-red-50 hover:text-red-700'"
           >
             <span class="material-symbols-outlined text-base">{{ cat.icon }}</span>
@@ -108,7 +108,7 @@
 
       <!-- Requests Table -->
       <div class="bg-white rounded-3xl shadow-[0_15px_40px_rgba(127,7,28,0.06)] border border-red-100 overflow-hidden">
-        <div class="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] min-h-[300px] relative">
+        <div class="overflow-x-auto relative min-h-[200px]">
           
           <div v-if="loading" class="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-10">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d10f2f]"></div>
