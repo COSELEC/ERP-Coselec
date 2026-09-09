@@ -1,9 +1,9 @@
 <template>
   <AppLayout>
-    <div class="p-6 max-w-7xl mx-auto">
+    <div class="p-4 max-w-7xl mx-auto">
       <div class="flex justify-between items-center mb-6">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">Matrice des Stocks (Inventaire Croisé)</h1>
+          <h1 class="text-xl font-bold text-gray-900">Matrice des Stocks (Inventaire Croisé)</h1>
           <p class="text-sm text-gray-500 mt-1">Aperçu du matériel réparti sur les différents projets.</p>
         </div>
         
@@ -18,11 +18,11 @@
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         
-        <div v-if="loading" class="p-6 sm:p-8 text-center text-gray-500">
+        <div v-if="loading" class="p-4 sm:p-5 text-center text-gray-500">
           Chargement de la matrice...
         </div>
         
-        <div v-else-if="matrixData.rows.length === 0" class="p-6 sm:p-8 text-center text-gray-500">
+        <div v-else-if="matrixData.rows.length === 0" class="p-4 sm:p-5 text-center text-gray-500">
           Aucune donnée disponible.
         </div>
         

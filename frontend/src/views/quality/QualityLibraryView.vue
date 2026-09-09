@@ -68,7 +68,7 @@ onMounted(() => {
       <div class="bg-white border-b border-gray-200 px-8 py-6">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
               <span class="material-symbols-outlined text-[#d10f2f]">local_library</span>
               Bibliothèque Qualité
             </h1>
@@ -89,7 +89,7 @@ onMounted(() => {
       </div>
 
       <!-- Main Content -->
-      <div class="flex-1 overflow-auto p-4 sm:p-6">
+      <div class="flex-1 overflow-auto p-3 sm:p-4">
         <div v-if="loading" class="flex justify-center items-center h-64">
           <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d10f2f]"></div>
         </div>

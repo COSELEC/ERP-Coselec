@@ -1,9 +1,9 @@
 <template>
   <AppLayout>
-    <div class="h-full bg-gray-50 p-4 sm:p-6">
+    <div class="h-full bg-gray-50 p-3 sm:p-4">
       <header class="mb-10 flex justify-between items-end">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Gestion des Utilisateurs</h1>
+          <h1 class="text-xl font-bold text-gray-900 tracking-tight">Gestion des Utilisateurs</h1>
           <p class="text-sm text-gray-400 mt-1">Administration des accès et rôles</p>
         </div>
         <button 
@@ -14,7 +14,7 @@
         </button>
       </header>
 
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
         <div class="mb-6 flex gap-4">
           <input 
             v-model="searchQuery"
@@ -57,7 +57,7 @@
           </button>
         </header>
 
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
           <RoleList 
             :roles="roles" 
             :loading="loadingRoles"

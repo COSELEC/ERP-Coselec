@@ -3,20 +3,20 @@
     <table class="w-full text-left text-sm text-gray-500">
       <thead class="bg-gray-50 text-xs text-gray-700 uppercase border-b border-gray-100">
         <tr>
-          <th v-for="col in columns" :key="col.key" scope="col" class="px-6 py-4 font-semibold" :class="col.headerClass">
+          <th v-for="col in columns" :key="col.key" scope="col" class="px-3 py-2 font-semibold" :class="col.headerClass">
             {{ col.label }}
           </th>
         </tr>
       </thead>
       <tbody>
         <tr v-if="loading" class="bg-white border-b border-gray-50">
-          <td :colspan="columns.length" class="px-6 py-12 text-center text-gray-400">
+          <td :colspan="columns.length" class="px-3 py-6 text-center text-gray-400">
             Chargement...
           </td>
         </tr>
         
         <tr v-else-if="items.length === 0" class="bg-white border-b border-gray-50">
-          <td :colspan="columns.length" class="px-6 py-12 text-center text-gray-400">
+          <td :colspan="columns.length" class="px-3 py-6 text-center text-gray-400">
             {{ emptyMessage }}
           </td>
         </tr>
@@ -28,7 +28,7 @@
           @click="emit('rowClick', item)"
           class="bg-white border-b border-gray-50 hover:bg-gray-50/50 transition cursor-pointer"
         >
-          <td v-for="col in columns" :key="col.key" class="px-6 py-4" :class="col.cellClass">
+          <td v-for="col in columns" :key="col.key" class="px-3 py-2" :class="col.cellClass">
             <slot :name="col.key" :item="item" :value="item[col.key]">
               {{ item[col.key] }}
             </slot>

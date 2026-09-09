@@ -3,12 +3,12 @@
     <div class="h-full bg-[linear-gradient(180deg,_#fff_0%,_#fff8f9_100%)] px-6 py-8 lg:px-8">
       <section class="mx-auto max-w-7xl">
         <div class="overflow-hidden rounded-[30px] border border-red-100 bg-white shadow-[0_18px_50px_rgba(127,7,28,0.12)]">
-          <div class="bg-gradient-to-r from-[#d10f2f] to-[#97091f] px-6 py-4 sm:py-6 text-white sm:px-4 sm:px-6">
+          <div class="bg-gradient-to-r from-[#d10f2f] to-[#97091f] px-6 py-3 sm:py-4 text-white sm:px-3 sm:px-4">
             <div class="mx-auto max-w-4xl text-center">
               <p class="text-xs font-semibold uppercase tracking-[0.4em] text-white/80">
                 Demandes internes unifiées
               </p>
-              <h1 class="mt-4 text-3xl font-black tracking-tight sm:text-3xl">
+              <h1 class="mt-4 text-xl font-black tracking-tight sm:text-xl">
                 Portail des demandes internes
               </h1>
               <p class="mx-auto mt-4 max-w-2xl text-sm leading-6 text-white/85 sm:text-base">
@@ -26,14 +26,14 @@
             </div>
           </div>
 
-          <div class="px-6 py-8 sm:px-4 sm:px-6 sm:py-4 sm:py-6">
+          <div class="px-6 py-8 sm:px-3 sm:px-4 sm:py-3 sm:py-4">
             <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <RouterLink
                 v-for="section in requestSections"
                 :key="section.key"
                 :id="section.key"
                 :to="{ name: 'request-form', params: { section: section.key } }"
-                class="group rounded-3xl border border-gray-200 bg-white p-6 text-center shadow-[0_10px_30px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-1 hover:border-red-200 hover:shadow-[0_18px_40px_rgba(127,7,28,0.12)] flex flex-col justify-between"
+                class="group rounded-3xl border border-gray-200 bg-white p-4 text-center shadow-[0_10px_30px_rgba(15,23,42,0.06)] transition duration-300 hover:-translate-y-1 hover:border-red-200 hover:shadow-[0_18px_40px_rgba(127,7,28,0.12)] flex flex-col justify-between"
               >
                 <div>
                   <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-red-100 bg-red-50 shadow-inner group-hover:scale-105 transition-transform duration-300">

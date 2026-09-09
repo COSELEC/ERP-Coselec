@@ -1,12 +1,12 @@
 <template>
   <div class="project-view-root w-full">
     <AppLayout>
-      <div class="flex flex-col w-full gap-8 p-4 sm:p-6">
+      <div class="flex flex-col w-full gap-8 p-3 sm:p-4">
         
         <div class="flex items-center justify-between w-full">
           <div class="flex items-center space-x-4">
             <span class="material-symbols-outlined text-[#d10f2f]">work</span>
-            <h2 class="text-2xl font-bold text-[#b30c27]">Projet à gérer</h2>
+            <h2 class="text-xl font-bold text-[#b30c27]">Projet à gérer</h2>
             <select v-model="selectedProject" @change="onProjectChange" class="border-2 w-50 h-10 rounded-lg px-2">
                <option v-for="p in projects" :key="p.id" :value="p.nom">
                  {{ p.nom }}
@@ -141,7 +141,7 @@
     
     <!-- Project Create Modal -->
     <div v-if="isProjectCreateModalOpen" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
-      <div class="bg-white p-6 rounded-xl w-96 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div class="bg-white p-4 rounded-xl w-96 shadow-xl max-h-[90vh] overflow-y-auto">
         <h2 class="text-xl font-bold mb-4 text-gray-900">Nouveau projet</h2>
         <form @submit.prevent="createProject" class="space-y-3">
           <input v-model="projectCreateForm.code" placeholder="Code (ex: PRJ-01)" required class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500" />
@@ -169,7 +169,7 @@
 
     <!-- Project Edit Modal -->
     <div v-if="isProjectEditModalOpen" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
-      <div class="bg-white p-6 rounded-xl w-96 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div class="bg-white p-4 rounded-xl w-96 shadow-xl max-h-[90vh] overflow-y-auto">
         <h2 class="text-xl font-bold mb-4 text-gray-900">Modifier le projet</h2>
         <form @submit.prevent="updateProjectInfo" class="space-y-3">
           <input v-model="projectEditForm.code" placeholder="Code (ex: PRJ-01)" required class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500" />

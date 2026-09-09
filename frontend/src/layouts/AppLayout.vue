@@ -18,7 +18,7 @@ const toggleChat = () => {
         <div class="flex min-w-0 flex-1 flex-col">
             <Navbar />
 
-            <main class="flex min-w-0 flex-1 overflow-y-auto bg-[#fff8f9] p-6">
+            <main class="flex min-h-0 flex-1 overflow-y-auto bg-[#fff8f9] p-3 sm:p-4">
                 <slot />
             </main>
         </div>

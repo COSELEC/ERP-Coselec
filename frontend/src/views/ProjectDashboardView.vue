@@ -187,7 +187,7 @@ const handleImportExcel = async (file: File) => {
     <div class="max-w-7xl mx-auto space-y-8 w-full">
       <div class="flex justify-between items-center">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">Dashboard Projet</h1>
+          <h1 class="text-xl font-bold text-gray-900">Dashboard Projet</h1>
           <p class="mt-1 text-gray-500">Suivi des KPIs, Budget et Avancement du Projet</p>
         </div>
         <div class="flex gap-4 items-center">
@@ -205,32 +205,32 @@ const handleImportExcel = async (file: File) => {
         </div>
       </div>
 
-      <div v-if="loading" class="flex justify-center items-center py-6 sm:py-8">
+      <div v-if="loading" class="flex justify-center items-center py-4 sm:py-5">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d10f2f]"></div>
       </div>
 
-      <div v-else-if="!selectedProjectId" class="text-center py-6 sm:py-8 text-gray-500">Aucun projet disponible.</div>
+      <div v-else-if="!selectedProjectId" class="text-center py-4 sm:py-5 text-gray-500">Aucun projet disponible.</div>
 
       <template v-else>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div v-for="kpi in kpis" :key="kpi.title" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div v-for="kpi in kpis" :key="kpi.title" class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div :class="[kpi.bg, kpi.color, 'w-12 h-12 rounded-lg flex items-center justify-center mb-4']">
               <span class="material-symbols-outlined">analytics</span>
             </div>
             <p class="text-sm font-medium text-gray-500">{{ kpi.title }}</p>
-            <p class="text-2xl font-bold text-gray-900 mt-1">{{ kpi.value }}</p>
+            <p class="text-xl font-bold text-gray-900 mt-1">{{ kpi.value }}</p>
           </div>
         </div>
         
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <h2 class="text-lg font-bold text-gray-900 mb-4">Dépenses Financières Annuelles</h2>
             <div class="h-80 w-full">
               <Bar :data="chartData" :options="chartOptions" />
             </div>
           </div>
           
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <span class="material-symbols-outlined text-[#d10f2f]">location_on</span>
               Localisation du Projet
@@ -252,7 +252,7 @@ const handleImportExcel = async (file: File) => {
                 ></l-marker>
               </l-map>
               <div v-else class="flex flex-col items-center justify-center h-full text-gray-500 bg-gray-50 px-4 text-center">
-                <span class="material-symbols-outlined text-2xl mb-2 text-gray-400">location_off</span>
+                <span class="material-symbols-outlined text-xl mb-2 text-gray-400">location_off</span>
                 <p>Aucune localisation définie pour ce projet.</p>
               </div>
             </div>
@@ -261,7 +261,7 @@ const handleImportExcel = async (file: File) => {
         
         <!-- HR Stats Section -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6" v-if="hrStats">
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <span class="material-symbols-outlined text-[#d10f2f]">group</span>
               Ressources Humaines Actives
@@ -278,7 +278,7 @@ const handleImportExcel = async (file: File) => {
             </div>
           </div>
           
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <span class="material-symbols-outlined text-[#d10f2f]">work</span>
               Distribution par Rôle
@@ -298,14 +298,14 @@ const handleImportExcel = async (file: File) => {
         <!-- Financial Stats Section -->
         <div v-if="financials.budgets.length > 0 || financials.payment_milestones.length > 0" class="space-y-6">
           
-          <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2 border-b pb-4 mt-8">
+          <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2 border-b pb-4 mt-8">
             <span class="material-symbols-outlined text-[#d10f2f]">account_balance_wallet</span>
             Finances & Prestataires
           </h2>
 
           <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <!-- Budgets par Prestataire -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
               <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <span class="material-symbols-outlined text-blue-600">receipt_long</span>
                 Budgets Alloués par Prestataire
@@ -328,7 +328,7 @@ const handleImportExcel = async (file: File) => {
             </div>
 
             <!-- Échéancier de Paiement -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col">
               <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
                   <span class="material-symbols-outlined text-green-600">calendar_month</span>

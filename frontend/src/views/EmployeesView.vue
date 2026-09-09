@@ -1,7 +1,7 @@
 <template>
   <AppLayout>
     <div class="w-full space-y-4 pb-20">
-      <h1 class="text-xl sm:text-2xl font-bold text-[#b30c27] flex items-center gap-2">
+      <h1 class="text-xl sm:text-xl font-bold text-[#b30c27] flex items-center gap-2">
         <span class="material-symbols-outlined">badge</span>
         <span>Gestion des employés</span>
       </h1>
@@ -71,7 +71,7 @@
             </button>
           </div>
           
-          <form @submit.prevent="submitEmployee" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+          <form @submit.prevent="submitEmployee" class="p-4 space-y-4 max-h-[80vh] overflow-y-auto">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
@@ -136,7 +136,7 @@
             </button>
           </div>
           
-          <form @submit.prevent="submitEditEmployee" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+          <form @submit.prevent="submitEditEmployee" class="p-4 space-y-4 max-h-[80vh] overflow-y-auto">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
@@ -221,7 +221,7 @@
               </label>
             </div>
             <div>
-              <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
                 <span class="material-symbols-outlined text-[#d10f2f]">account_circle</span>
                 <span>{{ selectedEmployee.first_name }} {{ selectedEmployee.last_name }}</span>
               </h2>
@@ -247,7 +247,7 @@
           </div>
         </div>
 
-        <div v-if="selectedEmployee" class="flex-1 overflow-y-auto p-6 space-y-8">
+        <div v-if="selectedEmployee" class="flex-1 overflow-y-auto p-4 space-y-8">
           <section class="bg-white p-5 rounded-xl border border-red-100 shadow-sm">
             <h3 class="text-sm font-bold text-[#7f071c] uppercase tracking-wider mb-4 border-b border-red-100 pb-2 flex items-center gap-2">
               <span class="material-symbols-outlined text-base">info</span>

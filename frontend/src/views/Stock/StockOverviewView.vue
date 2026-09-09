@@ -508,7 +508,7 @@ import api from '@/services/api'
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
         </svg>
         <div class="min-w-0">
-          <h1 class="text-2xl font-bold text-gray-900">État Global des Stocks</h1>
+          <h1 class="text-xl font-bold text-gray-900">État Global des Stocks</h1>
           <p class="text-sm text-gray-500">Visualisation matricielle des volumes par emplacement et par entité partenaire</p>
 
           <RouterLink
@@ -564,7 +564,7 @@ import api from '@/services/api'
     <!-- Error State -->
     <div v-else-if="errorMessage" class="flex flex-1 items-center justify-center py-20">
       <div class="flex flex-col items-center gap-4 text-center max-w-md">
-        <span class="material-symbols-outlined text-2xl text-red-400">error_outline</span>
+        <span class="material-symbols-outlined text-xl text-red-400">error_outline</span>
         <p class="text-sm text-red-600 font-medium">{{ errorMessage }}</p>
         <button @click="initOverview" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors">Réessayer</button>
       </div>
@@ -654,7 +654,7 @@ import api from '@/services/api'
 
             <!-- Empty Matrix Fallback -->
             <tr v-if="structuredInventory.length === 0">
-              <td :colspan="2 + displayedWarehouses.length + partnerWarehouseColumns.length" class="px-6 py-6 sm:py-8 text-center text-gray-400 border-b border-red-100">
+              <td :colspan="2 + displayedWarehouses.length + partnerWarehouseColumns.length" class="px-6 py-4 sm:py-5 text-center text-gray-400 border-b border-red-100">
                 <p class="text-sm font-medium">Aucun article ne correspond à votre recherche</p>
               </td>
             </tr>

@@ -53,8 +53,8 @@ const handleImported = () => {
       <!-- Header -->
       <div class="bg-white border-b border-gray-200 px-8 py-6 flex-shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <span class="material-symbols-outlined text-[#d10f2f] text-3xl">insights</span>
+          <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <span class="material-symbols-outlined text-[#d10f2f] text-xl">insights</span>
             Suivi des KPI Qualité
           </h1>
           <p class="text-gray-500 mt-1 text-sm">Visualisation des indicateurs de performance</p>
@@ -109,14 +109,14 @@ const handleImported = () => {
       </div>
 
       <!-- Content -->
-      <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+      <div class="flex-1 overflow-y-auto p-3 sm:p-4">
         <div v-if="loading" class="h-full flex justify-center items-center">
           <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-[#d10f2f]"></div>
         </div>
         
         <div v-else-if="filteredData.length === 0" class="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto">
           <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <span class="material-symbols-outlined text-3xl text-gray-400">monitoring</span>
+            <span class="material-symbols-outlined text-xl text-gray-400">monitoring</span>
           </div>
           <h3 class="text-lg font-bold text-gray-900 mb-2">Aucune donnée pour {{ currentYear }}</h3>
           <p class="text-gray-500 mb-6">Il n'y a pas encore d'indicateurs de performance importés pour cette année, ou le processus sélectionné est vide.</p>

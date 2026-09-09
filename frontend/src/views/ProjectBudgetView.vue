@@ -159,7 +159,7 @@ onMounted(async () => {
       
       <div class="flex justify-between items-center">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">Suivi du Budget Projet</h1>
+          <h1 class="text-xl font-bold text-gray-900">Suivi du Budget Projet</h1>
           <p class="mt-1 text-gray-500">Gestion des budgets alloués et des dépenses</p>
         </div>
         <div class="flex gap-4 items-center">
@@ -175,7 +175,7 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div v-if="loading" class="flex justify-center items-center py-6 sm:py-8">
+      <div v-if="loading" class="flex justify-center items-center py-4 sm:py-5">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d10f2f]"></div>
       </div>
 
@@ -183,12 +183,12 @@ onMounted(async () => {
         {{ error }}
       </div>
 
-      <div v-else-if="!selectedProjectId" class="text-center py-6 sm:py-8 text-gray-500">Aucun projet disponible.</div>
+      <div v-else-if="!selectedProjectId" class="text-center py-4 sm:py-5 text-gray-500">Aucun projet disponible.</div>
 
       <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Budgets Table -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden h-max">
-          <div class="p-6 border-b border-gray-100">
+          <div class="p-4 border-b border-gray-100">
             <h2 class="text-xl font-bold text-gray-900">Lignes Budgétaires</h2>
           </div>
           <div class="overflow-x-auto">
@@ -225,7 +225,7 @@ onMounted(async () => {
 
         <!-- Expenses Table -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="p-6 border-b border-gray-100">
+          <div class="p-4 border-b border-gray-100">
             <h2 class="text-xl font-bold text-gray-900">Dernières Dépenses</h2>
           </div>
           <div class="overflow-x-auto">
@@ -267,7 +267,7 @@ onMounted(async () => {
 
       <!-- Budget Creation/Edit Modal -->
       <div v-if="showBudgetModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-xl w-96 shadow-xl">
+        <div class="bg-white p-4 rounded-xl w-96 shadow-xl">
           <h2 class="text-xl font-bold mb-4 text-gray-900">{{ budgetForm.id ? 'Modifier le Budget' : 'Ajouter un Budget' }}</h2>
           <form @submit.prevent="saveBudget" class="space-y-3">
             <input v-model="budgetForm.category" placeholder="Catégorie (ex: Main d'oeuvre)" required class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500" />
@@ -282,7 +282,7 @@ onMounted(async () => {
 
       <!-- Expense Creation Modal -->
       <div v-if="showExpenseModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-xl w-96 shadow-xl">
+        <div class="bg-white p-4 rounded-xl w-96 shadow-xl">
           <h2 class="text-xl font-bold mb-4 text-gray-900">Nouvelle Dépense</h2>
           <form @submit.prevent="createExpense" class="space-y-3">
             <select v-model="expenseForm.budget_id" class="border border-gray-300 px-3 py-2 w-full rounded-lg focus:outline-none focus:border-red-500">

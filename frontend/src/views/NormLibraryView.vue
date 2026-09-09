@@ -198,13 +198,13 @@ const downloadFile = (url: string, filename: string) => {
 
 <template>
   <AppLayout>
-    <div class="h-full bg-gray-50/50 p-4 sm:p-6">
+    <div class="h-full bg-gray-50/50 p-3 sm:p-4">
       <div class="max-w-7xl mx-auto space-y-6">
         
         <!-- Header Section -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 shadow-sm border border-gray-100 rounded-2xl">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 shadow-sm border border-gray-100 rounded-2xl">
           <div>
-            <h1 class="text-3xl font-bold bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
+            <h1 class="text-xl font-bold bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
               Bibliothèque de Normes
             </h1>
             <p class="text-gray-500 mt-1">Consultez, lisez et gérez vos documents normatifs sous forme de tableau.</p>
@@ -219,7 +219,7 @@ const downloadFile = (url: string, filename: string) => {
         </div>
 
         <!-- Filters Section -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-4 gap-4">
           <div class="relative md:col-span-1">
             <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Recherche</label>
             <span class="material-symbols-outlined absolute left-3 top-[34px] text-gray-400">search</span>
@@ -345,7 +345,7 @@ const downloadFile = (url: string, filename: string) => {
                   </td>
                 </tr>
                 <tr v-if="filteredNorms.length === 0">
-                  <td colspan="6" class="px-6 py-6 sm:py-8 text-center text-gray-500">
+                  <td colspan="6" class="px-6 py-4 sm:py-5 text-center text-gray-500">
                     Aucune norme ne correspond à vos critères.
                   </td>
                 </tr>
@@ -359,7 +359,7 @@ const downloadFile = (url: string, filename: string) => {
       <!-- Modals -->
       
       <!-- Preview Modal -->
-      <div v-if="showPreviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-6 md:p-6 sm:p-8">
+      <div v-if="showPreviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-4 sm:p-5">
         <!-- Backdrop -->
         <div class="absolute inset-0 bg-gray-900/80 backdrop-blur-sm" @click="showPreviewModal = false"></div>
         
@@ -382,8 +382,8 @@ const downloadFile = (url: string, filename: string) => {
           <div class="flex-1 bg-gray-100 relative">
             <template v-if="previewIsUnsupported">
               <div class="absolute inset-0 flex flex-col items-center justify-center p-4">
-                <div class="text-center p-4 sm:p-6 bg-white rounded-xl shadow-sm border border-gray-200 max-w-lg w-full">
-                  <span class="material-symbols-outlined text-gray-400 text-3xl mb-4">description</span>
+                <div class="text-center p-3 sm:p-4 bg-white rounded-xl shadow-sm border border-gray-200 max-w-lg w-full">
+                  <span class="material-symbols-outlined text-gray-400 text-xl mb-4">description</span>
                   <h4 class="text-lg font-medium text-gray-900 mb-2">Aperçu non disponible</h4>
                   <p class="text-sm text-gray-500 mb-6">Les fichiers Microsoft Office (Word, Excel...) ne peuvent pas être lus directement dans le navigateur.</p>
                   <button @click="downloadFile(previewUrl, previewTitle)" class="px-5 py-2.5 bg-red-600 text-white font-medium hover:bg-red-700 rounded-xl transition shadow-sm shadow-red-200 flex items-center justify-center gap-2 mx-auto">
@@ -401,13 +401,13 @@ const downloadFile = (url: string, filename: string) => {
       <!-- Create Norm Modal -->
       <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
         <div class="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
-          <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+          <div class="p-4 border-b border-gray-100 flex justify-between items-center">
             <h3 class="text-xl font-semibold text-gray-900">Nouvelle Norme</h3>
             <button @click="showCreateModal = false" class="text-gray-400 hover:text-gray-600">
               <span class="material-symbols-outlined">close</span>
             </button>
           </div>
-          <div class="p-6 space-y-4">
+          <div class="p-4 space-y-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Code (ex: ISO-9001)</label>
               <input v-model="newNorm.code" type="text" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500 outline-none" />
@@ -425,16 +425,16 @@ const downloadFile = (url: string, filename: string) => {
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Fichier initial (PDF, Doc...)</label>
-              <div class="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:bg-gray-50 transition relative">
+              <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition relative">
                 <input type="file" @change="handleNewNormFile" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                 <div class="flex flex-col items-center">
-                  <span class="material-symbols-outlined text-gray-400 text-3xl mb-2">cloud_upload</span>
+                  <span class="material-symbols-outlined text-gray-400 text-xl mb-2">cloud_upload</span>
                   <span class="text-sm font-medium text-gray-700">{{ newNorm.file ? newNorm.file.name : "Cliquez ou glissez un fichier ici" }}</span>
                 </div>
               </div>
             </div>
           </div>
-          <div class="p-6 bg-gray-50 flex justify-end gap-3">
+          <div class="p-4 bg-gray-50 flex justify-end gap-3">
             <button @click="showCreateModal = false" class="px-5 py-2.5 text-gray-600 font-medium hover:bg-gray-100 rounded-xl transition">Annuler</button>
             <button @click="handleCreateNorm" class="px-5 py-2.5 bg-red-600 text-white font-medium hover:bg-red-700 rounded-xl transition shadow-sm shadow-red-200">Créer</button>
           </div>
@@ -444,13 +444,13 @@ const downloadFile = (url: string, filename: string) => {
       <!-- Upload Version Modal -->
       <div v-if="showUploadModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
         <div class="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
-          <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+          <div class="p-4 border-b border-gray-100 flex justify-between items-center">
             <h3 class="text-xl font-semibold text-gray-900">Nouvelle version</h3>
             <button @click="showUploadModal = false" class="text-gray-400 hover:text-gray-600">
               <span class="material-symbols-outlined">close</span>
             </button>
           </div>
-          <div class="p-6 space-y-5">
+          <div class="p-4 space-y-5">
             <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
                <p class="font-medium text-gray-900">{{ selectedNorm?.code }}</p>
                <p class="text-sm text-gray-500 mt-1">{{ selectedNorm?.title }}</p>
@@ -461,16 +461,16 @@ const downloadFile = (url: string, filename: string) => {
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Fichier (PDF, Doc...)</label>
-              <div class="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:bg-gray-50 transition relative">
+              <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:bg-gray-50 transition relative">
                 <input type="file" @change="handleFileChange" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                 <div class="flex flex-col items-center">
-                  <span class="material-symbols-outlined text-gray-400 text-3xl mb-2">cloud_upload</span>
+                  <span class="material-symbols-outlined text-gray-400 text-xl mb-2">cloud_upload</span>
                   <span class="text-sm font-medium text-gray-700">{{ uploadData.file ? uploadData.file.name : "Cliquez ou glissez un fichier ici" }}</span>
                 </div>
               </div>
             </div>
           </div>
-          <div class="p-6 bg-gray-50 flex justify-end gap-3">
+          <div class="p-4 bg-gray-50 flex justify-end gap-3">
             <button @click="showUploadModal = false" class="px-5 py-2.5 text-gray-600 font-medium hover:bg-gray-100 rounded-xl transition">Annuler</button>
             <button @click="handleUpload" :disabled="!uploadData.file" class="px-5 py-2.5 bg-red-600 text-white font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition shadow-sm shadow-red-200">Uploader</button>
           </div>
@@ -480,7 +480,7 @@ const downloadFile = (url: string, filename: string) => {
       <!-- History Modal -->
       <div v-if="showHistoryModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
         <div class="bg-white rounded-2xl w-full max-w-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
-          <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+          <div class="p-4 border-b border-gray-100 flex justify-between items-center">
             <div>
               <h3 class="text-xl font-semibold text-gray-900">Historique des versions</h3>
               <p class="text-sm text-gray-500 mt-1">{{ selectedNorm?.code }} - {{ selectedNorm?.title }}</p>
@@ -489,7 +489,7 @@ const downloadFile = (url: string, filename: string) => {
               <span class="material-symbols-outlined">close</span>
             </button>
           </div>
-          <div class="p-6 overflow-y-auto">
+          <div class="p-4 overflow-y-auto">
             <div v-if="normHistory.length === 0" class="text-center text-gray-500 py-8">
               Aucun historique disponible.
             </div>

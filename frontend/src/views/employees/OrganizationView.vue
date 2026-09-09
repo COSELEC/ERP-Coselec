@@ -173,7 +173,7 @@ onMounted(() => {
     <!-- Header & Actions -->
     <div class="flex justify-between items-center mb-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
       <div>
-        <h1 class="text-2xl font-bold text-gray-800">Organigramme Entreprise</h1>
+        <h1 class="text-xl font-bold text-gray-800">Organigramme Entreprise</h1>
         <p class="text-sm text-gray-500">Vue hiérarchique de l'organisation</p>
       </div>
       
@@ -268,7 +268,7 @@ onMounted(() => {
         </div>
         
         <!-- Modal Body -->
-        <div class="p-6" v-if="selectedNode">
+        <div class="p-4" v-if="selectedNode">
           <div class="flex items-center gap-4 mb-6">
             <UserAvatar :photo-url="selectedNode.photo_url" :name="selectedNode.name" size="xl" />
             <div>

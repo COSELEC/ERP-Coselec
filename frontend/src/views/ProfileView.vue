@@ -140,12 +140,12 @@ const handleChangePassword = async () => {
 
 <template>
 <AppLayout>
-  <div class="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
-    <h1 class="text-3xl font-bold text-gray-900 mb-8">Mon Profil</h1>
+  <div class="p-3 sm:p-4 max-w-4xl mx-auto space-y-6">
+    <h1 class="text-xl font-bold text-gray-900 mb-8">Mon Profil</h1>
     
     <!-- Photo de profil -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div class="p-6">
+        <div class="p-4">
             <h2 class="text-xl font-semibold mb-2 text-gray-800">Photo de profil</h2>
             <p class="text-sm text-gray-500 mb-6">
                 Votre photo apparaîtra sur votre avatar dans la barre de navigation, l'organigramme, la liste des employés et les demandes.
@@ -185,7 +185,7 @@ const handleChangePassword = async () => {
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div class="p-6">
+        <div class="p-4">
             <h2 class="text-xl font-semibold mb-4 text-gray-800">Informations Personnelles</h2>
             <div class="grid grid-cols-2 gap-6">
                 <div>
@@ -205,7 +205,7 @@ const handleChangePassword = async () => {
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div class="p-6">
+        <div class="p-4">
             <h2 class="text-xl font-semibold mb-4 text-gray-800">Signature Électronique</h2>
             <p class="text-sm text-gray-500 mb-6">
                 Ajoutez votre signature électronique pour l'inclure automatiquement sur les documents générés (Bons de commande, Pièces de caisse, etc.).
@@ -239,7 +239,7 @@ const handleChangePassword = async () => {
 
     <!-- Password Change Section -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div class="p-6">
+        <div class="p-4">
             <h2 class="text-xl font-semibold mb-4 text-gray-800">Sécurité</h2>
             <p class="text-sm text-gray-500 mb-6">
                 Modifiez votre mot de passe pour sécuriser votre compte.

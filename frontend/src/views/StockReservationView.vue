@@ -174,7 +174,7 @@ onMounted(() => {
       
       <div class="flex justify-between items-center">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">Réservations de Stock</h1>
+          <h1 class="text-xl font-bold text-gray-900">Réservations de Stock</h1>
           <p class="mt-1 text-gray-500">Gérer les réservations d'articles pour les projets</p>
         </div>
         <div class="flex gap-4">
@@ -186,7 +186,7 @@ onMounted(() => {
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
-        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+        <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
           <h2 class="text-xl font-bold text-gray-900">
             Liste des Réservations
           </h2>
@@ -201,7 +201,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <div v-if="loading && !reservations.length" class="flex justify-center items-center py-6 sm:py-8">
+        <div v-if="loading && !reservations.length" class="flex justify-center items-center py-4 sm:py-5">
           <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d10f2f]"></div>
         </div>
 
@@ -305,7 +305,7 @@ onMounted(() => {
 
     <!-- Nouvelle Réservation Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-xl">
+      <div class="bg-white p-4 rounded-xl w-full max-w-md shadow-xl">
         <h2 class="text-xl font-bold mb-4 text-gray-900">Nouvelle Réservation</h2>
         <form @submit.prevent="createReservation" class="space-y-4">
           

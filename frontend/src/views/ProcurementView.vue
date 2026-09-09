@@ -204,7 +204,7 @@ const downloadOrderPdf = async (orderId: number) => {
       
       <div class="flex justify-between items-center">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">Module Achats</h1>
+          <h1 class="text-xl font-bold text-gray-900">Module Achats</h1>
           <p class="mt-1 text-gray-500">Gestion des demandes d'achat et bons de commande</p>
         </div>
         <div class="flex gap-4">
@@ -231,7 +231,7 @@ const downloadOrderPdf = async (orderId: number) => {
       <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Purchase Requests -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="p-6 border-b border-gray-100">
+          <div class="p-4 border-b border-gray-100">
             <h2 class="text-xl font-bold text-gray-900">Demandes d'Achats</h2>
           </div>
           <div class="overflow-x-auto">
@@ -346,7 +346,7 @@ const downloadOrderPdf = async (orderId: number) => {
 
     <!-- Modal Nouvelle Demande d'Achat -->
     <div v-if="showRequestModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-xl">
+      <div class="bg-white p-4 rounded-xl w-full max-w-md shadow-xl">
         <h2 class="text-xl font-bold mb-4 text-gray-900">Nouvelle Demande d'Achat</h2>
         <form @submit.prevent="createPurchaseRequest" class="space-y-4">
           
@@ -383,7 +383,7 @@ const downloadOrderPdf = async (orderId: number) => {
 
     <!-- Modal Nouveau Bon de Commande -->
     <div v-if="showOrderModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-xl">
+      <div class="bg-white p-4 rounded-xl w-full max-w-md shadow-xl">
         <h2 class="text-xl font-bold mb-4 text-gray-900">Créer un Bon de Commande</h2>
         <form @submit.prevent="createPurchaseOrder" class="space-y-4">
           
@@ -448,7 +448,7 @@ const downloadOrderPdf = async (orderId: number) => {
 
     <!-- Modal Approbation & Imputation Budgétaire -->
     <div v-if="showApproveModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div class="bg-white p-6 rounded-xl w-full max-w-2xl shadow-xl">
+      <div class="bg-white p-4 rounded-xl w-full max-w-2xl shadow-xl">
         <h2 class="text-xl font-bold mb-4 text-gray-900">Approuver & Imputer (BC-{{ orderToApprove?.id }})</h2>
         <form @submit.prevent="submitApproval" class="space-y-4">
           

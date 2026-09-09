@@ -256,7 +256,7 @@ const deleteDocument = async () => {
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <div class="flex items-center gap-3">
-              <h1 class="text-2xl font-bold text-gray-900">{{ doc.title }}</h1>
+              <h1 class="text-xl font-bold text-gray-900">{{ doc.title }}</h1>
               <span class="px-3 py-1 text-xs font-semibold rounded-full border" :class="getStatusBadge(doc.status)">
                 {{ doc.status }}
               </span>
@@ -293,7 +293,7 @@ const deleteDocument = async () => {
       </div>
 
       <!-- Main Content -->
-      <div class="flex-1 overflow-auto p-4 sm:p-6">
+      <div class="flex-1 overflow-auto p-3 sm:p-4">
         <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           <!-- Left Column (Validation & Reviews) -->
@@ -305,7 +305,7 @@ const deleteDocument = async () => {
                 <span class="material-symbols-outlined">info</span>
                 <h3 class="font-bold">Votre validation est requise</h3>
               </div>
-              <div class="p-6">
+              <div class="p-4">
                 <p class="text-sm text-gray-600 mb-4">Vous devez valider ce document en tant que :</p>
                 <div class="flex flex-wrap gap-3">
                   <button
@@ -326,7 +326,7 @@ const deleteDocument = async () => {
                 <span class="material-symbols-outlined">visibility</span>
                 <h3 class="font-bold">Visibilité dans la bibliothèque</h3>
               </div>
-              <div class="p-6">
+              <div class="p-4">
                 <p class="text-sm text-gray-600 mb-4">Sélectionnez les rôles qui peuvent consulter ce document dans la bibliothèque :</p>
                 <div class="flex flex-wrap gap-3 mb-4">
                   <label v-for="role in availableRoles" :key="role.id" class="flex items-center gap-2 text-sm text-gray-700 bg-gray-50 border border-gray-200 px-3 py-2 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
@@ -385,7 +385,7 @@ const deleteDocument = async () => {
 
           <!-- Right Column (History) -->
           <div class="space-y-6">
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden p-6">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden p-4">
               <h3 class="font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <span class="material-symbols-outlined text-gray-400">history</span>
                 Historique des versions
@@ -434,7 +434,7 @@ const deleteDocument = async () => {
           </button>
         </div>
         
-        <div class="p-6 space-y-6">
+        <div class="p-4 space-y-6">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Décision</label>
             <div class="flex gap-4">
