@@ -1,3 +1,4 @@
+<template>
   <AppLayout>
     <div class="w-full space-y-3 pb-16">
       
