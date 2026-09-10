@@ -191,8 +191,7 @@ const formData = ref({
 onMounted(async () => {
   try {
     const deptRes = await api.get('/departments');
-    const allowedDepts = ['Achats', 'RH', 'Travaux', 'Etudes', 'Informatique'];
-    departments.value = deptRes.data.filter((d: any) => allowedDepts.includes(d.name));
+    departments.value = deptRes.data;
     
     // Fetch users for manager list
     const usersRes = await userService.getUsers(0, 100);

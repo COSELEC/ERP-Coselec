@@ -361,8 +361,7 @@ const departments = ref<any[]>([]);
 const fetchDepartments = async () => {
   try {
     const res = await api.get('/departments');
-    const allowedDepts = ['Achats', 'RH', 'Travaux', 'Etudes', 'Informatique'];
-    departments.value = res.data.filter((d: any) => allowedDepts.includes(d.name));
+    departments.value = res.data;
   } catch (e) {
     console.error("Error fetching departments", e);
   }
@@ -604,8 +603,7 @@ onMounted(async () => {
     ]);
     employees.value = empRes.data;
     
-    const allowedDepts = ['Achats', 'RH', 'Travaux', 'Etudes', 'Informatique'];
-    departments.value = depRes.data.filter((d: any) => allowedDepts.includes(d.name));
+    departments.value = depRes.data;
   } catch (e) {
     console.error("Error loading data", e);
   }
