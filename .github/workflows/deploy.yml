@@ -1,0 +1,67 @@
+name: Deploy & Rollback ERP-Coselec
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: 'SHA du commit pour un rollback manuel (laisser vide pour déployer HEAD)'
+        required: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Déploiement SSH sur EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
+          script: |
+            cd /home/ubuntu/ERP-Coselec
+            
+            # 1. Sauvegarder la version actuelle pour pouvoir rollback
+            CURRENT_SHA=$(git rev-parse HEAD)
+            echo "Version actuelle : $CURRENT_SHA"
+
+            # 2. Récupérer les nouveautés
+            git fetch --all
+
+            # Gérer déploiement standard vs rollback manuel
+            if [ -n "${{ github.event.inputs.commit_sha }}" ]; then
+              echo "Revert vers le commit : ${{ github.event.inputs.commit_sha }}"
+              git reset --hard ${{ github.event.inputs.commit_sha }}
+            else
+              echo "Déploiement du dernier commit..."
+              git reset --hard origin/main
+            fi
+
+            # 3. Build et lancement des conteneurs
+            echo "Redémarrage des conteneurs..."
+            docker compose down || docker-compose down
+            docker compose up -d --build || docker-compose up -d --build
+
+            # 4. Attente de démarrage et vérification de santé (Healthcheck)
+            echo "Attente de l'initialisation des services (15s)..."
+            sleep 15
+
+            # Teste l'accès au backend (FastAPI /docs ou /api)
+            if ! curl -sSf http://localhost:8000/docs > /dev/null && ! curl -sSf http://localhost/ > /dev/null; then
+              echo "⚠️ Le Healthcheck a échoué ! L'application ne répond pas correctement."
+              echo "🔄 Déclenchement du ROLLBACK AUTOMATIQUE..."
+              
+              # Restauration du commit précédent
+              git reset --hard $CURRENT_SHA
+              docker compose down || docker-compose down
+              docker compose up -d --build || docker-compose up -d --build
+              
+              echo "❌ Déploiement annulé. Retour automatique à la version stable : $CURRENT_SHA"
+              exit 1
+            else
+              echo "✅ Déploiement réussi et validé par le healthcheck !"
+            fi
