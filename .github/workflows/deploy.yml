@@ -65,7 +65,7 @@ jobs:
             for i in $(seq 1 $MAX_RETRIES); do
               sleep 5
               BACKEND=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/docs || echo "000")
-              FRONTEND=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/ || echo "000")
+              FRONTEND=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/ || echo "000")
               echo "Tentative $i/$MAX_RETRIES → Backend: $BACKEND | Frontend: $FRONTEND"
               if [ "$BACKEND" = "200" ] && [ "$FRONTEND" = "200" ]; then
                 SUCCESS=1
