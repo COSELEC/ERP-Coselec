@@ -1,0 +1,98 @@
+name: 🔙 Rollback Manuel
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Commit SHA ou tag vers lequel revenir (ex: HEAD~1, v1.2.0, a1b2c3d)"
+        required: true
+        default: "HEAD~1"
+      raison:
+        description: "Raison du rollback (pour la traçabilité)"
+        required: false
+        default: "Rollback manuel"
+
+jobs:
+  rollback:
+    name: 🔙 Rollback sur EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Rollback SSH sur EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          command_timeout: 15m
+          script_stop: false
+          script: |
+            set -x
+
+            echo "================================================"
+            echo "🔙 ROLLBACK DÉCLENCHÉ"
+            echo "   Cible     : ${{ github.event.inputs.target }}"
+            echo "   Raison    : ${{ github.event.inputs.raison }}"
+            echo "   Déclenché par : ${{ github.actor }}"
+            echo "   Date      : $(date)"
+            echo "================================================"
+
+            cd /home/ubuntu/ERP-Coselec || { echo "ERREUR: Répertoire introuvable"; exit 1; }
+
+            # Commit actuel avant rollback (pour log)
+            CURRENT_SHA=$(git rev-parse HEAD)
+            echo "📌 Version actuelle avant rollback : $CURRENT_SHA"
+
+            # Récupérer toutes les refs
+            git fetch --all --tags
+
+            # Résoudre la cible
+            TARGET_SHA=$(git rev-parse ${{ github.event.inputs.target }} 2>/dev/null) || {
+              echo "❌ ERREUR: La référence '${{ github.event.inputs.target }}' est introuvable."
+              echo "   Utilisez un SHA valide, un tag ou HEAD~N."
+              exit 1
+            }
+            echo "🎯 Rollback vers : $TARGET_SHA"
+
+            # Application du rollback
+            git reset --hard $TARGET_SHA
+            echo "✅ Code repositionné sur $TARGET_SHA"
+
+            # Rebuild et relance des conteneurs
+            echo "🐳 Rebuild des conteneurs..."
+            docker compose down || docker-compose down || true
+            docker compose up -d --build 2>&1 || docker-compose up -d --build 2>&1 || {
+              echo "❌ docker compose up a échoué !"
+              exit 1
+            }
+
+            # Health Check (90s max)
+            echo "🩺 Health Check en cours (max 90s)..."
+            MAX_RETRIES=18
+            SUCCESS=0
+            for i in $(seq 1 $MAX_RETRIES); do
+              sleep 5
+              BACKEND=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/docs || echo "000")
+              FRONTEND=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/ || echo "000")
+              echo "Tentative $i/$MAX_RETRIES → Backend: $BACKEND | Frontend: $FRONTEND"
+              if [ "$BACKEND" = "200" ] && [ "$FRONTEND" = "200" ]; then
+                SUCCESS=1
+                break
+              fi
+            done
+
+            if [ $SUCCESS -ne 1 ]; then
+              echo ""
+              echo "❌ Le rollback a échoué ! L'application ne répond pas après le rollback."
+              echo "📋 Logs des conteneurs :"
+              docker compose logs --tail=50 2>&1 || true
+              exit 1
+            fi
+
+            echo ""
+            echo "================================================"
+            echo "✅ ROLLBACK RÉUSSI !"
+            echo "   De : $CURRENT_SHA"
+            echo "   Vers : $TARGET_SHA"
+            echo "================================================"
