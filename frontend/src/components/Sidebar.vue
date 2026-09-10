@@ -130,7 +130,7 @@ onMounted(async () => {
       </div>
 
       <!-- Qualité -->
-      <div>
+      <div v-if="canViewDocuments">
         <h2 v-if="!collapsed" class="text-xs uppercase text-red-200 mb-2">
           Qualité
         </h2>
@@ -196,6 +196,7 @@ onMounted(async () => {
         />
 
         <SidebarItem
+          v-if="canViewValidationRequests"
           to="/admin/requests"
           icon="assignment"
           label="Toutes les demandes"

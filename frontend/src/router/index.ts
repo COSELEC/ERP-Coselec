@@ -129,13 +129,13 @@ const routes = [
     path: "/caisse",
     name: "caisse",
     component: () => import("../views/CaisseView.vue"),
-    meta: { requiredPermissions: ["dashboard.read"] }
+    meta: { requiredPermissions: ["requests.validate_finance"] }
   },
   {
     path: "/bank-voucher",
     name: "bank-voucher",
     component: () => import("../views/BankVoucherView.vue"),
-    meta: { requiredPermissions: ["dashboard.read"] }
+    meta: { requiredPermissions: ["requests.validate_finance"] }
   },
   {
     path: "/requests/:section(hr|it|facilities|facilities-site|fuel)",
@@ -154,6 +154,7 @@ const routes = [
     path: "/admin/requests",
     name: "admin-requests",
     component: () => import("@/views/Admin/AdminRequestsView.vue"),
+    meta: { requiredPermissions: ["requests.validate_hr", "requests.validate_it", "requests.validate_facility", "requests.validate_finance"] }
   },
   {
     path: "/admin/users",

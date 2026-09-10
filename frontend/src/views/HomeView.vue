@@ -10,9 +10,9 @@ const toast = useToast();
 
 const profile = ref(getStoredProfile());
 const permissions = computed(() => profile.value?.permissions || []);
-const canCreateProject = computed(() => hasPermission(permissions.value, ["projects.read", "projects.write"]));
+const canCreateProject = computed(() => hasPermission(permissions.value, ["projects.read", "projects.create"]));
 const canCreateHR = computed(() => hasPermission(permissions.value, ["employees.read", "requests.validate_hr"]));
-const canManageStock = computed(() => hasPermission(permissions.value, ["stock.read", "stock.write"]));
+const canManageStock = computed(() => hasPermission(permissions.value, ["stock.read", "stock.create"]));
 const canCreateFuel = computed(() => hasPermission(permissions.value, ["fuel_requests.read", "requests.validate_facility", "requests.validate_finance"]));
 
 const kpis = ref([

@@ -71,7 +71,7 @@ RBAC_ROLES: dict[str, dict[str, Iterable[str]]] = {
     },
     "Direction": {
         "description": "Vision globale, lecture et validation",
-        "permissions": RBAC_PERMISSIONS.keys(),
+        "permissions": {k for k in RBAC_PERMISSIONS.keys() if not k.startswith("users.") and not k.startswith("roles.")},
     },
     "RH / Comptabilité": {
         "description": "Ressources Humaines et Finance/Trésorerie",
