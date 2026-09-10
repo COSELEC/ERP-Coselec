@@ -21,6 +21,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
           script_stop: true
           script: |
             cd /home/ubuntu/ERP-Coselec
@@ -50,8 +51,8 @@ jobs:
             echo "Attente de l'initialisation des services (15s)..."
             sleep 15
 
-            # Teste l'accès au backend (FastAPI /docs ou /api)
-            if ! curl -sSf http://localhost:8000/docs > /dev/null && ! curl -sSf http://localhost/ > /dev/null; then
+            # Teste l'accès au backend et au frontend (échoue si l'un des deux ne répond pas)
+            if ! curl -sSf http://localhost:8000/docs > /dev/null || ! curl -sSf http://localhost/ > /dev/null; then
               echo "⚠️ Le Healthcheck a échoué ! L'application ne répond pas correctement."
               echo "🔄 Déclenchement du ROLLBACK AUTOMATIQUE..."
               
