@@ -18,15 +18,15 @@ from app.modules.users.models.user import User
 class OrgAssignment(Base):
     __tablename__ = "org_assignments"
     id = Column(Integer, primary_key=True, index=True)
-    position_key = Column(String, unique=True, nullable=False, index=True)
-    employee_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    position_key = Column(String, nullable=False, index=True)
+    employee_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
 
 
 # ─── Schémas Pydantic ─────────────────────────────────────────────────────────
 
 class OrgAssignmentIn(BaseModel):
     position_key: str
-    employee_id: Optional[int] = None
+    employee_ids: list[int] = []
 
 
 class OrgAssignmentOut(BaseModel):
@@ -52,29 +52,30 @@ def get_org_assignments(
     return db.query(OrgAssignment).all()
 
 
-@router.post("", response_model=OrgAssignmentOut)
+@router.post("", response_model=list[OrgAssignmentOut])
 def set_org_assignment(
     data: OrgAssignmentIn,
     _: None = Depends(check_permission("employees.update")),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Crée ou met à jour l'affectation pour un poste donné."""
-    existing = db.query(OrgAssignment).filter(
+    """Met à jour les affectations pour un poste donné (remplace les existantes)."""
+    # Delete existing
+    db.query(OrgAssignment).filter(
         OrgAssignment.position_key == data.position_key
-    ).first()
-
-    if existing:
-        existing.employee_id = data.employee_id
-        db.commit()
-        db.refresh(existing)
-        return existing
-    else:
+    ).delete()
+    
+    new_asgs = []
+    for emp_id in data.employee_ids:
         new_asg = OrgAssignment(
             position_key=data.position_key,
-            employee_id=data.employee_id
+            employee_id=emp_id
         )
         db.add(new_asg)
-        db.commit()
-        db.refresh(new_asg)
-        return new_asg
+        new_asgs.append(new_asg)
+        
+    db.commit()
+    for asg in new_asgs:
+        db.refresh(asg)
+        
+    return new_asgs

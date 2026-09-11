@@ -33,11 +33,11 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_org_assignments_id'), 'org_assignments', ['id'], unique=False)
-    op.create_index(op.f('ix_org_assignments_position_key'), 'org_assignments', ['position_key'], unique=True)
+    op.create_index(op.f('ix_org_assignments_position_key'), 'org_assignments', ['position_key'], unique=False)
 
 
 def downgrade() -> None:
-    """Downgrade schema."""
+    # Drop org_assignments table
     op.drop_index(op.f('ix_org_assignments_position_key'), table_name='org_assignments')
     op.drop_index(op.f('ix_org_assignments_id'), table_name='org_assignments')
     op.drop_table('org_assignments')

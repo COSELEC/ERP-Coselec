@@ -85,34 +85,24 @@ const COSELEC_ORG: OrgNode = {
 };
 
 // ─── Affectations ──────────────────────────────────────────────────────────────
-const assignments = ref<Record<string, number | null>>({});
+const assignments = ref<Record<string, number[]>>({});
 const employees = ref<any[]>([]);
 const isLoading = ref(true);
 
 // Modal
 const showModal = ref(false);
 const selectedNode = ref<OrgNode | null>(null);
-const selectedEmployeeId = ref<number | null>(null);
+const selectedEmployeeIds = ref<number[]>([]);
 
-const getEmployeeName = (posKey: string): string => {
-  const empId = assignments.value[posKey];
-  if (!empId) return '';
-  const emp = employees.value.find(e => e.id === empId);
-  if (!emp) return '';
-  return `${emp.first_name || ''} ${emp.last_name || ''}`.trim();
-};
-
-const getEmployeePhoto = (posKey: string): string | null => {
-  const empId = assignments.value[posKey];
-  if (!empId) return null;
-  const emp = employees.value.find(e => e.id === empId);
-  return emp?.photo_url || null;
+const getAssignedEmployees = (posKey: string): any[] => {
+  const empIds = assignments.value[posKey] || [];
+  return empIds.map(id => employees.value.find(e => e.id === id)).filter(Boolean);
 };
 
 const openAssignModal = (node: OrgNode) => {
   if (!canAssign) return;
   selectedNode.value = node;
-  selectedEmployeeId.value = assignments.value[node.key] || null;
+  selectedEmployeeIds.value = [...(assignments.value[node.key] || [])];
   showModal.value = true;
 };
 
@@ -121,9 +111,9 @@ const saveAssignment = async () => {
   try {
     await api.post('/org-assignments', {
       position_key: selectedNode.value.key,
-      employee_id: selectedEmployeeId.value
+      employee_ids: selectedEmployeeIds.value
     });
-    assignments.value[selectedNode.value.key] = selectedEmployeeId.value;
+    assignments.value[selectedNode.value.key] = [...selectedEmployeeIds.value];
     showModal.value = false;
     toast.success('Affectation mise à jour.');
   } catch (e) {
@@ -139,8 +129,11 @@ onMounted(async () => {
     ]);
     employees.value = empRes.data || [];
     const asgList: any[] = assignRes.data || [];
-    const map: Record<string, number | null> = {};
-    asgList.forEach((a: any) => { map[a.position_key] = a.employee_id; });
+    const map: Record<string, number[]> = {};
+    asgList.forEach((a: any) => { 
+      if (!map[a.position_key]) map[a.position_key] = [];
+      if (a.employee_id) map[a.position_key].push(a.employee_id);
+    });
     assignments.value = map;
   } catch (e) {
     console.error('Erreur chargement organigramme', e);
@@ -185,76 +178,76 @@ onMounted(async () => {
             <OrgCard :node="{ key: 'dg', title: 'DIRECTEUR GÉNÉRAL' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'dg', title: 'DIRECTEUR GÉNÉRAL' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'dg', title: 'DIRECTEUR GÉNÉRAL' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 500px; top: 105px; width: 180px;">
-            <OrgCard :node="{ key: 'dga', title: 'DIRECTEUR GÉNÉRAL ADJOINT' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'dga', title: 'DIRECTEUR GÉNÉRAL ADJOINT' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'dga', title: 'DIRECTEUR GÉNÉRAL ADJOINT' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'dga', title: 'DIRECTEUR GÉNÉRAL ADJOINT' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'dga', title: 'DIRECTEUR GÉNÉRAL ADJOINT' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'dga', title: 'DIRECTEUR GÉNÉRAL ADJOINT' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1100px; top: 155px; width: 180px;">
-            <OrgCard :node="{ key: 'assistante', title: 'ASSISTANTE DE DIRECTION' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'assistante', title: 'ASSISTANTE DE DIRECTION' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'assistante', title: 'ASSISTANTE DE DIRECTION' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'assistante', title: 'ASSISTANTE DE DIRECTION' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'assistante', title: 'ASSISTANTE DE DIRECTION' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'assistante', title: 'ASSISTANTE DE DIRECTION' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 500px; top: 215px; width: 180px;">
-            <OrgCard :node="{ key: 'resp_smqse', title: 'RESPONSABLE SMQSE' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'resp_smqse', title: 'RESPONSABLE SMQSE' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'resp_smqse', title: 'RESPONSABLE SMQSE' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'resp_smqse', title: 'RESPONSABLE SMQSE' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'resp_smqse', title: 'RESPONSABLE SMQSE' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'resp_smqse', title: 'RESPONSABLE SMQSE' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 250px; top: 215px; width: 180px;">
-            <OrgCard :node="{ key: 'ast_smqse', title: 'ASSISTANT SMQSE' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'ast_smqse', title: 'ASSISTANT SMQSE' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'ast_smqse', title: 'ASSISTANT SMQSE' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'ast_smqse', title: 'ASSISTANT SMQSE' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'ast_smqse', title: 'ASSISTANT SMQSE' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'ast_smqse', title: 'ASSISTANT SMQSE' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 500px; top: 295px; width: 180px;">
-            <OrgCard :node="{ key: 'resp_it', title: 'RESPONSABLE SUPPORT IT' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'resp_it', title: 'RESPONSABLE SUPPORT IT' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'resp_it', title: 'RESPONSABLE SUPPORT IT' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'resp_it', title: 'RESPONSABLE SUPPORT IT' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'resp_it', title: 'RESPONSABLE SUPPORT IT' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'resp_it', title: 'RESPONSABLE SUPPORT IT' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 160px; top: 445px; width: 180px;">
-            <OrgCard :node="{ key: 'dir_fin', title: 'DIRECTEUR DES FINANCES ET CONTRÔLE', highlight: 'yellow' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'dir_fin', title: 'DIRECTEUR DES FINANCES ET CONTRÔLE', highlight: 'yellow' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'dir_fin', title: 'DIRECTEUR DES FINANCES ET CONTRÔLE', highlight: 'yellow' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'dir_fin', title: 'DIRECTEUR DES FINANCES ET CONTRÔLE', highlight: 'yellow' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'dir_fin', title: 'DIRECTEUR DES FINANCES ET CONTRÔLE', highlight: 'yellow' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'dir_fin', title: 'DIRECTEUR DES FINANCES ET CONTRÔLE', highlight: 'yellow' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 810px; top: 445px; width: 180px;">
-            <OrgCard :node="{ key: 'resp_com', title: 'RESPONSABLE PÔLE COMMERCIAL & APPRO', highlight: 'yellow' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'resp_com', title: 'RESPONSABLE PÔLE COMMERCIAL & APPRO', highlight: 'yellow' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'resp_com', title: 'RESPONSABLE PÔLE COMMERCIAL & APPRO', highlight: 'yellow' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'resp_com', title: 'RESPONSABLE PÔLE COMMERCIAL & APPRO', highlight: 'yellow' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'resp_com', title: 'RESPONSABLE PÔLE COMMERCIAL & APPRO', highlight: 'yellow' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'resp_com', title: 'RESPONSABLE PÔLE COMMERCIAL & APPRO', highlight: 'yellow' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1610px; top: 445px; width: 180px;">
-            <OrgCard :node="{ key: 'dir_tech', title: 'DIRECTEUR TECHNIQUE', highlight: 'yellow' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'dir_tech', title: 'DIRECTEUR TECHNIQUE', highlight: 'yellow' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'dir_tech', title: 'DIRECTEUR TECHNIQUE', highlight: 'yellow' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'dir_tech', title: 'DIRECTEUR TECHNIQUE', highlight: 'yellow' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'dir_tech', title: 'DIRECTEUR TECHNIQUE', highlight: 'yellow' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'dir_tech', title: 'DIRECTEUR TECHNIQUE', highlight: 'yellow' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 560px; top: 560px; width: 180px;">
-            <OrgCard :node="{ key: 'serv_com', title: 'SERVICE COMMERCIAL' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'serv_com', title: 'SERVICE COMMERCIAL' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'serv_com', title: 'SERVICE COMMERCIAL' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'serv_com', title: 'SERVICE COMMERCIAL' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'serv_com', title: 'SERVICE COMMERCIAL' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'serv_com', title: 'SERVICE COMMERCIAL' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 810px; top: 560px; width: 180px;">
-            <OrgCard :node="{ key: 'serv_appro', title: 'SERVICE APPRO' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'serv_appro', title: 'SERVICE APPRO' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'serv_appro', title: 'SERVICE APPRO' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'serv_appro', title: 'SERVICE APPRO' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'serv_appro', title: 'SERVICE APPRO' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'serv_appro', title: 'SERVICE APPRO' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1060px; top: 560px; width: 180px;">
-            <OrgCard :node="{ key: 'serv_log', title: 'SERVICE LOGISTIQUE' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'serv_log', title: 'SERVICE LOGISTIQUE' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'serv_log', title: 'SERVICE LOGISTIQUE' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'serv_log', title: 'SERVICE LOGISTIQUE' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'serv_log', title: 'SERVICE LOGISTIQUE' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'serv_log', title: 'SERVICE LOGISTIQUE' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1410px; top: 560px; width: 180px;">
-            <OrgCard :node="{ key: 'chef_etudes', title: 'CHEF SERVICE ÉTUDES' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'chef_etudes', title: 'CHEF SERVICE ÉTUDES' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'chef_etudes', title: 'CHEF SERVICE ÉTUDES' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'chef_etudes', title: 'CHEF SERVICE ÉTUDES' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'chef_etudes', title: 'CHEF SERVICE ÉTUDES' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'chef_etudes', title: 'CHEF SERVICE ÉTUDES' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1810px; top: 560px; width: 180px;">
-            <OrgCard :node="{ key: 'chef_travaux', title: 'CHEF SERVICE TRAVAUX' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'chef_travaux', title: 'CHEF SERVICE TRAVAUX' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'chef_travaux', title: 'CHEF SERVICE TRAVAUX' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'chef_travaux', title: 'CHEF SERVICE TRAVAUX' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'chef_travaux', title: 'CHEF SERVICE TRAVAUX' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'chef_travaux', title: 'CHEF SERVICE TRAVAUX' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 280px; top: 570px; width: 180px;">
-            <OrgCard :node="{ key: 'comp_rh', title: 'COMPTABLE ET RESPONSABLE RH' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'comp_rh', title: 'COMPTABLE ET RESPONSABLE RH' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'comp_rh', title: 'COMPTABLE ET RESPONSABLE RH' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'comp_rh', title: 'COMPTABLE ET RESPONSABLE RH' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'comp_rh', title: 'COMPTABLE ET RESPONSABLE RH' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'comp_rh', title: 'COMPTABLE ET RESPONSABLE RH' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 280px; top: 650px; width: 180px;">
-            <OrgCard :node="{ key: 'comp_tres', title: 'COMPTABLE TRÉSORERIE' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'comp_tres', title: 'COMPTABLE TRÉSORERIE' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'comp_tres', title: 'COMPTABLE TRÉSORERIE' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'comp_tres', title: 'COMPTABLE TRÉSORERIE' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'comp_tres', title: 'COMPTABLE TRÉSORERIE' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'comp_tres', title: 'COMPTABLE TRÉSORERIE' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 280px; top: 730px; width: 180px;">
-            <OrgCard :node="{ key: 'comp_fourn', title: 'COMPTABLE FOURNISSEURS CLIENTS' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'comp_fourn', title: 'COMPTABLE FOURNISSEURS CLIENTS' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'comp_fourn', title: 'COMPTABLE FOURNISSEURS CLIENTS' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'comp_fourn', title: 'COMPTABLE FOURNISSEURS CLIENTS' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'comp_fourn', title: 'COMPTABLE FOURNISSEURS CLIENTS' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'comp_fourn', title: 'COMPTABLE FOURNISSEURS CLIENTS' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 280px; top: 810px; width: 180px;">
-            <OrgCard :node="{ key: 'recouv', title: 'CHARGÉE DU RECOUVREMENT' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'recouv', title: 'CHARGÉE DU RECOUVREMENT' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'recouv', title: 'CHARGÉE DU RECOUVREMENT' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'recouv', title: 'CHARGÉE DU RECOUVREMENT' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'recouv', title: 'CHARGÉE DU RECOUVREMENT' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'recouv', title: 'CHARGÉE DU RECOUVREMENT' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1550px; top: 640px; width: 180px;">
-            <OrgCard :node="{ key: 'tech_etudes', title: 'TECHNICIENS BUREAU D\'ÉTUDES' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'tech_etudes', title: 'TECHNICIENS BUREAU D\'ÉTUDES' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'tech_etudes', title: 'TECHNICIENS BUREAU D\'ÉTUDES' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'tech_etudes', title: 'TECHNICIENS BUREAU D\'ÉTUDES' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'tech_etudes', title: 'TECHNICIENS BUREAU D\'ÉTUDES' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'tech_etudes', title: 'TECHNICIENS BUREAU D\'ÉTUDES' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1550px; top: 720px; width: 180px;">
-            <OrgCard :node="{ key: 'charge_projet', title: 'CHARGÉS DE PROJET' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'charge_projet', title: 'CHARGÉS DE PROJET' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'charge_projet', title: 'CHARGÉS DE PROJET' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'charge_projet', title: 'CHARGÉS DE PROJET' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'charge_projet', title: 'CHARGÉS DE PROJET' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'charge_projet', title: 'CHARGÉS DE PROJET' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1550px; top: 800px; width: 180px;">
-            <OrgCard :node="{ key: 'charge_suivi', title: 'CHARGÉ DU SUIVI ET DES PLANNINGS' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'charge_suivi', title: 'CHARGÉ DU SUIVI ET DES PLANNINGS' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'charge_suivi', title: 'CHARGÉ DU SUIVI ET DES PLANNINGS' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'charge_suivi', title: 'CHARGÉ DU SUIVI ET DES PLANNINGS' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'charge_suivi', title: 'CHARGÉ DU SUIVI ET DES PLANNINGS' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'charge_suivi', title: 'CHARGÉ DU SUIVI ET DES PLANNINGS' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1950px; top: 640px; width: 180px;">
-            <OrgCard :node="{ key: 'cond_travaux', title: 'CONDUCTEURS DE TRAVAUX' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'cond_travaux', title: 'CONDUCTEURS DE TRAVAUX' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'cond_travaux', title: 'CONDUCTEURS DE TRAVAUX' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'cond_travaux', title: 'CONDUCTEURS DE TRAVAUX' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'cond_travaux', title: 'CONDUCTEURS DE TRAVAUX' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'cond_travaux', title: 'CONDUCTEURS DE TRAVAUX' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1950px; top: 720px; width: 180px;">
-            <OrgCard :node="{ key: 'chef_atelier', title: 'CHEF D\'ATELIER' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'chef_atelier', title: 'CHEF D\'ATELIER' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'chef_atelier', title: 'CHEF D\'ATELIER' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'chef_atelier', title: 'CHEF D\'ATELIER' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'chef_atelier', title: 'CHEF D\'ATELIER' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'chef_atelier', title: 'CHEF D\'ATELIER' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1950px; top: 800px; width: 180px;">
-            <OrgCard :node="{ key: 'chef_chantier', title: 'CHEFS DE CHANTIER' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'chef_chantier', title: 'CHEFS DE CHANTIER' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'chef_chantier', title: 'CHEFS DE CHANTIER' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'chef_chantier', title: 'CHEFS DE CHANTIER' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'chef_chantier', title: 'CHEFS DE CHANTIER' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'chef_chantier', title: 'CHEFS DE CHANTIER' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
           <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1950px; top: 880px; width: 180px;">
-            <OrgCard :node="{ key: 'vigiles', title: 'VIGILES' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'vigiles', title: 'VIGILES' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'vigiles', title: 'VIGILES' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
+            <OrgCard :node="{ key: 'vigiles', title: 'VIGILES' }" :assignments="assignments" :get-assigned-employees="getAssignedEmployees" :can-assign="canAssign" @click="openAssignModal({ key: 'vigiles', title: 'VIGILES' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'vigiles', title: 'VIGILES' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
 
 <!-- LINES -->
@@ -293,16 +286,12 @@ onMounted(async () => {
           <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1900px; top: 915px; width: 50px; height: 2px;"></div>
 </div>
 </div>
-
-</div>
-</div>
-
     <!-- Modal d'affectation -->
     <div v-if="showModal && canAssign" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
         <div class="px-6 py-4 bg-[#b30c27] text-white flex justify-between items-center">
           <div>
-            <h2 class="text-lg font-bold">Affecter un employé</h2>
+            <h2 class="text-lg font-bold">Affecter un/des employé(s)</h2>
             <p class="text-sm text-white/80 mt-0.5">{{ selectedNode?.title }}</p>
           </div>
           <button @click="showModal = false" class="hover:bg-[#d10f2f] p-1 rounded-full transition">
@@ -311,12 +300,13 @@ onMounted(async () => {
         </div>
         <div class="p-6 space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Employé affecté à ce poste</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Employé(s) affecté(s) à ce poste</label>
+            <p class="text-xs text-gray-500 mb-2">Maintenez Ctrl (Windows) ou Cmd (Mac) pour sélectionner plusieurs employés.</p>
             <select
-              v-model="selectedEmployeeId"
-              class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
+              v-model="selectedEmployeeIds"
+              multiple
+              class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition min-h-[150px]"
             >
-              <option :value="null">— Poste vacant —</option>
               <option v-for="emp in employees" :key="emp.id" :value="emp.id">
                 {{ emp.first_name || '' }} {{ emp.last_name || '' }}
                 <span v-if="emp.position"> — {{ emp.position }}</span>
@@ -342,16 +332,14 @@ export const OrgCard = defineComponent({
   props: {
     node: { type: Object, required: true },
     assignments: { type: Object, required: true },
-    getEmployeeName: { type: Function, required: true },
-    getEmployeePhoto: { type: Function, required: true },
+    getAssignedEmployees: { type: Function, required: true },
     canAssign: { type: Boolean, default: false },
   },
   emits: ['click'],
   setup(props, { emit }) {
     return () => {
       const node = props.node as any;
-      const empName = props.getEmployeeName(node.key);
-      const photoUrl = props.getEmployeePhoto(node.key);
+      const assignedEmps = props.getAssignedEmployees(node.key) || [];
 
       const bgClass = node.highlight === 'yellow'
         ? 'bg-yellow-50 border-yellow-300'
@@ -363,14 +351,18 @@ export const OrgCard = defineComponent({
           ${props.canAssign ? 'cursor-pointer hover:shadow-md hover:border-red-300' : 'cursor-default'}`,
         onClick: () => emit('click'),
       }, [
-        h('p', { class: 'text-[10px] font-bold text-gray-800 leading-tight uppercase' }, node.title),
-        empName
-          ? h('div', { class: 'mt-1.5 flex items-center justify-center gap-1' }, [
-              photoUrl
-                ? h('img', { src: photoUrl, class: 'w-4 h-4 rounded-full object-cover' })
-                : h('span', { class: 'material-symbols-outlined text-[12px] text-gray-400' }, 'person'),
-              h('p', { class: 'text-[10px] text-red-700 font-semibold truncate' }, empName),
-            ])
+        h('p', { class: 'text-[10px] font-bold text-gray-800 leading-tight uppercase mb-1' }, node.title),
+        assignedEmps.length > 0
+          ? h('div', { class: 'flex flex-col gap-1' }, 
+              assignedEmps.map((emp: any) => 
+                h('div', { class: 'flex items-center justify-center gap-1', key: emp.id }, [
+                  emp.photo_url
+                    ? h('img', { src: emp.photo_url, class: 'w-4 h-4 rounded-full object-cover' })
+                    : h('span', { class: 'material-symbols-outlined text-[12px] text-gray-400' }, 'person'),
+                  h('p', { class: 'text-[9px] text-red-700 font-semibold truncate' }, `${emp.first_name || ''} ${emp.last_name || ''}`.trim()),
+                ])
+              )
+            )
           : props.canAssign
             ? h('p', { class: 'text-[9px] text-gray-300 italic mt-1' }, '+ Affecter')
             : h('p', { class: 'text-[9px] text-gray-300 italic mt-1' }, 'Vacant'),
