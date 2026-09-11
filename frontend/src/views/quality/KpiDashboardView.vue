@@ -5,13 +5,25 @@ import { kpiService, type KPIProcessus } from '@/services/kpi';
 import { useToast } from '@/composables/useToast';
 import KpiUploadModal from './KpiUploadModal.vue';
 import KpiChartWidget from './KpiChartWidget.vue';
+import KpiCreateModal from './KpiCreateModal.vue';
+import KpiEditValuesModal from './KpiEditValuesModal.vue';
+import { getStoredProfile, hasPermission } from '@/services/session';
+import type { KPIIndicator } from '@/services/kpi';
 
 const toast = useToast();
+const profile = getStoredProfile();
+
+const isQualite = computed(() => {
+  return profile?.roles?.some(r => r.name === 'Qualité' || r.name === 'Admin' || r.name === 'Qualite') || false;
+});
 
 const loading = ref(true);
 const data = ref<KPIProcessus[]>([]);
 const currentYear = ref(new Date().getFullYear());
 const isUploadModalOpen = ref(false);
+const isCreateModalOpen = ref(false);
+const isEditValuesModalOpen = ref(false);
+const selectedIndicatorForEdit = ref<KPIIndicator | null>(null);
 
 const selectedProcessus = ref<number | 'ALL'>('ALL');
 
@@ -44,6 +56,22 @@ const handleImported = () => {
   isUploadModalOpen.value = false;
   loadData();
 };
+
+const handleCreated = () => {
+  isCreateModalOpen.value = false;
+  loadData();
+};
+
+const openEditValuesModal = (indicator: KPIIndicator) => {
+  selectedIndicatorForEdit.value = indicator;
+  isEditValuesModalOpen.value = true;
+};
+
+const handleValuesSaved = () => {
+  isEditValuesModalOpen.value = false;
+  selectedIndicatorForEdit.value = null;
+  loadData();
+};
 </script>
 
 <template>
@@ -73,6 +101,15 @@ const handleImported = () => {
           </div>
 
           <button 
+            v-if="isQualite"
+            @click="isCreateModalOpen = true"
+            class="flex items-center gap-2 bg-white text-[#d10f2f] hover:bg-red-50 border border-red-200 px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
+          >
+            <span class="material-symbols-outlined text-sm">add_circle</span>
+            Créer (Processus/Indicateur)
+          </button>
+          <button 
+            v-if="isQualite"
             @click="isUploadModalOpen = true"
             class="flex items-center gap-2 bg-[#d10f2f] hover:bg-[#a80c26] text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
           >
@@ -143,6 +180,7 @@ const handleImported = () => {
                 :key="ind.id"
                 :indicator="ind"
                 :year="currentYear"
+                @edit-values="openEditValuesModal"
               />
             </div>
           </div>
@@ -154,6 +192,21 @@ const handleImported = () => {
       v-if="isUploadModalOpen" 
       @close="isUploadModalOpen = false"
       @imported="handleImported"
+    />
+
+    <KpiCreateModal 
+      v-if="isCreateModalOpen" 
+      :processusList="data"
+      @close="isCreateModalOpen = false"
+      @created="handleCreated"
+    />
+
+    <KpiEditValuesModal 
+      v-if="isEditValuesModalOpen && selectedIndicatorForEdit" 
+      :indicator="selectedIndicatorForEdit"
+      :year="currentYear"
+      @close="isEditValuesModalOpen = false"
+      @saved="handleValuesSaved"
     />
   </AppLayout>
 </template>

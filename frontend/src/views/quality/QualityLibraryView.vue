@@ -47,6 +47,7 @@ const downloadLatestVersion = async (doc: QualityDocument, event: Event) => {
   event.stopPropagation();
   if (!doc.versions || doc.versions.length === 0) return;
   const latestVersion = doc.versions[0];
+  if (!latestVersion) return;
   try {
     const response = await api.get(`/quality/documents/${doc.id}/download/${latestVersion.id}`);
     const url = response.data.url;
@@ -123,7 +124,7 @@ onMounted(() => {
                     Mis à jour le {{ new Date(doc.updated_at).toLocaleDateString('fr-FR') }}
                   </span>
                   <span v-if="doc.versions && doc.versions.length > 0">•</span>
-                  <span v-if="doc.versions && doc.versions.length > 0">Version {{ doc.versions[0].version_number }}</span>
+                  <span v-if="doc.versions && doc.versions.length > 0">Version {{ doc.versions[0]?.version_number }}</span>
                 </div>
               </div>
             </div>

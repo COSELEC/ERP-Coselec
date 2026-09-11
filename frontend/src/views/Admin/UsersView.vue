@@ -14,33 +14,65 @@
         </button>
       </header>
 
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <div class="mb-6 flex gap-4">
-          <input 
-            v-model="searchQuery"
-            @input="handleSearch"
-            type="text" 
-            placeholder="Rechercher par nom ou email..."
-            class="flex-1 max-w-md px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <!-- Utilisateurs -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+          <div class="mb-6 flex gap-4">
+            <input 
+              v-model="searchQuery"
+              @input="handleSearch"
+              type="text" 
+              placeholder="Rechercher par nom ou email..."
+              class="flex-1 max-w-md px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            />
+          </div>
+
+          <UserList 
+            :users="users" 
+            :loading="loading"
+            :currentUserId="currentUserId"
+            @edit="openEditForm" 
+            @delete="confirmDelete"
+            @promote="promoteToEmployee"
+            @reset-password="openResetPasswordForm"
+          />
+
+          <!-- Pagination -->
+          <AppPagination 
+            :currentPage="currentPage" 
+            :totalPages="totalPages" 
+            @change="changePage" 
           />
         </div>
 
-        <UserList 
-          :users="users" 
-          :loading="loading"
-          :currentUserId="currentUserId"
-          @edit="openEditForm" 
-          @delete="confirmDelete"
-          @promote="promoteToEmployee"
-          @reset-password="openResetPasswordForm"
-        />
+        <!-- Employés sans compte -->
+        <div class="bg-white rounded-xl shadow-sm border border-orange-100 p-4">
+          <div class="mb-6 flex justify-between items-center">
+            <h2 class="text-lg font-bold text-orange-600">Employés sans compte</h2>
+            <input 
+              v-model="searchEmployeesQuery"
+              @input="handleSearchEmployees"
+              type="text" 
+              placeholder="Rechercher employé..."
+              class="max-w-xs px-4 py-2 border border-orange-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+            />
+          </div>
 
-        <!-- Pagination -->
-        <AppPagination 
-          :currentPage="currentPage" 
-          :totalPages="totalPages" 
-          @change="changePage" 
-        />
+          <UserList 
+            :users="employeesNoAccount" 
+            :loading="loadingEmployees"
+            :currentUserId="currentUserId"
+            :isEmployeeNoAccount="true"
+            @create-account="openCreateAccountForm"
+          />
+
+          <!-- Pagination -->
+          <AppPagination 
+            :currentPage="currentPageEmployees" 
+            :totalPages="totalPagesEmployees" 
+            @change="changePageEmployees" 
+          />
+        </div>
       </div>
       
       <!-- Section des Rôles -->
@@ -98,6 +130,7 @@
     <UserForm 
       v-if="showUserForm"
       :user="selectedUser"
+      :isCreateAccountMode="isCreateAccountMode"
       @close="closeUserForm"
       @saved="onUserSaved"
     />
@@ -160,11 +193,20 @@ const searchQuery = ref('');
 
 const showUserForm = ref(false);
 const selectedUser = ref<User | null>(null);
+const isCreateAccountMode = ref(false);
 
 const showResetModal = ref(false);
 const userForReset = ref<User | null>(null);
 
 let searchTimeout: ReturnType<typeof setTimeout>;
+
+// Employees No Account state
+const employeesNoAccount = ref<User[]>([]);
+const loadingEmployees = ref(true);
+const totalPagesEmployees = ref(1);
+const currentPageEmployees = ref(1);
+const searchEmployeesQuery = ref('');
+let searchEmployeesTimeout: ReturnType<typeof setTimeout>;
 
 // Roles state
 const roles = ref<Role[]>([]);
@@ -204,6 +246,23 @@ const fetchRoles = async () => {
   }
 };
 
+const fetchEmployeesNoAccount = async (page = 1) => {
+  loadingEmployees.value = true;
+  try {
+    const skip = (page - 1) * limit;
+    const response = await api.get('/users/employees-no-account', {
+      params: { skip, limit, search: searchEmployeesQuery.value }
+    });
+    employeesNoAccount.value = response.data.items;
+    totalPagesEmployees.value = response.data.total > 0 ? Math.ceil(response.data.total / limit) : 1;
+    currentPageEmployees.value = page;
+  } catch (error) {
+    console.error('Failed to fetch employees without account:', error);
+  } finally {
+    loadingEmployees.value = false;
+  }
+};
+
 const fetchDepartments = async () => {
   loadingDepts.value = true;
   try {
@@ -232,22 +291,26 @@ const changePage = (page: number) => {
 // Users Handlers
 const openCreateForm = () => {
   selectedUser.value = null;
+  isCreateAccountMode.value = false;
   showUserForm.value = true;
 };
 
 const openEditForm = (user: User) => {
   selectedUser.value = user;
+  isCreateAccountMode.value = false;
   showUserForm.value = true;
 };
 
 const closeUserForm = () => {
   showUserForm.value = false;
   selectedUser.value = null;
+  isCreateAccountMode.value = false;
 };
 
 const onUserSaved = () => {
   closeUserForm();
   fetchUsers(currentPage.value);
+  fetchEmployeesNoAccount(currentPageEmployees.value);
 };
 
 const confirmDelete = async (user: User) => {
@@ -284,6 +347,12 @@ const openResetPasswordForm = (user: User) => {
 const closeResetPasswordForm = () => {
   showResetModal.value = false;
   userForReset.value = null;
+};
+
+const openCreateAccountForm = (user: User) => {
+  selectedUser.value = user;
+  isCreateAccountMode.value = true;
+  showUserForm.value = true;
 };
 
 
@@ -355,8 +424,23 @@ const confirmDeptDelete = async (dept: any) => {
   }
 };
 
+const handleSearchEmployees = () => {
+  clearTimeout(searchEmployeesTimeout);
+  searchEmployeesTimeout = setTimeout(() => {
+    fetchEmployeesNoAccount(1);
+  }, 500);
+};
+
+const changePageEmployees = (page: number) => {
+  if (page >= 1 && page <= totalPagesEmployees.value) {
+    fetchEmployeesNoAccount(page);
+  }
+};
+
+// ...
 onMounted(() => {
   fetchUsers();
+  fetchEmployeesNoAccount();
   fetchRoles();
   fetchDepartments();
 });

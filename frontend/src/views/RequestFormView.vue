@@ -159,7 +159,7 @@ onMounted(async () => {
 });
 
 const props = defineProps<{
-  section: 'hr' | 'it' | 'facilities' | 'facilities-site' | 'fuel';
+  section: 'hr' | 'it' | 'facilities' | 'facilities-site' | 'fuel' | 'caisse';
 }>();
 
 const sectionMeta = computed(() => {
@@ -257,7 +257,7 @@ const selectedFile = ref<File | null>(null);
 const handleFileUpload = (e: Event) => {
   const target = e.target as HTMLInputElement;
   if (target.files && target.files.length > 0) {
-    selectedFile.value = target.files[0];
+    selectedFile.value = target.files[0] || null;
   }
 };
 

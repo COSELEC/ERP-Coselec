@@ -55,12 +55,14 @@ class KPIIndicatorResponse(KPIIndicatorBase):
 
 class KPIProcessusBase(BaseModel):
     name: str
+    department_id: Optional[int] = None
 
 class KPIProcessusCreate(KPIProcessusBase):
     pass
 
 class KPIProcessusResponse(KPIProcessusBase):
     id: int
+    department_id: Optional[int] = None
     indicators: List[KPIIndicatorResponse] = []
 
     class Config:

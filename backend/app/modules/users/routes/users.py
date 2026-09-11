@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from typing import Optional
 
 from app.core.database import get_db
 from app.core.security.auth import require_admin_role
 from app.modules.users.models.user import User
-from app.modules.users.schemas.user import UserCreate, UserUpdate, UserResponse, UserListResponse
+from app.modules.users.schemas.user import UserCreate, UserUpdate, UserResponse, UserListResponse, EmployeeToUser
 from app.modules.users.services import user_service
 
 router = APIRouter(
@@ -44,6 +45,46 @@ def create_user(
         "user": UserResponse.from_orm(user),
         "temporary_password": temp_pwd
     }
+
+@router.get("/employees-no-account", response_model=UserListResponse)
+def get_employees_no_account(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100),
+    search: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(User).filter(User.is_employee == True, User.hashed_password == None)
+    if search:
+        query = query.filter(
+            or_(
+                User.name.ilike(f"%{search}%"),
+                User.email.ilike(f"%{search}%")
+            )
+        )
+    total = query.count()
+    users = query.offset(skip).limit(limit).all()
+    return UserListResponse(total=total, page=skip // limit + 1, size=limit, items=users)
+
+@router.post("/{user_id}/create-account", response_model=dict)
+def create_account_for_employee(
+    user_id: int,
+    data: EmployeeToUser,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role)
+):
+    if data.email:
+        existing_user = db.query(User).filter(User.email == data.email).first()
+        if existing_user and existing_user.id != user_id:
+            raise HTTPException(status_code=400, detail="L'email est déjà utilisé.")
+        
+    try:
+        user, temp_pwd = user_service.employee_to_user(db, user_id, data.email, data.role_names, current_user)
+        return {
+            "user": UserResponse.from_orm(user),
+            "temporary_password": temp_pwd
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 @router.put("/{user_id}", response_model=UserResponse)
 def update_user(

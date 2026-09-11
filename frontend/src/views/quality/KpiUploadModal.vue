@@ -56,14 +56,14 @@ const getMonthOptions = computed(() => {
 const handleFileDrop = (e: DragEvent) => {
   e.preventDefault();
   if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-    file.value = e.dataTransfer.files[0];
+    file.value = e.dataTransfer.files[0] || null;
   }
 };
 
 const handleFileSelect = (e: Event) => {
   const target = e.target as HTMLInputElement;
   if (target.files && target.files.length > 0) {
-    file.value = target.files[0];
+    file.value = target.files[0] || null;
   }
 };
 
@@ -73,7 +73,7 @@ const nextStep = async () => {
   try {
     sheetNames.value = await kpiService.uploadPreview(file.value);
     if (sheetNames.value.length > 0) {
-      selectedSheet.value = sheetNames.value[0];
+      selectedSheet.value = sheetNames.value[0] || '';
       step.value = 2;
     }
   } catch (error: any) {

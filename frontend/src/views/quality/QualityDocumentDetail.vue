@@ -177,7 +177,7 @@ const triggerFileInput = () => {
 const uploadNewVersion = async (e: Event) => {
   const target = e.target as HTMLInputElement;
   if (!target.files || target.files.length === 0 || !doc.value) return;
-  
+  if (!target.files || target.files.length === 0) return;
   const file = target.files[0];
   uploadLoading.value = true;
   
@@ -207,7 +207,7 @@ const getReviewerDisplayName = (review: any) => {
 
   if (review.assigned_user_id) {
     for (const role of availableRoles.value) {
-      const user = role.users?.find((u: any) => u.id === review.assigned_user_id);
+      const user = (role as any).users?.find((u: any) => u.id === review.assigned_user_id);
       if (user) return user.name;
     }
     return `Utilisateur #${review.assigned_user_id}`; 
@@ -217,11 +217,18 @@ const getReviewerDisplayName = (review: any) => {
   return role ? role.name : `Rôle #${review.role_id}`;
 };
 
-const canDeleteDocument = computed(() => {
+const isCreator = computed(() => {
   if (!doc.value || !profile) return false;
-  const isCreator = doc.value.created_by_id === profile.id;
-  const isAdmin = profile.roles?.some(r => r === "Admin" || r === "Qualité");
-  return isCreator || isAdmin;
+  return doc.value.created_by_id === profile.id;
+});
+
+const isAdmin = computed(() => {
+  if (!profile) return false;
+  return profile.roles?.some(r => r === "Admin" || r === "Qualité");
+});
+
+const canDeleteDocument = computed(() => {
+  return isCreator.value || isAdmin.value;
 });
 
 const deleteDocument = async () => {
@@ -370,7 +377,7 @@ const deleteDocument = async () => {
                         </span>
                       </td>
                       <td class="px-6 py-4 text-gray-500">
-                        {{ review.reviewed_by ? review.reviewed_by.name : (review.reviewed_by_id ? `Utilisateur #${review.reviewed_by_id}` : '-') }}
+                        {{ (review as any).reviewed_by ? (review as any).reviewed_by.name : (review.reviewed_by_id ? `Utilisateur #${review.reviewed_by_id}` : '-') }}
                       </td>
                       <td class="px-6 py-4 text-gray-500 max-w-xs truncate" :title="review.comment || ''">
                         {{ review.comment || '-' }}
@@ -403,7 +410,7 @@ const deleteDocument = async () => {
                       <div class="min-w-0 flex-1">
                         <h4 class="font-semibold text-gray-900 text-sm">Version {{ v.version_number }}</h4>
                         <p class="text-xs text-gray-500 mt-1">{{ new Date(v.uploaded_at).toLocaleString('fr-FR') }}</p>
-                        <p v-if="v.uploaded_by" class="text-xs text-gray-500 mt-1">Soumis par : <span class="font-medium">{{ v.uploaded_by.name }}</span></p>
+                        <p v-if="(v as any).uploaded_by" class="text-xs text-gray-500 mt-1">Soumis par : <span class="font-medium">{{ (v as any).uploaded_by.name }}</span></p>
                       </div>
                       <button @click="downloadVersion(v.id)" class="flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-[#d10f2f] hover:bg-red-50 px-3 py-1.5 rounded-md transition-colors border border-gray-200 hover:border-red-200 shrink-0" title="Télécharger">
                         <span class="material-symbols-outlined" style="font-size: 16px;">download</span>

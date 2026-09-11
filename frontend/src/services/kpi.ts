@@ -31,6 +31,7 @@ export interface KPIIndicator {
 export interface KPIProcessus {
   id: number;
   name: string;
+  department_id: number | null;
   indicators: KPIIndicator[];
 }
 
@@ -67,6 +68,21 @@ export const kpiService = {
 
   async getDashboardData(year: number): Promise<KPIProcessus[]> {
     const response = await api.get(`/kpi/dashboard/${year}`);
+    return response.data;
+  },
+
+  async createProcessus(name: string, department_id?: number | null): Promise<KPIProcessus> {
+    const response = await api.post("/kpi/processus", { name, department_id });
+    return response.data;
+  },
+
+  async createIndicator(name: string, processus_id: number): Promise<KPIIndicator> {
+    const response = await api.post("/kpi/indicators", { name, processus_id });
+    return response.data;
+  },
+
+  async updateKpiValue(indicator_id: number, year: number, month: number, value_raw: string, value_numeric: number | null): Promise<KPIValue> {
+    const response = await api.post("/kpi/values", { indicator_id, year, month, value_raw, value_numeric });
     return response.data;
   }
 };

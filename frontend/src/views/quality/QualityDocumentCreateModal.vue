@@ -72,7 +72,7 @@ const finalReviewers = computed(() => {
   availableRoles.value.forEach(role => {
     if (selectedRoles.value.includes(role.id)) {
       result.push({ role_id: role.id, user_id: null });
-    } else if (selectedUsersByRole.value[role.id]?.length > 0) {
+    } else if (selectedUsersByRole.value[role.id] && selectedUsersByRole.value[role.id].length > 0) {
       selectedUsersByRole.value[role.id].forEach(userId => {
         result.push({ role_id: role.id, user_id: userId });
       });
@@ -85,14 +85,14 @@ const finalReviewers = computed(() => {
 const handleFileDrop = (e: DragEvent) => {
   e.preventDefault();
   if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-    file.value = e.dataTransfer.files[0];
+    file.value = e.dataTransfer.files[0] || null;
   }
 };
 
 const handleFileSelect = (e: Event) => {
   const target = e.target as HTMLInputElement;
   if (target.files && target.files.length > 0) {
-    file.value = target.files[0];
+    file.value = target.files[0] || null;
   }
 };
 
@@ -243,7 +243,7 @@ const submit = async () => {
                   >
                     <input 
                       type="checkbox" 
-                      :checked="selectedRoles.includes(role.id) || (selectedUsersByRole[role.id] && selectedUsersByRole[role.id].includes(user.id))"
+                      :checked="selectedRoles.includes(role.id) || (selectedUsersByRole[role.id]?.includes(user.id))"
                       :disabled="selectedRoles.includes(role.id)"
                       @change="toggleUserSelection(role.id, user.id)"
                       class="rounded border-gray-300 text-amber-500 focus:ring-amber-500 w-4 h-4 cursor-pointer"

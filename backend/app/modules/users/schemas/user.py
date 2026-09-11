@@ -18,7 +18,7 @@ class UserBase(BaseModel):
     photo_url: Optional[str] = None
 
 class UserCreate(UserBase):
-    role_name: str 
+    role_names: List[str] = []
     password: Optional[str] = "password123"
 
 class UserUpdate(BaseModel):
@@ -27,9 +27,13 @@ class UserUpdate(BaseModel):
     last_name: Optional[str] = None
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
-    role_name: Optional[str] = None
+    role_names: Optional[List[str]] = None
     is_employee: Optional[bool] = None
     photo_url: Optional[str] = None
+
+class EmployeeToUser(BaseModel):
+    email: EmailStr
+    role_names: List[str] = []
 
 class UserResponse(UserBase):
     id: int

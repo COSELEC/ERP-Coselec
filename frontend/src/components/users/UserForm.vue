@@ -3,7 +3,7 @@
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
       <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
         <h3 class="text-lg font-bold text-gray-900">
-          {{ isEdit ? 'Modifier Utilisateur' : 'Nouvel Utilisateur' }}
+          {{ isCreateAccountMode ? 'Créer un compte' : (isEdit ? 'Modifier Utilisateur' : 'Nouvel Utilisateur') }}
         </h3>
         <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600 transition">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -21,7 +21,9 @@
                 v-model="formData.first_name"
                 type="text" 
                 required
+                :readonly="isCreateAccountMode"
                 class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                :class="{'opacity-70 cursor-not-allowed': isCreateAccountMode}"
               />
             </div>
             <div>
@@ -30,7 +32,9 @@
                 v-model="formData.last_name"
                 type="text" 
                 required
+                :readonly="isCreateAccountMode"
                 class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                :class="{'opacity-70 cursor-not-allowed': isCreateAccountMode}"
               />
             </div>
           </div>
@@ -51,15 +55,18 @@
               <input 
                 v-model="formData.phone"
                 type="tel" 
+                :readonly="isCreateAccountMode"
                 class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                :class="{'opacity-70 cursor-not-allowed': isCreateAccountMode}"
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Rôles</label>
               <select 
-                v-model="formData.role_name"
+                v-model="formData.role_names"
                 required
-                class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                multiple
+                class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition h-32"
               >
                 <option value="" disabled>Sélectionner un rôle</option>
                 <option v-for="role in availableRoles" :key="role" :value="role">
@@ -94,7 +101,7 @@
             :disabled="loading"
             class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
           >
-            {{ loading ? 'Enregistrement...' : (isEdit ? 'Mettre à jour' : 'Créer') }}
+            {{ loading ? 'Enregistrement...' : (isCreateAccountMode ? 'Créer le compte' : (isEdit ? 'Mettre à jour' : 'Créer')) }}
           </button>
         </div>
       </form>
@@ -109,6 +116,7 @@ import { userService, type User, type UserCreate, type UserUpdate } from '@/serv
 
 const props = defineProps<{
   user?: User | null;
+  isCreateAccountMode?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -142,7 +150,7 @@ const formData = ref({
   last_name: '',
   email: '',
   phone: '',
-  role_name: ''
+  role_names: [] as string[]
 });
 
 onMounted(async () => {
@@ -153,7 +161,7 @@ onMounted(async () => {
       last_name: props.user.last_name || '',
       email: props.user.email,
       phone: props.user.phone || '',
-      role_name: props.user.roles?.[0]?.name || ''
+      role_names: props.user.roles?.map(r => r.name) || []
     };
   }
 });
@@ -164,7 +172,10 @@ const handleSubmit = async () => {
   tempPassword.value = '';
 
   try {
-    if (isEdit.value && props.user) {
+    if (props.isCreateAccountMode && props.user) {
+      const response = await userService.createAccountForEmployee(props.user.id, formData.value.email, formData.value.role_names);
+      tempPassword.value = response.temporary_password || '';
+    } else if (isEdit.value && props.user) {
       await userService.updateUser(props.user.id, formData.value as UserUpdate);
       emit('saved');
     } else {

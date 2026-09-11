@@ -29,7 +29,7 @@ export interface UserCreate {
   last_name?: string;
   email: string;
   phone?: string;
-  role_name: string;
+  role_names: string[];
   is_employee?: boolean;
 }
 
@@ -39,7 +39,7 @@ export interface UserUpdate {
   last_name?: string;
   email?: string;
   phone?: string;
-  role_name?: string;
+  role_names?: string[];
   is_employee?: boolean;
 }
 
@@ -82,4 +82,8 @@ export const userService = {
     const response = await api.post('/reset-password', payload);
     return response.data;
   },
+  async createAccountForEmployee(employeeId: number, email: string, role_names: string[]): Promise<CreateUserResponse> {
+    const response = await api.post<CreateUserResponse>(`/users/${employeeId}/create-account`, { email, role_names });
+    return response.data;
+  }
 };

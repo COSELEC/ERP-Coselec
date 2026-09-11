@@ -11,10 +11,9 @@ class KPIOperator(str, enum.Enum):
 
 class KPIProcessus(Base):
     __tablename__ = "quality_kpi_processus"
-
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), unique=True, index=True, nullable=False)
-
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
     indicators = relationship("KPIIndicator", back_populates="processus", cascade="all, delete-orphan")
 
 class KPIIndicator(Base):

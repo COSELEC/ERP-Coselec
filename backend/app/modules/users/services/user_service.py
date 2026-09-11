@@ -74,19 +74,43 @@ def create_user(db: Session, user_data: UserCreate, current_user: User) -> Tuple
     db.commit()
     db.refresh(new_user)
     
-    if user_data.role_name:
-        assign_role_to_user(db, new_user, user_data.role_name)
+    if user_data.role_names:
+        roles = db.query(Role).filter(Role.name.in_(user_data.role_names)).all()
+        new_user.roles = roles
         
-    log_audit(db, current_user.id, new_user.id, "CREATE", new_value=json.dumps({"email": user_data.email, "role": user_data.role_name}))
+    log_audit(db, current_user.id, new_user.id, "CREATE", new_value=json.dumps({"email": user_data.email, "roles": user_data.role_names}))
     db.commit()
     return new_user, temp_password
+
+def employee_to_user(db: Session, employee_id: int, email: str, role_names: List[str], current_user: User) -> Tuple[User, str]:
+    user = db.query(User).filter(User.id == employee_id).first()
+    if not user:
+        raise ValueError("Employé non trouvé")
+    
+    temp_password = generate_temp_password()
+    hashed_pwd = hash_password(temp_password)
+    
+    user.email = email
+    user.hashed_password = hashed_pwd
+    user.requires_password_change = True
+    user.is_active = True
+    
+    if role_names:
+        roles = db.query(Role).filter(Role.name.in_(role_names)).all()
+        user.roles = roles
+        
+    log_audit(db, current_user.id, user.id, "CREATE_ACCOUNT", new_value=json.dumps({"email": email, "roles": role_names}))
+    db.commit()
+    db.refresh(user)
+    return user, temp_password
 
 def update_user(db: Session, user_id: int, user_data: UserUpdate, current_user: User) -> Optional[User]:
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         return None
     
-    old_values = {"name": user.name, "email": user.email, "role": user.roles[0].name if user.roles else None}
+    old_roles = [r.name for r in user.roles]
+    old_values = {"name": user.name, "email": user.email, "roles": old_roles}
     new_values = {}
     
     if user_data.name is not None and user.name != user_data.name:
@@ -115,13 +139,10 @@ def update_user(db: Session, user_id: int, user_data: UserUpdate, current_user: 
         user.email = user_data.email
         new_values["email"] = user.email
         
-    if user_data.role_name:
-        has_target_role = any(r.name == user_data.role_name for r in user.roles)
-        if not has_target_role:
-            target_role = db.query(Role).filter(Role.name == user_data.role_name).first()
-            if target_role:
-                user.roles = [target_role]
-                new_values["role"] = target_role.name
+    if user_data.role_names is not None:
+        target_roles = db.query(Role).filter(Role.name.in_(user_data.role_names)).all()
+        user.roles = target_roles
+        new_values["roles"] = [r.name for r in target_roles]
                 
     if new_values:
         log_audit(db, current_user.id, user.id, "UPDATE", old_value=json.dumps(old_values), new_value=json.dumps(new_values))

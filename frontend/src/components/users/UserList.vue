@@ -52,11 +52,18 @@
               Réinitialiser le mot de passe
             </button>
             <button 
-              v-if="!item.is_employee"
+              v-if="!item.is_employee && !isEmployeeNoAccount"
               @click="$emit('promote', item); openDropdownId = null"
               class="flex w-full px-4 py-2 text-sm text-green-600 hover:bg-green-50 transition"
             >
               Promouvoir en employé
+            </button>
+            <button 
+              v-if="isEmployeeNoAccount"
+              @click="$emit('create-account', item); openDropdownId = null"
+              class="flex w-full px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition"
+            >
+              Créer un compte
             </button>
             <button 
               v-if="item.id !== currentUserId"
@@ -82,6 +89,7 @@ defineProps<{
   users: User[];
   loading: boolean;
   currentUserId?: number;
+  isEmployeeNoAccount?: boolean;
 }>();
 
 defineEmits<{
@@ -89,6 +97,7 @@ defineEmits<{
   (e: 'delete', user: User): void;
   (e: 'reset-password', user: User): void;
   (e: 'promote', user: User): void;
+  (e: 'create-account', user: User): void;
 }>();
 
 const columns: ColumnDefinition[] = [

@@ -18,6 +18,10 @@ const props = defineProps<{
   year: number;
 }>();
 
+const emit = defineEmits<{
+  (e: 'edit-values', indicator: KPIIndicator): void;
+}>();
+
 const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
 const targetConfig = computed(() => {
@@ -169,6 +173,13 @@ const chartOptions = computed(() => {
           </span>
         </div>
       </div>
+      <button 
+        @click="$emit('edit-values', indicator)"
+        class="text-gray-400 hover:text-[#d10f2f] transition-colors p-1 rounded-full hover:bg-red-50"
+        title="Renseigner les valeurs"
+      >
+        <span class="material-symbols-outlined text-sm">edit</span>
+      </button>
     </div>
     
     <VueApexCharts 
