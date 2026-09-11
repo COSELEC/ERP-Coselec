@@ -95,7 +95,21 @@
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Poste(s)</label>
-                <input type="text" v-model="form.position" required placeholder="Ex: Directeur Technique, Chef de Projet" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
+                <div class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2 flex flex-wrap gap-2 focus-within:ring-2 focus-within:ring-red-500 focus-within:border-red-500 transition min-h-[42px]">
+                  <div v-for="(pos, idx) in formPositions" :key="idx" class="flex items-center gap-1 bg-white border border-gray-200 px-2 py-1 rounded-lg text-sm text-gray-700 shadow-sm">
+                    {{ pos }}
+                    <button type="button" @click="removeFormPosition(idx)" class="text-gray-400 hover:text-red-500 flex items-center justify-center">
+                      <span class="material-symbols-outlined text-[14px]">close</span>
+                    </button>
+                  </div>
+                  <input 
+                    type="text" 
+                    v-model="newPositionTag" 
+                    @keydown.enter.prevent="addFormPosition" 
+                    placeholder="Taper et appuyer sur Entrée..." 
+                    class="flex-1 min-w-[120px] bg-transparent border-none focus:ring-0 px-2 py-1 text-sm outline-none" 
+                  />
+                </div>
               </div>
               <div class="col-span-1 md:col-span-2 pt-2 mt-2 border-t border-gray-100">
                 <h4 class="text-sm font-bold text-gray-900 mb-4">Contact d'urgence</h4>
@@ -173,7 +187,21 @@
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Poste(s)</label>
-                <input type="text" v-model="editForm.position" required placeholder="Ex: Directeur Technique, Chef de Projet" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
+                <div class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2 flex flex-wrap gap-2 focus-within:ring-2 focus-within:ring-red-500 focus-within:border-red-500 transition min-h-[42px]">
+                  <div v-for="(pos, idx) in editFormPositions" :key="idx" class="flex items-center gap-1 bg-white border border-gray-200 px-2 py-1 rounded-lg text-sm text-gray-700 shadow-sm">
+                    {{ pos }}
+                    <button type="button" @click="removeEditPosition(idx)" class="text-gray-400 hover:text-red-500 flex items-center justify-center">
+                      <span class="material-symbols-outlined text-[14px]">close</span>
+                    </button>
+                  </div>
+                  <input 
+                    type="text" 
+                    v-model="editPositionTag" 
+                    @keydown.enter.prevent="addEditPosition" 
+                    placeholder="Taper et appuyer sur Entrée..." 
+                    class="flex-1 min-w-[120px] bg-transparent border-none focus:ring-0 px-2 py-1 text-sm outline-none" 
+                  />
+                </div>
               </div>
               <div class="col-span-1 md:col-span-2 pt-2 mt-2 border-t border-gray-100">
                 <h4 class="text-sm font-bold text-gray-900 mb-4">Contact d'urgence</h4>
@@ -543,12 +571,45 @@ const availableSubordinates = computed(() => {
   return employees.value.filter(emp => emp.id !== editForm.value.id);
 });
 
+const formPositions = ref<string[]>([]);
+const editFormPositions = ref<string[]>([]);
+const newPositionTag = ref('');
+const editPositionTag = ref('');
+
+const addFormPosition = () => {
+  if (newPositionTag.value.trim()) {
+    formPositions.value.push(newPositionTag.value.trim());
+    newPositionTag.value = '';
+    form.value.position = formPositions.value.join(', ');
+  }
+};
+const removeFormPosition = (index: number) => {
+  formPositions.value.splice(index, 1);
+  form.value.position = formPositions.value.join(', ');
+};
+
+const addEditPosition = () => {
+  if (editPositionTag.value.trim()) {
+    editFormPositions.value.push(editPositionTag.value.trim());
+    editPositionTag.value = '';
+    editForm.value.position = editFormPositions.value.join(', ');
+  }
+};
+const removeEditPosition = (index: number) => {
+  editFormPositions.value.splice(index, 1);
+  editForm.value.position = editFormPositions.value.join(', ');
+};
+
 const openEditModal = async (employee: Employee) => {
   await fetchDepartments();
   
   try {
     const res = await employeeService.getEmployee(employee.id);
     const fullEmp = res.data;
+    
+    // Set editForm positions
+    editFormPositions.value = fullEmp.position ? fullEmp.position.split(',').map((p: string) => p.trim()).filter(Boolean) : [];
+    
     editForm.value = {
       id: fullEmp.id,
       first_name: fullEmp.first_name || '',
@@ -565,7 +626,14 @@ const openEditModal = async (employee: Employee) => {
       emergency_contact_name: fullEmp.emergency_contact_name || '',
       emergency_contact_phone: fullEmp.emergency_contact_phone || ''
     };
-  } catch {
+    editPhotoPreview.value = fullEmp.photo_url || null;
+    editPhotoFile.value = null;
+    showEditModal.value = true;
+  } catch (e) {
+    console.error("Failed to fetch full employee details", e);
+    // Fallback
+    editFormPositions.value = employee.position ? employee.position.split(',').map((p: string) => p.trim()).filter(Boolean) : [];
+    
     editForm.value = {
       id: employee.id,
       first_name: employee.first_name || '',
@@ -582,12 +650,10 @@ const openEditModal = async (employee: Employee) => {
       emergency_contact_name: employee.emergency_contact_name || '',
       emergency_contact_phone: employee.emergency_contact_phone || ''
     };
+    editPhotoPreview.value = employee.photo_url || null;
+    editPhotoFile.value = null;
+    showEditModal.value = true;
   }
-  
-  editPhotoPreview.value = null;
-  editPhotoFile.value = null;
-  
-  showEditModal.value = true;
 };
 
 const handleDrawerPhotoUpload = async (e: Event) => {
@@ -615,6 +681,7 @@ const handleDrawerPhotoUpload = async (e: Event) => {
 };
 
 async function submitEmployee() {
+  if (newPositionTag.value.trim()) addFormPosition();
   try {
     const payload = {
       ...form.value,
@@ -638,6 +705,7 @@ async function submitEmployee() {
       emergency_contact_name: '',
       emergency_contact_phone: ''
     };
+    formPositions.value = [];
     
     await fetchEmployees();
   } catch (e: any) {
@@ -648,6 +716,7 @@ async function submitEmployee() {
 }
 
 async function submitEditEmployee() {
+  if (editPositionTag.value.trim()) addEditPosition();
   isSubmittingEdit.value = true;
   try {
     const payload = {
