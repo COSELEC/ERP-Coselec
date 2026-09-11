@@ -204,39 +204,7 @@ onMounted(async () => {
         />
       </div>
 
-      <!-- Documents / GED -->
-      <div v-if="canViewDocuments">
-        <h2
-          v-if="!collapsed"
-          class="text-xs uppercase text-red-200 mb-2"
-        >
-          Documents
-        </h2>
 
-        <SidebarItem
-          to="/norms"
-          icon="folder_special"
-          label="Bibliothèque de Normes"
-          :collapsed="collapsed"
-        />
-      </div>
-
-      <!-- Trésorerie -->
-      <div v-if="canViewTreasury">
-        <h2
-          v-if="!collapsed"
-          class="text-xs uppercase text-red-200 mb-2"
-        >
-          Trésorerie
-        </h2>
-
-        <SidebarItem
-          to="/caisse"
-          icon="receipt_long"
-          label="Pièce de Caisse"
-          :collapsed="collapsed"
-        />
-      </div>
 
       <!-- Admin -->
       <div v-if="canViewAdmin">

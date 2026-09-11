@@ -74,11 +74,22 @@
                 ></textarea>
               </div>
 
+              <div v-if="props.section === 'caisse'">
+                <label class="mb-2 block text-sm font-semibold text-gray-700">Document (Pièce de caisse remplie)</label>
+                <input
+                  type="file"
+                  @change="handleFileUpload"
+                  accept=".pdf,.doc,.docx,.jpg,.png"
+                  required
+                  class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-red-400 focus:ring-4 focus:ring-red-100"
+                />
+              </div>
+
               <div class="flex flex-wrap gap-3 pt-2">
                 <button
                   type="submit"
                   :disabled="isSubmitting.value"
-                  class="inline-flex items-center gap-2 rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-red-200 transition hover:bg-red-700"
+                  class="inline-flex items-center gap-2 rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-red-200 transition hover:bg-red-700 disabled:opacity-50"
                 >
                   <span class="material-symbols-outlined text-[18px]">send</span>
                   {{ isSubmitting.value ? "Envoi..." : "Envoyer la demande" }}
@@ -242,19 +253,36 @@ const isSubmitting = reactive({
   value: false
 });
 
+const selectedFile = ref<File | null>(null);
+const handleFileUpload = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  if (target.files && target.files.length > 0) {
+    selectedFile.value = target.files[0];
+  }
+};
 
 import api from '@/services/api';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const submitRequest = async () => {
   if (isSubmitting.value) {
     return;
   }
 
+  if (props.section === 'caisse' && !selectedFile.value) {
+    toast.error('Veuillez joindre le document de la pièce de caisse.');
+    return;
+  }
+
   isSubmitting.value = true;
 
   try {
+    let createdReq: any = null;
+    
     if (props.section === 'it') {
-      await api.post('/requests/', {
+      const res = await api.post('/requests/', {
         type: 'IT_INCIDENT',
         priority: form.priority === 'Normal' ? 'NORMAL' : 'HIGH',
         description: form.description,
@@ -265,8 +293,9 @@ const submitRequest = async () => {
           impact_level: 'medium'
         }
       });
+      createdReq = res.data;
     } else if (props.section === 'hr') {
-      await api.post('/requests/', {
+      const res = await api.post('/requests/', {
         type: 'LEAVE',
         description: form.description,
         payload: {
@@ -277,13 +306,36 @@ const submitRequest = async () => {
           reason: form.subject
         }
       });
+      createdReq = res.data;
+    } else if (props.section === 'caisse') {
+      const res = await api.post('/requests/', {
+        type: 'PIECE_CAISSE',
+        description: form.description,
+        payload: {
+          subject: form.subject,
+          description: form.description
+        }
+      });
+      createdReq = res.data;
+      
+      // Upload attachment
+      if (selectedFile.value && createdReq?.id) {
+        const formData = new FormData();
+        formData.append('file', selectedFile.value);
+        await api.post(`/requests/${createdReq.id}/attachment`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
     }
 
     form.subject = '';
     form.description = '';
     form.priority = 'Normal';
     form.attachment = '';
+    selectedFile.value = null;
+    
     toast.success('Demande envoyée.');
+    router.push('/requests');
   } catch (error) {
     console.error('Erreur lors de la création de la demande', error);
     toast.error('Impossible de créer la demande pour le moment.');

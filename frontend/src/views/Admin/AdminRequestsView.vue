@@ -56,7 +56,6 @@
           <!-- Scope Switch (visible uniquement pour les admins/validateurs) -->
           <div class="inline-flex rounded-2xl bg-gray-100 p-1">
             <button
-              v-if="isAdminOrValidator"
               @click="activeScope = 'all'"
               class="px-3 py-1.5 rounded-xl text-xs font-bold transition"
               :class="activeScope === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'"
@@ -480,6 +479,7 @@ const categoryTabs = [
   { key: 'FACILITIES_REPAIR', label: 'Facilities : Réparation & Bureau', icon: 'home_repair_service' },
   { key: 'FACILITIES_SITE', label: 'Facilities : Matériel Chantier', icon: 'construction' },
   { key: 'FUEL', label: 'Carburant (DMCAR)', icon: 'local_gas_station' },
+  { key: 'CAISSE', label: 'Pièces de Caisse', icon: 'receipt_long' },
 ];
 
 const fetchRequests = async () => {
@@ -497,6 +497,7 @@ const fetchRequests = async () => {
 
 const getCategory = (req: any): string => {
   if (req.type === 'FUEL') return 'FUEL';
+  if (req.type === 'PIECE_CAISSE') return 'CAISSE';
   if (['LEAVE', 'DOCUMENT'].includes(req.type)) return 'HR';
   if (req.type && req.type.startsWith('IT_')) return 'IT';
   if (req.type === 'FACILITY_SUPPLIES' && !!req.project_id) return 'FACILITIES_SITE';
@@ -532,6 +533,8 @@ const getCategoryBadgeClass = (req: any): string => {
       return 'bg-amber-100 text-amber-900';
     case 'FUEL':
       return 'bg-red-100 text-red-800';
+    case 'CAISSE':
+      return 'bg-emerald-100 text-emerald-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }
@@ -545,6 +548,7 @@ const getCategoryIcon = (req: any): string => {
     case 'FACILITIES_REPAIR': return 'home_repair_service';
     case 'FACILITIES_SITE': return 'construction';
     case 'FUEL': return 'local_gas_station';
+    case 'CAISSE': return 'receipt_long';
     default: return 'help';
   }
 };
@@ -557,6 +561,7 @@ const getCategoryLabel = (req: any): string => {
     case 'FACILITIES_REPAIR': return 'Réparation / Bureau';
     case 'FACILITIES_SITE': return 'Matériel Chantier';
     case 'FUEL': return 'Carburant';
+    case 'CAISSE': return 'Trésorerie';
     default: return req.type || 'Autre';
   }
 };

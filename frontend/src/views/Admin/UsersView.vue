@@ -31,6 +31,7 @@
           :currentUserId="currentUserId"
           @edit="openEditForm" 
           @delete="confirmDelete"
+          @promote="promoteToEmployee"
           @reset-password="openResetPasswordForm"
         />
 
@@ -66,6 +67,31 @@
           />
         </div>
       </div>
+
+      <!-- Section des Départements -->
+      <div class="mt-12">
+        <header class="mb-6 flex justify-between items-end">
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 tracking-tight">Gestion des Départements</h2>
+            <p class="text-sm text-gray-400 mt-1">Gérez les directions et services de l'entreprise</p>
+          </div>
+          <button 
+            @click="openDeptCreateForm"
+            class="bg-red-600 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm"
+          >
+            + Nouveau Département
+          </button>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+          <DepartmentList 
+            :departments="departments" 
+            :loading="loadingDepts"
+            @edit="openDeptEditForm" 
+            @delete="confirmDeptDelete" 
+          />
+        </div>
+      </div>
     </div>
 
     <!-- Modal Form Utilisateur -->
@@ -82,6 +108,14 @@
       :role="selectedRole"
       @close="closeRoleForm"
       @saved="onRoleSaved"
+    />
+
+    <!-- Modal Form Département -->
+    <DepartmentForm 
+      v-if="showDeptForm"
+      :department="selectedDept"
+      @close="closeDeptForm"
+      @saved="onDeptSaved"
     />
 
     <!-- Modal Reset Password -->
@@ -102,9 +136,12 @@ import UserForm from '@/components/users/UserForm.vue';
 import AppPagination from '@/components/common/AppPagination.vue';
 import RoleList from '@/components/users/RoleList.vue';
 import RoleForm from '@/components/users/RoleForm.vue';
+import DepartmentList from '@/components/departments/DepartmentList.vue';
+import DepartmentForm from '@/components/departments/DepartmentForm.vue';
 import ResetPasswordModal from '@/components/users/ResetPasswordModal.vue';
 import { userService, type User } from '@/services/userService';
 import { roleService, type Role } from '@/services/roleService';
+import api from '@/services/api';
 import { getStoredProfile } from '@/services/session';
 import { useToast } from '@/composables/useToast';
 
@@ -135,6 +172,12 @@ const loadingRoles = ref(true);
 const showRoleForm = ref(false);
 const selectedRole = ref<Role | null>(null);
 
+// Departments state
+const departments = ref<any[]>([]);
+const loadingDepts = ref(true);
+const showDeptForm = ref(false);
+const selectedDept = ref<any | null>(null);
+
 const fetchUsers = async (page = 1) => {
   loading.value = true;
   try {
@@ -158,6 +201,18 @@ const fetchRoles = async () => {
     console.error('Failed to fetch roles:', error);
   } finally {
     loadingRoles.value = false;
+  }
+};
+
+const fetchDepartments = async () => {
+  loadingDepts.value = true;
+  try {
+    const res = await api.get('/departments');
+    departments.value = res.data;
+  } catch (error) {
+    console.error('Failed to fetch departments:', error);
+  } finally {
+    loadingDepts.value = false;
   }
 };
 
@@ -208,6 +263,19 @@ const confirmDelete = async (user: User) => {
   }
 };
 
+const promoteToEmployee = async (user: User) => {
+  if (confirm(`Êtes-vous sûr de vouloir promouvoir ${user.name} en employé ? Il apparaitra désormais dans la liste des employés et ses informations RH pourront être renseignées.`)) {
+    try {
+      await userService.updateUser(user.id, { is_employee: true });
+      fetchUsers(currentPage.value);
+      toast.success(`${user.name} a été promu en employé avec succès.`);
+    } catch (error) {
+      console.error('Failed to promote user:', error);
+      toast.error("Erreur lors de la promotion de l'utilisateur.");
+    }
+  }
+};
+
 const openResetPasswordForm = (user: User) => {
   userForReset.value = user;
   showResetModal.value = true;
@@ -253,8 +321,43 @@ const confirmRoleDelete = async (role: Role) => {
   }
 };
 
+// Departments Handlers
+const openDeptCreateForm = () => {
+  selectedDept.value = null;
+  showDeptForm.value = true;
+};
+
+const openDeptEditForm = (dept: any) => {
+  selectedDept.value = dept;
+  showDeptForm.value = true;
+};
+
+const closeDeptForm = () => {
+  showDeptForm.value = false;
+  selectedDept.value = null;
+};
+
+const onDeptSaved = () => {
+  closeDeptForm();
+  fetchDepartments();
+};
+
+const confirmDeptDelete = async (dept: any) => {
+  if (confirm(`Êtes-vous sûr de vouloir supprimer le département ${dept.name} ?`)) {
+    try {
+      await api.delete(`/departments/${dept.id}`);
+      fetchDepartments();
+      toast.success("Département supprimé avec succès.");
+    } catch (error: any) {
+      console.error('Failed to delete department:', error);
+      toast.error(error.response?.data?.detail || "Erreur lors de la suppression du département.");
+    }
+  }
+};
+
 onMounted(() => {
   fetchUsers();
   fetchRoles();
+  fetchDepartments();
 });
 </script>

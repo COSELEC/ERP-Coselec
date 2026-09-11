@@ -45,71 +45,28 @@
             />
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
-            <select 
-              v-model="formData.role_name"
-              required
-              class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            >
-              <option value="" disabled>Sélectionner un rôle</option>
-              <option v-for="role in availableRoles" :key="role" :value="role">
-                {{ role }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Champs réservés à l'édition (gérés par le RH dans la fiche employé) -->
-          <template v-if="isEdit">
+          <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Direction / Service</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+              <input 
+                v-model="formData.phone"
+                type="tel" 
+                class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
               <select 
-                v-model="formData.department_id"
+                v-model="formData.role_name"
+                required
                 class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               >
-                <option value="" disabled>Sélectionner une direction / service</option>
-                <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-                  {{ dept.name }}
+                <option value="" disabled>Sélectionner un rôle</option>
+                <option v-for="role in availableRoles" :key="role" :value="role">
+                  {{ role }}
                 </option>
               </select>
             </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-              <select 
-                v-model="formData.status"
-                class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              >
-                <option value="CDI">CDI</option>
-                <option value="CDD">CDD</option>
-                <option value="STAGIAIRE">Stagiaire</option>
-                <option value="PRESTATAIRE">Prestataire</option>
-                <option value="INACTIF">Inactif</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Manager</label>
-              <select 
-                v-model="formData.manager_id"
-                class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              >
-                <option :value="undefined">Aucun</option>
-                <option 
-                  v-for="mgr in availableManagers" 
-                  :key="mgr.id" 
-                  :value="mgr.id"
-                >
-                  {{ mgr.first_name || '' }} {{ mgr.last_name || mgr.name || '' }}
-                </option>
-              </select>
-            </div>
-          </template>
-
-          <!-- Info visible en création uniquement -->
-          <div v-if="!isEdit" class="p-3 bg-blue-50 border border-blue-100 rounded-lg">
-            <p class="text-xs text-blue-700">
-              <span class="font-semibold">ℹ️ Note :</span> Le département, statut (CDI/CDD…) et le manager seront définis par le service RH dans la fiche employé.
-            </p>
           </div>
         </div>
 
@@ -179,46 +136,24 @@ const availableRoles = [
   'Employé'
 ];
 
-const availableManagers = computed(() => {
-  if (isEdit.value && props.user) {
-    return usersList.value.filter(u => u.id !== props.user?.id);
-  }
-  return usersList.value;
-});
-
 const formData = ref({
   name: '',
   first_name: '',
   last_name: '',
-  status: 'CDI',
   email: '',
-  role_name: '',
-  department_id: undefined as number | undefined,
-  manager_id: undefined as number | null | undefined
+  phone: '',
+  role_name: ''
 });
 
 onMounted(async () => {
-  try {
-    const deptRes = await api.get('/departments');
-    departments.value = deptRes.data;
-    
-    // Fetch users for manager list
-    const usersRes = await userService.getUsers(0, 100);
-    usersList.value = usersRes.items;
-  } catch (err) {
-    console.error('Erreur lors du chargement des données (départements ou utilisateurs)', err);
-  }
-
   if (props.user) {
     formData.value = {
       name: props.user.name,
       first_name: props.user.first_name || '',
       last_name: props.user.last_name || '',
-      status: props.user.status || 'CDI',
       email: props.user.email,
-      role_name: props.user.roles?.[0]?.name || '',
-      department_id: props.user.department_id,
-      manager_id: props.user.manager_id
+      phone: props.user.phone || '',
+      role_name: props.user.roles?.[0]?.name || ''
     };
   }
 });

@@ -94,8 +94,21 @@
                 <input type="text" v-model="form.matricule" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Poste</label>
-                <input type="text" v-model="form.position" required class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
+                <label class="block text-sm font-medium text-gray-700 mb-1">Poste(s)</label>
+                <input type="text" v-model="form.position" required placeholder="Ex: Directeur Technique, Chef de Projet" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
+              </div>
+              <div class="col-span-1 md:col-span-2 pt-2 mt-2 border-t border-gray-100">
+                <h4 class="text-sm font-bold text-gray-900 mb-4">Contact d'urgence</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nom du contact</label>
+                    <input type="text" v-model="form.emergency_contact_name" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone d'urgence</label>
+                    <input type="text" v-model="form.emergency_contact_phone" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
+                  </div>
+                </div>
               </div>
               <div class="col-span-1 md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Direction / Service</label>
@@ -159,8 +172,21 @@
                 <input type="text" v-model="editForm.matricule" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Poste</label>
-                <input type="text" v-model="editForm.position" required class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
+                <label class="block text-sm font-medium text-gray-700 mb-1">Poste(s)</label>
+                <input type="text" v-model="editForm.position" required placeholder="Ex: Directeur Technique, Chef de Projet" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
+              </div>
+              <div class="col-span-1 md:col-span-2 pt-2 mt-2 border-t border-gray-100">
+                <h4 class="text-sm font-bold text-gray-900 mb-4">Contact d'urgence</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nom du contact</label>
+                    <input type="text" v-model="editForm.emergency_contact_name" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone d'urgence</label>
+                    <input type="text" v-model="editForm.emergency_contact_phone" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
+                  </div>
+                </div>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Direction / Service</label>
@@ -273,6 +299,15 @@
               <div><p class="text-xs text-gray-500 uppercase">Direction / Service</p><p class="font-medium text-gray-900">{{ getDepartmentName(selectedEmployee.department_id) }}</p></div>
               <div><p class="text-xs text-gray-500 uppercase">Manager</p><p class="font-medium text-gray-900">{{ getManagerName(selectedEmployee.manager_id) }}</p></div>
               <div><p class="text-xs text-gray-500 uppercase">Compte</p><p class="font-medium text-gray-900"><span :class="selectedEmployee.is_active !== false ? 'text-emerald-600' : 'text-rose-600'">{{ selectedEmployee.is_active !== false ? 'Actif' : 'Inactif' }}</span></p></div>
+              <div class="col-span-2 pt-2 border-t border-gray-100">
+                <p class="text-xs text-gray-500 uppercase mb-1">Contact d'urgence</p>
+                <p class="font-medium text-gray-900">
+                  <span v-if="selectedEmployee.emergency_contact_name || selectedEmployee.emergency_contact_phone">
+                    {{ selectedEmployee.emergency_contact_name || 'Nom non défini' }} — {{ selectedEmployee.emergency_contact_phone || 'Téléphone non défini' }}
+                  </span>
+                  <span v-else class="text-gray-400 italic">Non défini</span>
+                </p>
+              </div>
             </div>
           </section>
 
@@ -280,13 +315,23 @@
             <h3 class="text-sm font-bold text-[#7f071c] uppercase tracking-wider mb-4 border-b border-red-100 pb-2 flex items-center gap-2">
               <span class="material-symbols-outlined text-base">work_outline</span>
               <span>Fiche de Poste</span>
-              <button 
+              <label 
                 v-if="canUpdateEmployee"
-                @click="openJobDescModal" 
-                class="ml-auto text-[10px] font-semibold text-[#b30c27] hover:text-white hover:bg-[#b30c27] border border-red-200 px-2 py-0.5 rounded-lg transition"
-              >Éditer</button>
+                class="ml-auto text-[10px] font-semibold text-[#b30c27] hover:text-white hover:bg-[#b30c27] border border-red-200 px-2 py-0.5 rounded-lg transition cursor-pointer"
+              >
+                Importer PDF
+                <input type="file" class="hidden" accept="application/pdf" @change="handleJobDescUpload" />
+              </label>
             </h3>
-            <div v-if="selectedEmployee.job_description" class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{{ selectedEmployee.job_description }}</div>
+            <div v-if="selectedEmployee.job_description" class="mt-4">
+              <iframe :src="selectedEmployee.job_description" class="w-full h-[500px] border rounded-lg shadow-inner"></iframe>
+              <div class="mt-2 text-right">
+                <a :href="selectedEmployee.job_description" target="_blank" class="text-sm text-blue-600 hover:underline inline-flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+                  Ouvrir dans un nouvel onglet
+                </a>
+              </div>
+            </div>
             <p v-else class="text-sm text-gray-400 italic">Aucune fiche de poste définie pour cet employé.</p>
           </section>
 
@@ -326,33 +371,7 @@
     </div>
   </AppLayout>
 
-  <!-- Modal Fiche de Poste -->
-  <div v-if="showJobDescModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
-    <div class="bg-white rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl">
-      <div class="px-6 py-4 bg-[#b30c27] text-white flex justify-between items-center">
-        <h2 class="text-xl font-bold flex items-center gap-2">
-          <span class="material-symbols-outlined">work_outline</span>
-          Fiche de Poste — {{ selectedEmployee?.first_name }} {{ selectedEmployee?.last_name }}
-        </h2>
-        <button @click="showJobDescModal = false" class="hover:bg-[#d10f2f] p-1 rounded-full transition">
-          <span class="material-symbols-outlined">close</span>
-        </button>
-      </div>
-      <div class="p-6 space-y-4">
-        <p class="text-sm text-gray-500">Décrivez les missions, responsabilités et compétences attendues pour ce poste.</p>
-        <textarea 
-          v-model="jobDescDraft"
-          rows="8"
-          placeholder="Ex : Assurer la gestion comptable, superviser les déclarations fiscales, coordonner avec les équipes RH..."
-          class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition resize-none"
-        ></textarea>
-        <div class="flex justify-end gap-3 pt-2 border-t border-gray-100">
-          <button @click="showJobDescModal = false" class="px-6 py-2 text-gray-700 hover:bg-gray-100 rounded-xl transition">Annuler</button>
-          <button @click="saveJobDescription" class="px-6 py-2 bg-[#d10f2f] text-white hover:bg-[#97091f] rounded-xl shadow-lg transition">Enregistrer</button>
-        </div>
-      </div>
-    </div>
-  </div>
+
 </template>
 
 <script setup lang="ts">
@@ -405,6 +424,8 @@ interface Employee {
   photo_url?: string | null;
   signature_url?: string | null;
   job_description?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
 }
 
 const showCreateModal = ref(false);
@@ -417,23 +438,28 @@ const editPhotoFile = ref<File | null>(null);
 const showJobDescModal = ref(false);
 const jobDescDraft = ref('');
 
-const openJobDescModal = () => {
-  if (!selectedEmployee.value) return;
-  jobDescDraft.value = selectedEmployee.value.job_description || '';
-  showJobDescModal.value = true;
-};
-
-const saveJobDescription = async () => {
-  if (!selectedEmployee.value) return;
+// Upload Fiche de Poste PDF
+const handleJobDescUpload = async (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  if (!target.files || !target.files[0] || !selectedEmployee.value) return;
+  const file = target.files[0];
+  const formData = new FormData();
+  formData.append('file', file);
   try {
-    const res = await employeeService.updateEmployee(selectedEmployee.value.id, { job_description: jobDescDraft.value } as any);
-    selectedEmployee.value.job_description = jobDescDraft.value;
-    const empInList = employees.value.find(e => e.id === selectedEmployee.value?.id) as any;
-    if (empInList) empInList.job_description = jobDescDraft.value;
-    showJobDescModal.value = false;
-    toast.success('Fiche de poste mise à jour.');
-  } catch (e) {
-    toast.error("Erreur lors de la mise à jour de la fiche de poste.");
+    const res = await api.post(`/employees/${selectedEmployee.value.id}/job_description`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    selectedEmployee.value.job_description = res.data.job_description_url;
+    const empInList = employees.value.find(emp => emp.id === selectedEmployee.value?.id) as any;
+    if (empInList) {
+      empInList.job_description = res.data.job_description_url;
+    }
+    toast.success("Fiche de poste importée avec succès !");
+  } catch (error) {
+    console.error("Erreur lors de l'import de la fiche de poste", error);
+    toast.error("Impossible d'importer le document.");
+  } finally {
+    target.value = '';
   }
 };
 
@@ -485,7 +511,9 @@ const form = ref({
   department_id: '',
   manager_id: '',
   status: 'CDI',
-  supervised_employee_ids: [] as number[]
+  supervised_employee_ids: [] as number[],
+  emergency_contact_name: '',
+  emergency_contact_phone: ''
 });
 
 const editForm = ref({
@@ -500,7 +528,9 @@ const editForm = ref({
   manager_id: '' as string | number,
   status: 'CDI',
   supervised_employee_ids: [] as number[],
-  is_active: true
+  is_active: true,
+  emergency_contact_name: '',
+  emergency_contact_phone: ''
 });
 
 const availableManagers = computed(() => {
@@ -531,7 +561,9 @@ const openEditModal = async (employee: Employee) => {
       manager_id: fullEmp.manager_id ?? '',
       status: fullEmp.status || 'CDI',
       supervised_employee_ids: fullEmp.supervised_employee_ids || [],
-      is_active: fullEmp.is_active ?? true
+      is_active: fullEmp.is_active ?? true,
+      emergency_contact_name: fullEmp.emergency_contact_name || '',
+      emergency_contact_phone: fullEmp.emergency_contact_phone || ''
     };
   } catch {
     editForm.value = {
@@ -546,7 +578,9 @@ const openEditModal = async (employee: Employee) => {
       manager_id: employee.manager_id ?? '',
       status: employee.status || 'CDI',
       supervised_employee_ids: employee.supervised_employee_ids || [],
-      is_active: employee.is_active ?? true
+      is_active: employee.is_active ?? true,
+      emergency_contact_name: employee.emergency_contact_name || '',
+      emergency_contact_phone: employee.emergency_contact_phone || ''
     };
   }
   
@@ -600,11 +634,12 @@ async function submitEmployee() {
       department_id: '',
       manager_id: '',
       status: 'CDI',
-      supervised_employee_ids: [] as number[]
+      supervised_employee_ids: [] as number[],
+      emergency_contact_name: '',
+      emergency_contact_phone: ''
     };
     
-    const response = await employeeService.getAllEmployees();
-    employees.value = response.data;
+    await fetchEmployees();
   } catch (e: any) {
     console.error("Error creating employee", e);
     const errorMsg = e.response?.data?.detail || "Erreur lors de la création de l'employé";
@@ -626,7 +661,9 @@ async function submitEditEmployee() {
       manager_id: editForm.value.manager_id !== '' && editForm.value.manager_id !== null ? Number(editForm.value.manager_id) : null,
       status: editForm.value.status,
       supervised_employee_ids: editForm.value.supervised_employee_ids,
-      is_active: editForm.value.is_active
+      is_active: editForm.value.is_active,
+      emergency_contact_name: editForm.value.emergency_contact_name,
+      emergency_contact_phone: editForm.value.emergency_contact_phone
     };
 
     const res = await employeeService.updateEmployee(editForm.value.id, payload);
@@ -653,7 +690,7 @@ async function submitEditEmployee() {
     showEditModal.value = false;
 
     const response = await employeeService.getAllEmployees();
-    employees.value = response.data;
+    employees.value = response.data.filter((e: any) => e.is_employee === true);
 
     if (selectedEmployee.value && selectedEmployee.value.id === editForm.value.id) {
       selectedEmployee.value = res.data;
@@ -696,7 +733,7 @@ const confirmDeleteEmployee = async () => {
     toast.success("Employé supprimé avec succès");
     
     const response = await employeeService.getAllEmployees();
-    employees.value = response.data;
+    employees.value = response.data.filter((e: any) => e.is_employee === true);
     
     closeSlideOver();
   } catch (e: any) {
@@ -712,7 +749,7 @@ onMounted(async () => {
       employeeService.getAllEmployees(),
       api.get('/departments')
     ]);
-    employees.value = empRes.data;
+    employees.value = empRes.data.filter((e: any) => e.is_employee === true);
     
     departments.value = depRes.data;
   } catch (e) {

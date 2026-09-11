@@ -43,7 +43,7 @@ def get_employees(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return db.query(User).options(joinedload(User.documents)).all()
+    return db.query(User).filter(User.is_employee == True).options(joinedload(User.documents)).all()
 
 @router.get(
     "/org-chart",
@@ -142,6 +142,30 @@ def delete_employee_photo(
     
     return {"message": "Photo supprimée avec succès"}
 
+@router.post("/{user_id}/job_description")
+async def upload_job_description(
+    user_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    from app.services.storage import upload_file_to_minio
+    import uuid
+    
+    employee = db.query(User).filter(User.id == user_id).first()
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employé introuvable")
+        
+    ext = file.filename.split('.')[-1] if '.' in file.filename else 'pdf'
+    filename = f"job_descriptions/{user_id}_{uuid.uuid4().hex}.{ext}"
+    
+    file_url = upload_file_to_minio(file, filename)
+    
+    employee.job_description = file_url
+    db.commit()
+    
+    return {"job_description_url": file_url}
+
+
 @router.get(
     "/{employee_id}",
     response_model=EmployeeResponse
@@ -180,6 +204,7 @@ def create_employee(
     supervised_ids = dumped_data.pop("supervised_employee_ids", None)
     
     new_employee = User(**dumped_data)
+    new_employee.is_employee = True
     if not new_employee.name:
         new_employee.name = f"{new_employee.first_name or ''} {new_employee.last_name or ''}".strip() or new_employee.email
     db.add(new_employee)

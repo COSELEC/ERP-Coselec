@@ -28,6 +28,9 @@ class User(Base):
     signature_url = Column(String, nullable=True)
     photo_url = Column(String, nullable=True)
     job_description = Column(String, nullable=True)
+    is_employee = Column(Boolean, default=False)
+    emergency_contact_name = Column(String, nullable=True)
+    emergency_contact_phone = Column(String, nullable=True)
 
     department = relationship("Department")
     manager = relationship("User", remote_side=[id], back_populates="subordinates")

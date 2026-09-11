@@ -52,6 +52,13 @@
               Réinitialiser le mot de passe
             </button>
             <button 
+              v-if="!item.is_employee"
+              @click="$emit('promote', item); openDropdownId = null"
+              class="flex w-full px-4 py-2 text-sm text-green-600 hover:bg-green-50 transition"
+            >
+              Promouvoir en employé
+            </button>
+            <button 
               v-if="item.id !== currentUserId"
               @click="$emit('delete', item); openDropdownId = null"
               class="flex w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
@@ -81,6 +88,7 @@ defineEmits<{
   (e: 'edit', user: User): void;
   (e: 'delete', user: User): void;
   (e: 'reset-password', user: User): void;
+  (e: 'promote', user: User): void;
 }>();
 
 const columns: ColumnDefinition[] = [

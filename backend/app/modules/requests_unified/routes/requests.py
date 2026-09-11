@@ -178,6 +178,11 @@ def _apply_row_level_filter(query, current_user: User):
     if roles & {"Direction"}:
         return query
 
+    # Managers see their own requests + their subordinates' requests
+    subordinate_ids = [sub.id for sub in current_user.subordinates]
+    if subordinate_ids:
+        conditions.append(GenericRequest.requester_id.in_(subordinate_ids))
+
     return query.filter(or_(*conditions))
 
 
@@ -574,3 +579,34 @@ def download_request_pdf(
     except Exception as e:
         logger.error(f"Error generating presigned URL for {file_path}: {e}")
         raise HTTPException(status_code=500, detail="Erreur lors de la récupération du PDF")
+
+@router.post("/{request_id}/attachment")
+def upload_request_attachment(
+    request_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    from app.services.storage import upload_file_to_minio
+    import uuid
+    
+    request = db.get(GenericRequest, request_id)
+    if not request:
+        raise HTTPException(status_code=404, detail="Demande introuvable")
+        
+    if request.requester_id != current_user.id and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+        
+    try:
+        file_ext = file.filename.split(".")[-1] if file.filename else "pdf"
+        file_name = f"requests/{request_id}/attachment_{uuid.uuid4().hex[:8]}.{file_ext}"
+        
+        url = upload_file_to_minio(file, file_name)
+        
+        request.attachment_url = url
+        db.commit()
+        
+        return {"attachment_url": url}
+    except Exception as e:
+        logger.error(f"Error uploading request attachment: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors de l'upload du fichier")

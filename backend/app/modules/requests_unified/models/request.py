@@ -15,6 +15,7 @@ class RequestType(str, enum.Enum):
     FACILITY_SUPPLIES = "FACILITY_SUPPLIES"
     FUEL = "FUEL"
     DOCUMENT = "DOCUMENT"
+    PIECE_CAISSE = "PIECE_CAISSE"
     OTHER = "OTHER"
 
 

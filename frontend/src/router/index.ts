@@ -138,7 +138,7 @@ const routes = [
     meta: { requiredPermissions: ["requests.validate_finance"] }
   },
   {
-    path: "/requests/:section(hr|it|facilities|facilities-site|fuel)",
+    path: "/requests/:section(hr|it|facilities|facilities-site|fuel|caisse)",
     name: "request-form",
     component: () => import("../views/RequestFormView.vue"),
     props: true
@@ -153,8 +153,7 @@ const routes = [
   {
     path: "/admin/requests",
     name: "admin-requests",
-    component: () => import("@/views/Admin/AdminRequestsView.vue"),
-    meta: { requiredPermissions: ["requests.validate_hr", "requests.validate_it", "requests.validate_facility", "requests.validate_finance"] }
+    component: () => import("@/views/Admin/AdminRequestsView.vue")
   },
   {
     path: "/admin/users",

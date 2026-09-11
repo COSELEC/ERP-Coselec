@@ -63,11 +63,10 @@ def create_user(db: Session, user_data: UserCreate, current_user: User) -> Tuple
         name=name,
         first_name=first_name,
         last_name=last_name,
-        status=user_data.status or "CDI",
         email=user_data.email,
+        phone=user_data.phone,
+        is_employee=user_data.is_employee,
         hashed_password=hashed_pwd,
-        department_id=user_data.department_id,
-        manager_id=user_data.manager_id,
         requires_password_change=True 
     )
     
@@ -87,7 +86,6 @@ def update_user(db: Session, user_id: int, user_data: UserUpdate, current_user: 
     if not user:
         return None
     
-    
     old_values = {"name": user.name, "email": user.email, "role": user.roles[0].name if user.roles else None}
     new_values = {}
     
@@ -102,15 +100,12 @@ def update_user(db: Session, user_id: int, user_data: UserUpdate, current_user: 
     if user_data.last_name is not None:
         user.last_name = user_data.last_name
         new_values["last_name"] = user.last_name
-    if user_data.status is not None:
-        user.status = user_data.status
-        new_values["status"] = user.status
-    if user_data.department_id is not None:
-        user.department_id = user_data.department_id
-        new_values["department_id"] = user.department_id
-    if 'manager_id' in user_data.dict(exclude_unset=True):
-        user.manager_id = user_data.manager_id
-        new_values["manager_id"] = user.manager_id
+    if user_data.phone is not None:
+        user.phone = user_data.phone
+        new_values["phone"] = user.phone
+    if user_data.is_employee is not None:
+        user.is_employee = user_data.is_employee
+        new_values["is_employee"] = user.is_employee
         
     if user.first_name and not user_data.name:
         user.name = f"{user.first_name} {user.last_name or ''}".strip()

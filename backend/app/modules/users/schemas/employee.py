@@ -17,6 +17,8 @@ class EmployeeCreate(BaseModel):
     is_active: Optional[bool] = True
     photo_url: Optional[str] = None
     job_description: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
 
 
 class EmployeeUpdate(BaseModel):
@@ -33,6 +35,8 @@ class EmployeeUpdate(BaseModel):
     is_active: Optional[bool] = None
     photo_url: Optional[str] = None
     job_description: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
 
 
 class EmployeeResponse(BaseModel):
@@ -52,6 +56,9 @@ class EmployeeResponse(BaseModel):
     photo_url: Optional[str] = None
     has_expiring_documents: Optional[bool] = False
     job_description: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    is_employee: Optional[bool] = False
 
     class Config:
         from_attributes = True

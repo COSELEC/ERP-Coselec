@@ -10,11 +10,10 @@ export interface User {
   name: string;
   first_name?: string;
   last_name?: string;
-  status?: string;
   email: string;
+  phone?: string;
   roles: Role[];
-  department_id?: number;
-  manager_id?: number | null;
+  is_employee?: boolean;
 }
 
 export interface UserListResponse {
@@ -28,22 +27,20 @@ export interface UserCreate {
   name?: string;
   first_name?: string;
   last_name?: string;
-  status?: string;
   email: string;
+  phone?: string;
   role_name: string;
-  department_id?: number;
-  manager_id?: number | null;
+  is_employee?: boolean;
 }
 
 export interface UserUpdate {
   name?: string;
   first_name?: string;
   last_name?: string;
-  status?: string;
   email?: string;
+  phone?: string;
   role_name?: string;
-  department_id?: number;
-  manager_id?: number | null;
+  is_employee?: boolean;
 }
 
 export interface CreateUserResponse {
