@@ -23,18 +23,18 @@ nodes_data = {
     'serv_appro': (750, 580, 'SERVICE APPRO', None),
     'serv_log': (1000, 580, 'SERVICE LOGISTIQUE', None),
     
-    'dir_tech': (1250, 480, 'DIRECTEUR TECHNIQUE', 'yellow'),
-    'chef_etudes': (1100, 580, 'CHEF SERVICE ÉTUDES', None),
-    'chef_travaux': (1400, 580, 'CHEF SERVICE TRAVAUX', None),
+    'dir_tech': (1450, 480, 'DIRECTEUR TECHNIQUE', 'yellow'),
+    'chef_etudes': (1300, 580, 'CHEF SERVICE ÉTUDES', None),
+    'chef_travaux': (1600, 580, 'CHEF SERVICE TRAVAUX', None),
     
-    'tech_etudes': (1220, 660, "TECHNICIENS BUREAU D'ÉTUDES", None),
-    'charge_projet': (1220, 740, 'CHARGÉS DE PROJET', None),
-    'charge_suivi': (1220, 820, 'CHARGÉ DU SUIVI ET DES PLANNINGS', None),
+    'tech_etudes': (1420, 660, "TECHNICIENS BUREAU D'ÉTUDES", None),
+    'charge_projet': (1420, 740, 'CHARGÉS DE PROJET', None),
+    'charge_suivi': (1420, 820, 'CHARGÉ DU SUIVI ET DES PLANNINGS', None),
     
-    'cond_travaux': (1520, 660, 'CONDUCTEURS DE TRAVAUX', None),
-    'chef_atelier': (1520, 740, "CHEF D'ATELIER", None),
-    'chef_chantier': (1520, 820, 'CHEFS DE CHANTIER', None),
-    'vigiles': (1520, 900, 'VIGILES', None),
+    'cond_travaux': (1720, 660, 'CONDUCTEURS DE TRAVAUX', None),
+    'chef_atelier': (1720, 740, "CHEF D'ATELIER", None),
+    'chef_chantier': (1720, 820, 'CHEFS DE CHANTIER', None),
+    'vigiles': (1720, 900, 'VIGILES', None),
 }
 
 lines_data = []
@@ -66,10 +66,10 @@ hline(460, 340, 250)
 hline(750, 540, 330)
 
 # Main Horizontal Divider
-hline(250, 1250, 430)
+hline(250, 1450, 430)
 vline(250, 430, 445)
 vline(750, 430, 445)
-vline(1250, 430, 445)
+vline(1450, 430, 445)
 
 # Finance Sub-branch
 vline(250, 515, 530)
@@ -85,26 +85,22 @@ for cx in [500, 750, 1000]:
     vline(cx, 540, 545)
 
 # Technique Sub-branch
-vline(1250, 515, 540)
-hline(1100, 1400, 540)
-for cx in [1100, 1400]:
+vline(1450, 515, 540)
+hline(1300, 1600, 540)
+for cx in [1300, 1600]:
     vline(cx, 540, 545)
 
 # Chef Etudes Sub-branch
-vline(1100, 615, 630)
-hline(1100, 1100, 630) # wait, where do the boxes start?
-# tech_etudes center is 1220. Left edge is 1130.
-# let's drop the vertical line at 1100 down to 820.
-vline(1100, 630, 820)
+vline(1300, 615, 630)
+vline(1300, 630, 820)
 for cy in [660, 740, 820]:
-    hline(1100, 1130, cy)
+    hline(1300, 1330, cy)
 
 # Chef Travaux Sub-branch
-vline(1400, 615, 630)
-# vigiles center is 1520. Left edge is 1430.
-vline(1400, 630, 900)
+vline(1600, 615, 630)
+vline(1600, 630, 900)
 for cy in [660, 740, 820, 900]:
-    hline(1400, 1430, cy)
+    hline(1600, 1630, cy)
 
 
 html_nodes = []
