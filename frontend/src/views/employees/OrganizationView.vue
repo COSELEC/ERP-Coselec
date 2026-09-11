@@ -183,118 +183,120 @@ onMounted(async () => {
         <div class="org-chart relative w-full overflow-auto h-[80vh] flex justify-center items-start pt-10">
 <div class="relative w-[1700px] h-[1000px] shrink-0">
 <!-- NODES -->
-          <div class="absolute z-10" style="left: 670px; top: 20px; width: 160px;">
-            <OrgCard :node="{ key: 'dg', title: 'DIRECTEUR GÉNÉRAL' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'dg', title: 'DIRECTEUR GÉNÉRAL' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 660px; top: 15px; width: 180px;">
+            <OrgCard :node="{ key: 'dg', title: 'DIRECTEUR GÉNÉRAL' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'dg', title: 'DIRECTEUR GÉNÉRAL' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'dg', title: 'DIRECTEUR GÉNÉRAL' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 370px; top: 120px; width: 160px;">
-            <OrgCard :node="{ key: 'dga', title: 'DIRECTEUR GÉNÉRAL ADJOINT' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'dga', title: 'DIRECTEUR GÉNÉRAL ADJOINT' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 360px; top: 105px; width: 180px;">
+            <OrgCard :node="{ key: 'dga', title: 'DIRECTEUR GÉNÉRAL ADJOINT' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'dga', title: 'DIRECTEUR GÉNÉRAL ADJOINT' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'dga', title: 'DIRECTEUR GÉNÉRAL ADJOINT' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 970px; top: 120px; width: 160px;">
-            <OrgCard :node="{ key: 'assistante', title: 'ASSISTANTE DE DIRECTION' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'assistante', title: 'ASSISTANTE DE DIRECTION' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 960px; top: 155px; width: 180px;">
+            <OrgCard :node="{ key: 'assistante', title: 'ASSISTANTE DE DIRECTION' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'assistante', title: 'ASSISTANTE DE DIRECTION' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'assistante', title: 'ASSISTANTE DE DIRECTION' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 270px; top: 220px; width: 160px;">
-            <OrgCard :node="{ key: 'ast_smqse', title: 'ASSISTANT SMQSE' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'ast_smqse', title: 'ASSISTANT SMQSE' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 460px; top: 215px; width: 180px;">
+            <OrgCard :node="{ key: 'resp_smqse', title: 'RESPONSABLE SMQSE' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'resp_smqse', title: 'RESPONSABLE SMQSE' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'resp_smqse', title: 'RESPONSABLE SMQSE' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 470px; top: 220px; width: 160px;">
-            <OrgCard :node="{ key: 'resp_smqse', title: 'RESPONSABLE SMQSE' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'resp_smqse', title: 'RESPONSABLE SMQSE' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 160px; top: 215px; width: 180px;">
+            <OrgCard :node="{ key: 'ast_smqse', title: 'ASSISTANT SMQSE' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'ast_smqse', title: 'ASSISTANT SMQSE' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'ast_smqse', title: 'ASSISTANT SMQSE' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 370px; top: 320px; width: 160px;">
-            <OrgCard :node="{ key: 'resp_it', title: 'RESPONSABLE SUPPORT IT' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'resp_it', title: 'RESPONSABLE SUPPORT IT' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 360px; top: 295px; width: 180px;">
+            <OrgCard :node="{ key: 'resp_it', title: 'RESPONSABLE SUPPORT IT' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'resp_it', title: 'RESPONSABLE SUPPORT IT' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'resp_it', title: 'RESPONSABLE SUPPORT IT' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 170px; top: 440px; width: 160px;">
-            <OrgCard :node="{ key: 'dir_fin', title: 'DIRECTEUR DES FINANCES ET CONTRÔLE', highlight: 'yellow' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'dir_fin', title: 'DIRECTEUR DES FINANCES ET CONTRÔLE', highlight: 'yellow' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 160px; top: 445px; width: 180px;">
+            <OrgCard :node="{ key: 'dir_fin', title: 'DIRECTEUR DES FINANCES ET CONTRÔLE', highlight: 'yellow' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'dir_fin', title: 'DIRECTEUR DES FINANCES ET CONTRÔLE', highlight: 'yellow' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'dir_fin', title: 'DIRECTEUR DES FINANCES ET CONTRÔLE', highlight: 'yellow' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 170px; top: 540px; width: 160px;">
-            <OrgCard :node="{ key: 'comp_rh', title: 'COMPTABLE ET RESPONSABLE RH' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'comp_rh', title: 'COMPTABLE ET RESPONSABLE RH' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 160px; top: 545px; width: 180px;">
+            <OrgCard :node="{ key: 'comp_rh', title: 'COMPTABLE ET RESPONSABLE RH' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'comp_rh', title: 'COMPTABLE ET RESPONSABLE RH' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'comp_rh', title: 'COMPTABLE ET RESPONSABLE RH' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 170px; top: 620px; width: 160px;">
-            <OrgCard :node="{ key: 'comp_tres', title: 'COMPTABLE TRÉSORERIE' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'comp_tres', title: 'COMPTABLE TRÉSORERIE' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 160px; top: 625px; width: 180px;">
+            <OrgCard :node="{ key: 'comp_tres', title: 'COMPTABLE TRÉSORERIE' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'comp_tres', title: 'COMPTABLE TRÉSORERIE' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'comp_tres', title: 'COMPTABLE TRÉSORERIE' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 170px; top: 700px; width: 160px;">
-            <OrgCard :node="{ key: 'comp_fourn', title: 'COMPTABLE FOURNISSEURS CLIENTS' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'comp_fourn', title: 'COMPTABLE FOURNISSEURS CLIENTS' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 160px; top: 705px; width: 180px;">
+            <OrgCard :node="{ key: 'comp_fourn', title: 'COMPTABLE FOURNISSEURS CLIENTS' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'comp_fourn', title: 'COMPTABLE FOURNISSEURS CLIENTS' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'comp_fourn', title: 'COMPTABLE FOURNISSEURS CLIENTS' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 170px; top: 780px; width: 160px;">
-            <OrgCard :node="{ key: 'recouv', title: 'CHARGÉE DU RECOUVREMENT' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'recouv', title: 'CHARGÉE DU RECOUVREMENT' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 160px; top: 785px; width: 180px;">
+            <OrgCard :node="{ key: 'recouv', title: 'CHARGÉE DU RECOUVREMENT' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'recouv', title: 'CHARGÉE DU RECOUVREMENT' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'recouv', title: 'CHARGÉE DU RECOUVREMENT' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 670px; top: 440px; width: 160px;">
-            <OrgCard :node="{ key: 'resp_com', title: 'RESPONSABLE PÔLE COMMERCIAL & APPRO', highlight: 'yellow' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'resp_com', title: 'RESPONSABLE PÔLE COMMERCIAL & APPRO', highlight: 'yellow' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 660px; top: 445px; width: 180px;">
+            <OrgCard :node="{ key: 'resp_com', title: 'RESPONSABLE PÔLE COMMERCIAL & APPRO', highlight: 'yellow' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'resp_com', title: 'RESPONSABLE PÔLE COMMERCIAL & APPRO', highlight: 'yellow' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'resp_com', title: 'RESPONSABLE PÔLE COMMERCIAL & APPRO', highlight: 'yellow' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 470px; top: 540px; width: 160px;">
-            <OrgCard :node="{ key: 'serv_com', title: 'SERVICE COMMERCIAL' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'serv_com', title: 'SERVICE COMMERCIAL' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 410px; top: 545px; width: 180px;">
+            <OrgCard :node="{ key: 'serv_com', title: 'SERVICE COMMERCIAL' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'serv_com', title: 'SERVICE COMMERCIAL' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'serv_com', title: 'SERVICE COMMERCIAL' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 670px; top: 540px; width: 160px;">
-            <OrgCard :node="{ key: 'serv_appro', title: 'SERVICE APPRO' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'serv_appro', title: 'SERVICE APPRO' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 660px; top: 545px; width: 180px;">
+            <OrgCard :node="{ key: 'serv_appro', title: 'SERVICE APPRO' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'serv_appro', title: 'SERVICE APPRO' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'serv_appro', title: 'SERVICE APPRO' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 870px; top: 540px; width: 160px;">
-            <OrgCard :node="{ key: 'serv_log', title: 'SERVICE LOGISTIQUE' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'serv_log', title: 'SERVICE LOGISTIQUE' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 910px; top: 545px; width: 180px;">
+            <OrgCard :node="{ key: 'serv_log', title: 'SERVICE LOGISTIQUE' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'serv_log', title: 'SERVICE LOGISTIQUE' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'serv_log', title: 'SERVICE LOGISTIQUE' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 1170px; top: 440px; width: 160px;">
-            <OrgCard :node="{ key: 'dir_tech', title: 'DIRECTEUR TECHNIQUE', highlight: 'yellow' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'dir_tech', title: 'DIRECTEUR TECHNIQUE', highlight: 'yellow' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1160px; top: 445px; width: 180px;">
+            <OrgCard :node="{ key: 'dir_tech', title: 'DIRECTEUR TECHNIQUE', highlight: 'yellow' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'dir_tech', title: 'DIRECTEUR TECHNIQUE', highlight: 'yellow' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'dir_tech', title: 'DIRECTEUR TECHNIQUE', highlight: 'yellow' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 1020px; top: 540px; width: 160px;">
-            <OrgCard :node="{ key: 'chef_etudes', title: 'CHEF SERVICE ÉTUDES' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'chef_etudes', title: 'CHEF SERVICE ÉTUDES' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1010px; top: 545px; width: 180px;">
+            <OrgCard :node="{ key: 'chef_etudes', title: 'CHEF SERVICE ÉTUDES' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'chef_etudes', title: 'CHEF SERVICE ÉTUDES' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'chef_etudes', title: 'CHEF SERVICE ÉTUDES' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 1320px; top: 540px; width: 160px;">
-            <OrgCard :node="{ key: 'chef_travaux', title: 'CHEF SERVICE TRAVAUX' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'chef_travaux', title: 'CHEF SERVICE TRAVAUX' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1310px; top: 545px; width: 180px;">
+            <OrgCard :node="{ key: 'chef_travaux', title: 'CHEF SERVICE TRAVAUX' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'chef_travaux', title: 'CHEF SERVICE TRAVAUX' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'chef_travaux', title: 'CHEF SERVICE TRAVAUX' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 1150px; top: 620px; width: 160px;">
-            <OrgCard :node="{ key: 'tech_etudes', title: 'TECHNICIENS BUREAU D\'ÉTUDES' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'tech_etudes', title: 'TECHNICIENS BUREAU D\'ÉTUDES' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1130px; top: 625px; width: 180px;">
+            <OrgCard :node="{ key: 'tech_etudes', title: 'TECHNICIENS BUREAU D\'ÉTUDES' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'tech_etudes', title: 'TECHNICIENS BUREAU D\'ÉTUDES' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'tech_etudes', title: 'TECHNICIENS BUREAU D\'ÉTUDES' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 1150px; top: 700px; width: 160px;">
-            <OrgCard :node="{ key: 'charge_projet', title: 'CHARGÉS DE PROJET' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'charge_projet', title: 'CHARGÉS DE PROJET' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1130px; top: 705px; width: 180px;">
+            <OrgCard :node="{ key: 'charge_projet', title: 'CHARGÉS DE PROJET' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'charge_projet', title: 'CHARGÉS DE PROJET' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'charge_projet', title: 'CHARGÉS DE PROJET' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 1150px; top: 780px; width: 160px;">
-            <OrgCard :node="{ key: 'charge_suivi', title: 'CHARGÉ DU SUIVI ET DES PLANNINGS' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'charge_suivi', title: 'CHARGÉ DU SUIVI ET DES PLANNINGS' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1130px; top: 785px; width: 180px;">
+            <OrgCard :node="{ key: 'charge_suivi', title: 'CHARGÉ DU SUIVI ET DES PLANNINGS' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'charge_suivi', title: 'CHARGÉ DU SUIVI ET DES PLANNINGS' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'charge_suivi', title: 'CHARGÉ DU SUIVI ET DES PLANNINGS' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 1450px; top: 620px; width: 160px;">
-            <OrgCard :node="{ key: 'cond_travaux', title: 'CONDUCTEURS DE TRAVAUX' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'cond_travaux', title: 'CONDUCTEURS DE TRAVAUX' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1430px; top: 625px; width: 180px;">
+            <OrgCard :node="{ key: 'cond_travaux', title: 'CONDUCTEURS DE TRAVAUX' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'cond_travaux', title: 'CONDUCTEURS DE TRAVAUX' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'cond_travaux', title: 'CONDUCTEURS DE TRAVAUX' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 1450px; top: 700px; width: 160px;">
-            <OrgCard :node="{ key: 'chef_atelier', title: 'CHEF D\'ATELIER' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'chef_atelier', title: 'CHEF D\'ATELIER' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1430px; top: 705px; width: 180px;">
+            <OrgCard :node="{ key: 'chef_atelier', title: 'CHEF D\'ATELIER' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'chef_atelier', title: 'CHEF D\'ATELIER' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'chef_atelier', title: 'CHEF D\'ATELIER' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 1450px; top: 780px; width: 160px;">
-            <OrgCard :node="{ key: 'chef_chantier', title: 'CHEFS DE CHANTIER' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'chef_chantier', title: 'CHEFS DE CHANTIER' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1430px; top: 785px; width: 180px;">
+            <OrgCard :node="{ key: 'chef_chantier', title: 'CHEFS DE CHANTIER' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'chef_chantier', title: 'CHEFS DE CHANTIER' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'chef_chantier', title: 'CHEFS DE CHANTIER' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
-          <div class="absolute z-10" style="left: 1450px; top: 860px; width: 160px;">
-            <OrgCard :node="{ key: 'vigiles', title: 'VIGILES' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'vigiles', title: 'VIGILES' })" />
+          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: 1430px; top: 865px; width: 180px;">
+            <OrgCard :node="{ key: 'vigiles', title: 'VIGILES' }" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({ key: 'vigiles', title: 'VIGILES' })" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{ key: 'vigiles', title: 'VIGILES' }.highlight === 'yellow' ? 'border-yellow-400' : 'border-red-600']" />
           </div>
 <!-- LINES -->
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 749px; top: 80px; width: 2px; height: 340px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 250px; top: 419px; width: 1000px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 249px; top: 420px; width: 2px; height: 20px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 749px; top: 420px; width: 2px; height: 20px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 1249px; top: 420px; width: 2px; height: 20px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 450px; top: 149px; width: 300px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 750px; top: 149px; width: 300px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 449px; top: 180px; width: 2px; height: 20px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 350px; top: 199px; width: 200px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 349px; top: 200px; width: 2px; height: 20px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 549px; top: 200px; width: 2px; height: 20px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 530px; top: 349px; width: 220px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 140px; top: 469px; width: 30px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 139px; top: 470px; width: 2px; height: 310px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 140px; top: 569px; width: 30px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 140px; top: 649px; width: 30px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 140px; top: 729px; width: 30px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 140px; top: 809px; width: 30px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 749px; top: 500px; width: 2px; height: 20px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 550px; top: 519px; width: 400px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 549px; top: 520px; width: 2px; height: 20px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 749px; top: 520px; width: 2px; height: 20px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 949px; top: 520px; width: 2px; height: 20px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 1249px; top: 500px; width: 2px; height: 20px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 1100px; top: 519px; width: 300px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 1099px; top: 520px; width: 2px; height: 20px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 1399px; top: 520px; width: 2px; height: 20px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 1099px; top: 600px; width: 2px; height: 210px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 1100px; top: 649px; width: 50px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 1100px; top: 729px; width: 50px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 1100px; top: 809px; width: 50px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 1399px; top: 600px; width: 2px; height: 290px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 1400px; top: 649px; width: 50px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 1400px; top: 729px; width: 50px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 1400px; top: 809px; width: 50px; height: 2px;"></div>
-          <div class="absolute bg-[#9ca3af] z-0" style="left: 1400px; top: 889px; width: 50px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 750px; top: 85px; width: 2px; height: 345px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 540px; top: 140px; width: 210px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 750px; top: 190px; width: 210px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 640px; top: 250px; width: 110px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 340px; top: 250px; width: 120px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 540px; top: 330px; width: 210px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 250px; top: 430px; width: 1000px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 250px; top: 430px; width: 2px; height: 15px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 750px; top: 430px; width: 2px; height: 15px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1250px; top: 430px; width: 2px; height: 15px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 250px; top: 515px; width: 2px; height: 15px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 130px; top: 530px; width: 120px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 130px; top: 530px; width: 2px; height: 290px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 130px; top: 580px; width: 30px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 130px; top: 660px; width: 30px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 130px; top: 740px; width: 30px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 130px; top: 820px; width: 30px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 750px; top: 515px; width: 2px; height: 25px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 500px; top: 540px; width: 500px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 500px; top: 540px; width: 2px; height: 5px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 750px; top: 540px; width: 2px; height: 5px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1000px; top: 540px; width: 2px; height: 5px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1250px; top: 515px; width: 2px; height: 25px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1100px; top: 540px; width: 300px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1100px; top: 540px; width: 2px; height: 5px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1400px; top: 540px; width: 2px; height: 5px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1100px; top: 615px; width: 2px; height: 15px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1100px; top: 630px; width: 0px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1100px; top: 630px; width: 2px; height: 190px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1100px; top: 660px; width: 30px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1100px; top: 740px; width: 30px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1100px; top: 820px; width: 30px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1400px; top: 615px; width: 2px; height: 15px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1400px; top: 630px; width: 2px; height: 270px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1400px; top: 660px; width: 30px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1400px; top: 740px; width: 30px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1400px; top: 820px; width: 30px; height: 2px;"></div>
+          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: 1400px; top: 900px; width: 30px; height: 2px;"></div>
 
 </div>
 </div>

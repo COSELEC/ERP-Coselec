@@ -1,93 +1,131 @@
 import json
 
-nodes = [
-    {"key": "dg", "title": "DIRECTEUR GÉNÉRAL", "l": 670, "t": 20},
-    {"key": "dga", "title": "DIRECTEUR GÉNÉRAL ADJOINT", "l": 370, "t": 120},
-    {"key": "assistante", "title": "ASSISTANTE DE DIRECTION", "l": 970, "t": 120},
-    {"key": "ast_smqse", "title": "ASSISTANT SMQSE", "l": 270, "t": 220},
-    {"key": "resp_smqse", "title": "RESPONSABLE SMQSE", "l": 470, "t": 220},
-    {"key": "resp_it", "title": "RESPONSABLE SUPPORT IT", "l": 370, "t": 320},
-    
-    {"key": "dir_fin", "title": "DIRECTEUR DES FINANCES ET CONTRÔLE", "l": 170, "t": 440, "hl": "yellow"},
-    {"key": "comp_rh", "title": "COMPTABLE ET RESPONSABLE RH", "l": 170, "t": 540},
-    {"key": "comp_tres", "title": "COMPTABLE TRÉSORERIE", "l": 170, "t": 620},
-    {"key": "comp_fourn", "title": "COMPTABLE FOURNISSEURS CLIENTS", "l": 170, "t": 700},
-    {"key": "recouv", "title": "CHARGÉE DU RECOUVREMENT", "l": 170, "t": 780},
-    
-    {"key": "resp_com", "title": "RESPONSABLE PÔLE COMMERCIAL & APPRO", "l": 670, "t": 440, "hl": "yellow"},
-    {"key": "serv_com", "title": "SERVICE COMMERCIAL", "l": 470, "t": 540},
-    {"key": "serv_appro", "title": "SERVICE APPRO", "l": 670, "t": 540},
-    {"key": "serv_log", "title": "SERVICE LOGISTIQUE", "l": 870, "t": 540},
-    
-    {"key": "dir_tech", "title": "DIRECTEUR TECHNIQUE", "l": 1170, "t": 440, "hl": "yellow"},
-    {"key": "chef_etudes", "title": "CHEF SERVICE ÉTUDES", "l": 1020, "t": 540},
-    {"key": "chef_travaux", "title": "CHEF SERVICE TRAVAUX", "l": 1320, "t": 540},
-    
-    {"key": "tech_etudes", "title": "TECHNICIENS BUREAU D'ÉTUDES", "l": 1150, "t": 620},
-    {"key": "charge_projet", "title": "CHARGÉS DE PROJET", "l": 1150, "t": 700},
-    {"key": "charge_suivi", "title": "CHARGÉ DU SUIVI ET DES PLANNINGS", "l": 1150, "t": 780},
-    
-    {"key": "cond_travaux", "title": "CONDUCTEURS DE TRAVAUX", "l": 1450, "t": 620},
-    {"key": "chef_atelier", "title": "CHEF D'ATELIER", "l": 1450, "t": 700},
-    {"key": "chef_chantier", "title": "CHEFS DE CHANTIER", "l": 1450, "t": 780},
-    {"key": "vigiles", "title": "VIGILES", "l": 1450, "t": 860},
-]
+W = 180
+H = 70
 
-lines = [
-    {"l": 749, "t": 80, "w": 2, "h": 340},
-    {"l": 250, "t": 419, "w": 1000, "h": 2},
-    {"l": 249, "t": 420, "w": 2, "h": 20},
-    {"l": 749, "t": 420, "w": 2, "h": 20},
-    {"l": 1249, "t": 420, "w": 2, "h": 20},
-    {"l": 450, "t": 149, "w": 300, "h": 2},
-    {"l": 750, "t": 149, "w": 300, "h": 2},
-    {"l": 449, "t": 180, "w": 2, "h": 20},
-    {"l": 350, "t": 199, "w": 200, "h": 2},
-    {"l": 349, "t": 200, "w": 2, "h": 20},
-    {"l": 549, "t": 200, "w": 2, "h": 20},
-    {"l": 530, "t": 349, "w": 220, "h": 2},
-    {"l": 140, "t": 469, "w": 30, "h": 2},
-    {"l": 139, "t": 470, "w": 2, "h": 310},
-    {"l": 140, "t": 569, "w": 30, "h": 2},
-    {"l": 140, "t": 649, "w": 30, "h": 2},
-    {"l": 140, "t": 729, "w": 30, "h": 2},
-    {"l": 140, "t": 809, "w": 30, "h": 2},
-    {"l": 749, "t": 500, "w": 2, "h": 20},
-    {"l": 550, "t": 519, "w": 400, "h": 2},
-    {"l": 549, "t": 520, "w": 2, "h": 20},
-    {"l": 749, "t": 520, "w": 2, "h": 20},
-    {"l": 949, "t": 520, "w": 2, "h": 20},
-    {"l": 1249, "t": 500, "w": 2, "h": 20},
-    {"l": 1100, "t": 519, "w": 300, "h": 2},
-    {"l": 1099, "t": 520, "w": 2, "h": 20},
-    {"l": 1399, "t": 520, "w": 2, "h": 20},
-    {"l": 1099, "t": 600, "w": 2, "h": 210},
-    {"l": 1100, "t": 649, "w": 50, "h": 2},
-    {"l": 1100, "t": 729, "w": 50, "h": 2},
-    {"l": 1100, "t": 809, "w": 50, "h": 2},
-    {"l": 1399, "t": 600, "w": 2, "h": 290},
-    {"l": 1400, "t": 649, "w": 50, "h": 2},
-    {"l": 1400, "t": 729, "w": 50, "h": 2},
-    {"l": 1400, "t": 809, "w": 50, "h": 2},
-    {"l": 1400, "t": 889, "w": 50, "h": 2},
-]
+# CX, CY, Title, Highlight
+nodes_data = {
+    'dg': (750, 50, 'DIRECTEUR GÉNÉRAL', None),
+    'dga': (450, 140, 'DIRECTEUR GÉNÉRAL ADJOINT', None),
+    'assistante': (1050, 190, 'ASSISTANTE DE DIRECTION', None),
+    'resp_smqse': (550, 250, 'RESPONSABLE SMQSE', None),
+    'ast_smqse': (250, 250, 'ASSISTANT SMQSE', None),
+    'resp_it': (450, 330, 'RESPONSABLE SUPPORT IT', None),
+    
+    'dir_fin': (250, 480, 'DIRECTEUR DES FINANCES ET CONTRÔLE', 'yellow'),
+    'comp_rh': (250, 580, 'COMPTABLE ET RESPONSABLE RH', None),
+    'comp_tres': (250, 660, 'COMPTABLE TRÉSORERIE', None),
+    'comp_fourn': (250, 740, 'COMPTABLE FOURNISSEURS CLIENTS', None),
+    'recouv': (250, 820, 'CHARGÉE DU RECOUVREMENT', None),
+    
+    'resp_com': (750, 480, 'RESPONSABLE PÔLE COMMERCIAL & APPRO', 'yellow'),
+    'serv_com': (500, 580, 'SERVICE COMMERCIAL', None),
+    'serv_appro': (750, 580, 'SERVICE APPRO', None),
+    'serv_log': (1000, 580, 'SERVICE LOGISTIQUE', None),
+    
+    'dir_tech': (1250, 480, 'DIRECTEUR TECHNIQUE', 'yellow'),
+    'chef_etudes': (1100, 580, 'CHEF SERVICE ÉTUDES', None),
+    'chef_travaux': (1400, 580, 'CHEF SERVICE TRAVAUX', None),
+    
+    'tech_etudes': (1220, 660, "TECHNICIENS BUREAU D'ÉTUDES", None),
+    'charge_projet': (1220, 740, 'CHARGÉS DE PROJET', None),
+    'charge_suivi': (1220, 820, 'CHARGÉ DU SUIVI ET DES PLANNINGS', None),
+    
+    'cond_travaux': (1520, 660, 'CONDUCTEURS DE TRAVAUX', None),
+    'chef_atelier': (1520, 740, "CHEF D'ATELIER", None),
+    'chef_chantier': (1520, 820, 'CHEFS DE CHANTIER', None),
+    'vigiles': (1520, 900, 'VIGILES', None),
+}
+
+lines_data = []
+def add_line(x, y, w, h):
+    lines_data.append({"l": x, "t": y, "w": w, "h": h})
+
+def hline(x1, x2, y):
+    add_line(min(x1, x2), y, abs(x2 - x1), 2)
+
+def vline(x, y1, y2):
+    add_line(x, min(y1, y2), 2, abs(y2 - y1))
+
+# Spine
+vline(750, 85, 430)
+
+# DGA
+hline(750, 540, 140)
+
+# Assistante
+hline(750, 960, 190)
+
+# Resp SMQSE
+hline(750, 640, 250)
+
+# Ast SMQSE (from Resp SMQSE)
+hline(460, 340, 250)
+
+# Resp IT
+hline(750, 540, 330)
+
+# Main Horizontal Divider
+hline(250, 1250, 430)
+vline(250, 430, 445)
+vline(750, 430, 445)
+vline(1250, 430, 445)
+
+# Finance Sub-branch
+vline(250, 515, 530)
+hline(250, 130, 530)
+vline(130, 530, 820)
+for cy in [580, 660, 740, 820]:
+    hline(130, 160, cy)
+
+# Commercial Sub-branch
+vline(750, 515, 540)
+hline(500, 1000, 540)
+for cx in [500, 750, 1000]:
+    vline(cx, 540, 545)
+
+# Technique Sub-branch
+vline(1250, 515, 540)
+hline(1100, 1400, 540)
+for cx in [1100, 1400]:
+    vline(cx, 540, 545)
+
+# Chef Etudes Sub-branch
+vline(1100, 615, 630)
+hline(1100, 1100, 630) # wait, where do the boxes start?
+# tech_etudes center is 1220. Left edge is 1130.
+# let's drop the vertical line at 1100 down to 820.
+vline(1100, 630, 820)
+for cy in [660, 740, 820]:
+    hline(1100, 1130, cy)
+
+# Chef Travaux Sub-branch
+vline(1400, 615, 630)
+# vigiles center is 1520. Left edge is 1430.
+vline(1400, 630, 900)
+for cy in [660, 740, 820, 900]:
+    hline(1400, 1430, cy)
+
 
 html_nodes = []
-for n in nodes:
-    hl = f"highlight: '{n.get('hl')}'" if 'hl' in n else ""
-    title = n['title'].replace("'", "\\'")
-    obj_str = "{ key: '" + n['key'] + "', title: '" + title + "'"
-    if hl:
-        obj_str += ", " + hl
+for key, (cx, cy, title, hl) in nodes_data.items():
+    l = cx - W // 2
+    t = cy - H // 2
+    hl_str = f"highlight: '{hl}'" if hl else ""
+    title_escaped = title.replace("'", "\\'")
+    obj_str = "{ key: '" + key + "', title: '" + title_escaped + "'"
+    if hl_str:
+        obj_str += ", " + hl_str
     obj_str += " }"
     
-    html_nodes.append(f'          <div class="absolute z-10" style="left: {n["l"]}px; top: {n["t"]}px; width: 160px;">')
-    html_nodes.append(f'            <OrgCard :node="{obj_str}" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({obj_str})" />')
+    html_nodes.append(f'          <div class="absolute z-10 hover:z-20 transition-all duration-300" style="left: {l}px; top: {t}px; width: {W}px;">')
+    html_nodes.append(f'            <OrgCard :node="{obj_str}" :assignments="assignments" :get-employee-name="getEmployeeName" :get-employee-photo="getEmployeePhoto" :can-assign="canAssign" @click="openAssignModal({obj_str})" class="shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-t-4" :class="[{obj_str}.highlight === \'yellow\' ? \'border-yellow-400\' : \'border-red-600\']" />')
     html_nodes.append(f'          </div>')
 
 html_lines = []
-for i, l in enumerate(lines):
-    html_lines.append(f'          <div class="absolute bg-[#9ca3af] z-0" style="left: {l["l"]}px; top: {l["t"]}px; width: {l["w"]}px; height: {l["h"]}px;"></div>')
+for l in lines_data:
+    # Use rounded corners for lines to make it "plus sympa"
+    html_lines.append(f'          <div class="absolute bg-slate-300 z-0 rounded-full" style="left: {l["l"]}px; top: {l["t"]}px; width: {l["w"]}px; height: {l["h"]}px;"></div>')
 
 with open("org_output.html", "w", encoding="utf-8") as f:
     f.write("<!-- NODES -->\n")
