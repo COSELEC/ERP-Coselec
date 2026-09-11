@@ -53,9 +53,10 @@
         <!-- Filters Row (Scope, Search, Status) -->
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
           
-          <!-- Scope Switch (Toutes / Mes demandes / Concerné) -->
+          <!-- Scope Switch (visible uniquement pour les admins/validateurs) -->
           <div class="inline-flex rounded-2xl bg-gray-100 p-1">
             <button
+              v-if="isAdminOrValidator"
               @click="activeScope = 'all'"
               class="px-3 py-1.5 rounded-xl text-xs font-bold transition"
               :class="activeScope === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'"
@@ -436,7 +437,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import UserAvatar from '@/components/common/UserAvatar.vue';
 import api from '@/services/api';
 import { useToast, useStatusBadges, useFormatters } from '@/composables';
-import { getStoredProfile } from '@/services/session';
+import { getStoredProfile, hasPermission } from '@/services/session';
 
 const route = useRoute();
 const router = useRouter();
@@ -449,10 +450,17 @@ const isUserAdmin = computed(() => {
   return currentUser?.roles?.includes('Admin') || false;
 });
 
+// Vrai si l'utilisateur peut voir TOUTES les demandes (admin ou validateur de n'importe quelle catégorie)
+const isAdminOrValidator = computed(() => {
+  const perms = currentUser?.permissions || [];
+  return hasPermission(perms, ['requests.validate_hr', 'requests.validate_it', 'requests.validate_facility', 'requests.validate_finance']) || isUserAdmin.value;
+});
+
 const requests = ref<any[]>([]);
 const loading = ref(false);
 
 const activeCategory = ref<string>('ALL');
+// Pour les non-admins/validateurs : forcé sur 'mine'
 const activeScope = ref<'all' | 'mine' | 'concerning'>('all');
 const searchQuery = ref<string>('');
 const statusFilter = ref<string>('ALL');
@@ -560,16 +568,32 @@ const getPdfUrl = (req: any) => {
 
 const filteredRequests = computed(() => {
   return requests.value.filter((req) => {
+    // 0. Si non-admin/validateur : ne voir que ses demandes + celles à traiter
+    if (!isAdminOrValidator.value) {
+      const isMine = req.requester_id === currentUser?.id;
+      const isConcerning = req.requester_id !== currentUser?.id && ['PENDING', 'PENDING_MANAGER_APPROVAL', 'PENDING_FINANCE_APPROVAL'].includes(req.status);
+      if (!isMine && !isConcerning) return false;
+    }
+
     // 1. Category tab
     if (activeCategory.value !== 'ALL') {
       if (getCategory(req) !== activeCategory.value) return false;
     }
 
-    // 2. Scope
-    if (activeScope.value === 'mine') {
-      if (req.requester_id !== currentUser?.id) return false;
-    } else if (activeScope.value === 'concerning') {
-      if (req.requester_id === currentUser?.id) return false;
+    // 2. Scope (for admins/validators)
+    if (isAdminOrValidator.value) {
+      if (activeScope.value === 'mine') {
+        if (req.requester_id !== currentUser?.id) return false;
+      } else if (activeScope.value === 'concerning') {
+        if (req.requester_id === currentUser?.id) return false;
+      }
+    } else {
+      // Pour les non-validateurs, le scope "mine" vs "concerning" est actif aussi
+      if (activeScope.value === 'mine') {
+        if (req.requester_id !== currentUser?.id) return false;
+      } else if (activeScope.value === 'concerning') {
+        if (req.requester_id === currentUser?.id) return false;
+      }
     }
 
     // 3. Status

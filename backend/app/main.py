@@ -22,6 +22,7 @@ from app.modules.users.routes.auth import router as auth_router
 from app.modules.users.routes.employees import router as employees_router
 from app.modules.users.routes.users import router as users_router
 from app.modules.users.routes.roles import router as roles_router
+from app.modules.users.routes.org_assignments import router as org_assignments_router
 from app.modules.users.services.rbac import (
     ensure_admin_role_for_email,
     ensure_rbac_setup,
@@ -151,6 +152,7 @@ app.include_router(chat_router)
 app.include_router(daily_reports_router)
 app.include_router(quality_router)
 app.include_router(kpi_router)
+app.include_router(org_assignments_router)
 
 @app.get("/uploads/{file_path:path}")
 def get_uploaded_file(file_path: str):

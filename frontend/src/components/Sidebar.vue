@@ -172,8 +172,8 @@ onMounted(async () => {
 
         <SidebarItem
           to="/departments"
-          icon="apartment"
-          label="Départements"
+          icon="calendar_month"
+          label="Planning / Affectations"
           :collapsed="collapsed"
         />
 
@@ -191,7 +191,7 @@ onMounted(async () => {
         <SidebarItem
           to="/requests"
           icon="add_circle"
-          label="Créer une demande"
+          label="Mes demandes"
           :collapsed="collapsed"
         />
 
@@ -236,66 +236,6 @@ onMounted(async () => {
           label="Pièce de Caisse"
           :collapsed="collapsed"
         />
-        
-        <SidebarItem
-          to="/bank-voucher"
-          icon="account_balance"
-          label="Pièce de Banque"
-          :collapsed="collapsed"
-        />
-      </div>
-
-
-      <!-- Stock -->
-      <div v-if="canViewStock">
-        <h2
-          v-if="!collapsed"
-          class="text-xs uppercase text-red-200 mb-2"
-        >
-          Stock
-        </h2>
-
-        <SidebarItem
-          to="/stock"
-          icon="inventory_2"
-          label="Vue d'ensemble"
-          :collapsed="collapsed"
-        />
-
-        <SidebarItem
-          to="/stock/movement"
-          icon="sync_alt"
-          label="Mouvements"
-          :collapsed="collapsed"
-        />
-
-        <SidebarItem
-          to="/stock/canvas"
-          icon="view_kanban"
-          label="Canvas"
-          :collapsed="collapsed"
-        />
-
-        <SidebarItem
-          to="/stock-reservations"
-          icon="event_seat"
-          label="Réservations"
-          :collapsed="collapsed"
-        />
-
-        <SidebarItem
-          to="/procurement"
-          icon="shopping_cart"
-          label="Achats"
-          :collapsed="collapsed"
-        />
-      </div>
-
-      <div v-if="canViewProjects">
-        <h2 v-if="!collapsed" class="text-xs uppercase text-red-200 mb-2">Projets</h2>
-        <SidebarItem to="/project-dashboard" icon="dashboard" label="Dashboard Projet" :collapsed="collapsed"></SidebarItem>
-        <SidebarItem to="/projects" icon="work" label="Projets" :collapsed="collapsed"></SidebarItem>
-        <SidebarItem to="/project-budget" icon="account_balance_wallet" label="Budgets" :collapsed="collapsed"></SidebarItem>
       </div>
 
       <!-- Admin -->

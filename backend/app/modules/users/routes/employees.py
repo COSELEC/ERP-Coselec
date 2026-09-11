@@ -297,10 +297,21 @@ def delete_employee(
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(
-            status_code=400,
-            detail="Impossible de supprimer l'employé : il est toujours assigné à des projets, tâches, ou possède des documents liés. Veuillez les réassigner ou les supprimer d'abord."
+        # Si impossible de supprimer physiquement, on désactive le compte (Soft Delete)
+        employee.is_active = False
+        db.add(employee)
+        db.commit()
+        
+        create_notification(
+            db=db,
+            user_id=current_user.id,
+            message=f"Employé désactivé (liens existants): {deleted_label}",
+            type=NotificationType.WARNING,
+            reference_id=del_id
         )
+        return {
+            "message": "L'employé a été désactivé au lieu d'être supprimé (car il est lié à des documents ou projets)."
+        }
 
     create_notification(
         db=db,

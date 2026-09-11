@@ -98,7 +98,7 @@
                 <input type="text" v-model="form.position" required class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
               </div>
               <div class="col-span-1 md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Département</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Direction / Service</label>
                 <select v-model="form.department_id" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition">
                   <option value="">-- Aucun --</option>
                   <option v-for="dep in departments" :key="dep.id" :value="dep.id">{{ dep.name }}</option>
@@ -163,7 +163,7 @@
                 <input type="text" v-model="editForm.position" required class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Département</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Direction / Service</label>
                 <select v-model="editForm.department_id" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition">
                   <option value="">-- Aucun --</option>
                   <option v-for="dep in departments" :key="dep.id" :value="dep.id">{{ dep.name }}</option>
@@ -186,15 +186,28 @@
                   <option v-for="emp in availableManagers" :key="emp.id" :value="emp.id">{{ emp.first_name }} {{ emp.last_name }} - {{ emp.position }}</option>
                 </select>
               </div>
-              <div class="col-span-1 md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Employés supervisés (Maintenez Ctrl pour sélection multiple)</label>
-                <select v-model="editForm.supervised_employee_ids" multiple class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition h-32">
-                  <option v-for="emp in availableSubordinates" :key="emp.id" :value="emp.id">{{ emp.first_name }} {{ emp.last_name }} - {{ emp.position }}</option>
-                </select>
-              </div>
+
               <div class="col-span-1 md:col-span-2 flex items-center gap-3 pt-2">
                 <input type="checkbox" id="edit_is_active" v-model="editForm.is_active" class="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500" />
                 <label for="edit_is_active" class="text-sm font-medium text-gray-700">Compte employé actif</label>
+              </div>
+              <!-- Changer de photo directement dans le formulaire -->
+              <div class="col-span-1 md:col-span-2 pt-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Changer de photo</label>
+                <div class="flex items-center gap-4">
+                  <div class="relative">
+                    <div v-if="editPhotoPreview || editForm.id" class="w-16 h-16 rounded-full overflow-hidden border-2 border-red-200 bg-gray-100 flex items-center justify-center">
+                      <img v-if="editPhotoPreview" :src="editPhotoPreview" class="w-full h-full object-cover" />
+                      <span v-else class="material-symbols-outlined text-gray-400 text-3xl">person</span>
+                    </div>
+                  </div>
+                  <label class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-red-50 hover:text-red-700 text-gray-700 rounded-xl cursor-pointer transition border border-gray-200 hover:border-red-200">
+                    <span class="material-symbols-outlined text-sm">photo_camera</span>
+                    <span class="text-sm font-medium">Choisir une photo</span>
+                    <input type="file" class="hidden" accept="image/*" @change="handleEditPhotoChange" />
+                  </label>
+                  <span v-if="editPhotoPreview" class="text-xs text-green-600 font-medium">✓ Photo sélectionnée</span>
+                </div>
               </div>
             </div>
             <div class="mt-8 flex justify-end gap-3 pt-4 border-t">
@@ -257,10 +270,24 @@
               <div><p class="text-xs text-gray-500 uppercase">Matricule</p><p class="font-medium text-gray-900">{{ selectedEmployee.matricule || 'Non défini' }}</p></div>
               <div><p class="text-xs text-gray-500 uppercase">Email professionnel</p><p class="font-medium text-gray-900">{{ selectedEmployee.email }}</p></div>
               <div><p class="text-xs text-gray-500 uppercase">Téléphone</p><p class="font-medium text-gray-900">{{ selectedEmployee.phone || 'Non renseigné' }}</p></div>
-              <div><p class="text-xs text-gray-500 uppercase">Département</p><p class="font-medium text-gray-900">{{ getDepartmentName(selectedEmployee.department_id) }}</p></div>
+              <div><p class="text-xs text-gray-500 uppercase">Direction / Service</p><p class="font-medium text-gray-900">{{ getDepartmentName(selectedEmployee.department_id) }}</p></div>
               <div><p class="text-xs text-gray-500 uppercase">Manager</p><p class="font-medium text-gray-900">{{ getManagerName(selectedEmployee.manager_id) }}</p></div>
               <div><p class="text-xs text-gray-500 uppercase">Compte</p><p class="font-medium text-gray-900"><span :class="selectedEmployee.is_active !== false ? 'text-emerald-600' : 'text-rose-600'">{{ selectedEmployee.is_active !== false ? 'Actif' : 'Inactif' }}</span></p></div>
             </div>
+          </section>
+
+          <section class="bg-white p-5 rounded-xl border border-red-100 shadow-sm">
+            <h3 class="text-sm font-bold text-[#7f071c] uppercase tracking-wider mb-4 border-b border-red-100 pb-2 flex items-center gap-2">
+              <span class="material-symbols-outlined text-base">work_outline</span>
+              <span>Fiche de Poste</span>
+              <button 
+                v-if="canUpdateEmployee"
+                @click="openJobDescModal" 
+                class="ml-auto text-[10px] font-semibold text-[#b30c27] hover:text-white hover:bg-[#b30c27] border border-red-200 px-2 py-0.5 rounded-lg transition"
+              >Éditer</button>
+            </h3>
+            <div v-if="selectedEmployee.job_description" class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{{ selectedEmployee.job_description }}</div>
+            <p v-else class="text-sm text-gray-400 italic">Aucune fiche de poste définie pour cet employé.</p>
           </section>
 
           <section class="bg-white p-5 rounded-xl border border-red-100 shadow-sm">
@@ -298,6 +325,34 @@
       </div>
     </div>
   </AppLayout>
+
+  <!-- Modal Fiche de Poste -->
+  <div v-if="showJobDescModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
+    <div class="bg-white rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl">
+      <div class="px-6 py-4 bg-[#b30c27] text-white flex justify-between items-center">
+        <h2 class="text-xl font-bold flex items-center gap-2">
+          <span class="material-symbols-outlined">work_outline</span>
+          Fiche de Poste — {{ selectedEmployee?.first_name }} {{ selectedEmployee?.last_name }}
+        </h2>
+        <button @click="showJobDescModal = false" class="hover:bg-[#d10f2f] p-1 rounded-full transition">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="p-6 space-y-4">
+        <p class="text-sm text-gray-500">Décrivez les missions, responsabilités et compétences attendues pour ce poste.</p>
+        <textarea 
+          v-model="jobDescDraft"
+          rows="8"
+          placeholder="Ex : Assurer la gestion comptable, superviser les déclarations fiscales, coordonner avec les équipes RH..."
+          class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition resize-none"
+        ></textarea>
+        <div class="flex justify-end gap-3 pt-2 border-t border-gray-100">
+          <button @click="showJobDescModal = false" class="px-6 py-2 text-gray-700 hover:bg-gray-100 rounded-xl transition">Annuler</button>
+          <button @click="saveJobDescription" class="px-6 py-2 bg-[#d10f2f] text-white hover:bg-[#97091f] rounded-xl shadow-lg transition">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -349,11 +404,45 @@ interface Employee {
   has_expiring_documents?: boolean;
   photo_url?: string | null;
   signature_url?: string | null;
+  job_description?: string | null;
 }
 
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
 const isSubmittingEdit = ref(false);
+const editPhotoPreview = ref<string | null>(null);
+const editPhotoFile = ref<File | null>(null);
+
+// Fiche de poste modal
+const showJobDescModal = ref(false);
+const jobDescDraft = ref('');
+
+const openJobDescModal = () => {
+  if (!selectedEmployee.value) return;
+  jobDescDraft.value = selectedEmployee.value.job_description || '';
+  showJobDescModal.value = true;
+};
+
+const saveJobDescription = async () => {
+  if (!selectedEmployee.value) return;
+  try {
+    const res = await employeeService.updateEmployee(selectedEmployee.value.id, { job_description: jobDescDraft.value } as any);
+    selectedEmployee.value.job_description = jobDescDraft.value;
+    const empInList = employees.value.find(e => e.id === selectedEmployee.value?.id) as any;
+    if (empInList) empInList.job_description = jobDescDraft.value;
+    showJobDescModal.value = false;
+    toast.success('Fiche de poste mise à jour.');
+  } catch (e) {
+    toast.error("Erreur lors de la mise à jour de la fiche de poste.");
+  }
+};
+
+const handleEditPhotoChange = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  if (!target.files || !target.files[0]) return;
+  editPhotoFile.value = target.files[0];
+  editPhotoPreview.value = URL.createObjectURL(target.files[0]);
+};
 
 const employees = ref<Employee[]>([]);
 const departments = ref<any[]>([]);
@@ -461,6 +550,9 @@ const openEditModal = async (employee: Employee) => {
     };
   }
   
+  editPhotoPreview.value = null;
+  editPhotoFile.value = null;
+  
   showEditModal.value = true;
 };
 
@@ -538,6 +630,25 @@ async function submitEditEmployee() {
     };
 
     const res = await employeeService.updateEmployee(editForm.value.id, payload);
+
+    // Upload la photo si une nouvelle a été sélectionnée dans le formulaire
+    if (editPhotoFile.value) {
+      const formDataPhoto = new FormData();
+      formDataPhoto.append('file', editPhotoFile.value);
+      try {
+        const photoRes = await api.post(`/employees/${editForm.value.id}/photo`, formDataPhoto, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        if (selectedEmployee.value && selectedEmployee.value.id === editForm.value.id) {
+          (selectedEmployee.value as any).photo_url = photoRes.data.photo_url;
+        }
+      } catch (photoErr) {
+        console.error('Erreur upload photo', photoErr);
+      }
+      editPhotoFile.value = null;
+      editPhotoPreview.value = null;
+    }
+
     toast.success("Employé mis à jour avec succès");
     showEditModal.value = false;
 

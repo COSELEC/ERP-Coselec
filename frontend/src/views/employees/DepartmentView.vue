@@ -3,8 +3,21 @@ import { ref, onMounted, watch, computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import api from '@/services/api';
 import { useToast } from '@/composables';
+import { getStoredProfile, hasPermission } from '@/services/session';
 
 const toast = useToast();
+const profile = getStoredProfile();
+const profilePermissions = profile?.permissions || [];
+const profileId = profile?.id;
+
+// Le manager ou RH/Admin peut modifier le planning
+const isRhOrAdmin = hasPermission(profilePermissions, ['employees.update']);
+
+const canEditScheduleFor = (emp: any): boolean => {
+  if (isRhOrAdmin) return true;
+  // L'employe est un subordonné direct du manager connecté
+  return emp.manager_id === profileId;
+};
 
 interface Department {
   id: number;
@@ -139,6 +152,12 @@ const fetchHRData = async (): Promise<void> => {
 const openAssignmentModal = (emp: EmployeeSchedule, dayIndex: number): void => {
   const targetDay = currentWeekDays.value[dayIndex];
   if (!targetDay || emp.schedule[dayIndex] === 'NONE') return;
+  
+  // Restriction : seul le manager direct ou RH/Admin peut modifier
+  if (!canEditScheduleFor(emp)) {
+    toast.error("Seul le responsable direct ou le service RH peut modifier ce planning.");
+    return;
+  }
 
   selectedEmployee.value = emp;
   selectedDate.value = targetDay.fullDate;
@@ -265,7 +284,7 @@ onMounted(async () => {
               v-model="selectedDepartment"
               class="border border-gray-300 rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-gray-700 focus:outline-none focus:border-red-500 cursor-pointer shadow-2xs"
             >
-              <option value="">Tous les départements</option>
+              <option value="">Toutes les directions / services</option>
               <option v-for="dept in departments" :key="dept.id" :value="dept.id">
                 {{ dept.name }}
               </option>

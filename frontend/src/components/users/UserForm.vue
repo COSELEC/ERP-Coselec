@@ -59,48 +59,57 @@
             </select>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Département</label>
-            <select 
-              v-model="formData.department_id"
-              class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            >
-              <option value="" disabled>Sélectionner un département</option>
-              <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-                {{ dept.name }}
-              </option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-            <select 
-              v-model="formData.status"
-              required
-              class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            >
-              <option value="CDI">CDI</option>
-              <option value="CDD">CDD</option>
-              <option value="STAGIAIRE">Stagiaire</option>
-              <option value="PRESTATAIRE">Prestataire</option>
-              <option value="INACTIF">Inactif</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Manager</label>
-            <select 
-              v-model="formData.manager_id"
-              class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            >
-              <option :value="undefined">Aucun</option>
-              <option 
-                v-for="mgr in availableManagers" 
-                :key="mgr.id" 
-                :value="mgr.id"
+          <!-- Champs réservés à l'édition (gérés par le RH dans la fiche employé) -->
+          <template v-if="isEdit">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Direction / Service</label>
+              <select 
+                v-model="formData.department_id"
+                class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               >
-                {{ mgr.first_name || '' }} {{ mgr.last_name || mgr.name || '' }}
-              </option>
-            </select>
+                <option value="" disabled>Sélectionner une direction / service</option>
+                <option v-for="dept in departments" :key="dept.id" :value="dept.id">
+                  {{ dept.name }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+              <select 
+                v-model="formData.status"
+                class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              >
+                <option value="CDI">CDI</option>
+                <option value="CDD">CDD</option>
+                <option value="STAGIAIRE">Stagiaire</option>
+                <option value="PRESTATAIRE">Prestataire</option>
+                <option value="INACTIF">Inactif</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Manager</label>
+              <select 
+                v-model="formData.manager_id"
+                class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              >
+                <option :value="undefined">Aucun</option>
+                <option 
+                  v-for="mgr in availableManagers" 
+                  :key="mgr.id" 
+                  :value="mgr.id"
+                >
+                  {{ mgr.first_name || '' }} {{ mgr.last_name || mgr.name || '' }}
+                </option>
+              </select>
+            </div>
+          </template>
+
+          <!-- Info visible en création uniquement -->
+          <div v-if="!isEdit" class="p-3 bg-blue-50 border border-blue-100 rounded-lg">
+            <p class="text-xs text-blue-700">
+              <span class="font-semibold">ℹ️ Note :</span> Le département, statut (CDI/CDD…) et le manager seront définis par le service RH dans la fiche employé.
+            </p>
           </div>
         </div>
 

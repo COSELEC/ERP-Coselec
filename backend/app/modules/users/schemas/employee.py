@@ -16,6 +16,7 @@ class EmployeeCreate(BaseModel):
     supervised_employee_ids: Optional[list[int]] = None
     is_active: Optional[bool] = True
     photo_url: Optional[str] = None
+    job_description: Optional[str] = None
 
 
 class EmployeeUpdate(BaseModel):
@@ -31,6 +32,7 @@ class EmployeeUpdate(BaseModel):
     supervised_employee_ids: Optional[list[int]] = None
     is_active: Optional[bool] = None
     photo_url: Optional[str] = None
+    job_description: Optional[str] = None
 
 
 class EmployeeResponse(BaseModel):
@@ -49,6 +51,7 @@ class EmployeeResponse(BaseModel):
     signature_url: Optional[str] = None
     photo_url: Optional[str] = None
     has_expiring_documents: Optional[bool] = False
+    job_description: Optional[str] = None
 
     class Config:
         from_attributes = True

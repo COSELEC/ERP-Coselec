@@ -27,6 +27,7 @@ class User(Base):
     manager_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     signature_url = Column(String, nullable=True)
     photo_url = Column(String, nullable=True)
+    job_description = Column(String, nullable=True)
 
     department = relationship("Department")
     manager = relationship("User", remote_side=[id], back_populates="subordinates")

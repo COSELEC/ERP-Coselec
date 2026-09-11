@@ -19,7 +19,11 @@
           </div>
 
           <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-8">
-            <div class="grid grid-cols-4 gap-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">DATE</label>
+                <input v-model="form.date" type="date" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
+              </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">NUM</label>
                 <input v-model="form.num" type="text" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
@@ -32,7 +36,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">N° CIA</label>
                 <input v-model="form.cia" type="text" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition" />
               </div>
-              <div>
+              <div class="col-span-2 md:col-span-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">MOYEN DE PAIEMENT</label>
                 <select v-model="form.payment_method" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition">
                   <option value="">Sélectionner</option>
@@ -54,17 +58,23 @@
               <table class="w-full text-left text-sm text-gray-600">
                 <thead class="bg-gray-50 text-gray-700">
                   <tr>
-                    <th class="px-4 py-2 rounded-l-lg w-1/4">DATE</th>
-                    <th class="px-4 py-2 w-1/2">DÉSIGNATION</th>
-                    <th class="px-4 py-2">MONTANT</th>
-                    <th class="px-4 py-2 rounded-r-lg w-16"></th>
+                    <th class="px-3 py-2 rounded-l-lg w-10 text-xs">N°</th>
+                    <th class="px-3 py-2 w-2/5 text-xs">DÉSIGNATION</th>
+                    <th class="px-3 py-2 text-xs">QUANTITÉ</th>
+                    <th class="px-3 py-2 text-xs">PRIX UNITAIRE</th>
+                    <th class="px-3 py-2 text-xs">MONTANT TOTAL</th>
+                    <th class="px-3 py-2 rounded-r-lg w-10"></th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="(row, index) in form.depenses" :key="'dep-'+index" class="border-b last:border-0">
-                    <td class="py-2 pr-2"><input v-model="row.date" type="date" class="w-full px-3 py-1.5 border rounded-lg" /></td>
-                    <td class="py-2 pr-2"><input v-model="row.designation" type="text" class="w-full px-3 py-1.5 border rounded-lg" placeholder="Description" /></td>
-                    <td class="py-2 pr-2"><input v-model="row.montant" type="text" class="w-full px-3 py-1.5 border rounded-lg" placeholder="0 CFA" /></td>
+                    <td class="py-2 pr-2 text-xs text-gray-400 font-medium">{{ index + 1 }}</td>
+                    <td class="py-2 pr-2">
+                      <textarea v-model="row.designation" rows="2" class="w-full px-2 py-1 border border-gray-200 rounded-lg text-sm resize-none" placeholder="Désignation..." style="word-break:break-word;white-space:pre-wrap;"></textarea>
+                    </td>
+                    <td class="py-2 pr-2"><input v-model.number="row.quantite" type="number" min="0" class="w-20 px-2 py-1 border border-gray-200 rounded-lg text-sm" placeholder="1" /></td>
+                    <td class="py-2 pr-2"><input v-model.number="row.prix_unitaire" type="number" min="0" class="w-24 px-2 py-1 border border-gray-200 rounded-lg text-sm" placeholder="0 CFA" /></td>
+                    <td class="py-2 pr-2 font-semibold text-gray-900 whitespace-nowrap">{{ ((row.quantite || 0) * (row.prix_unitaire || 0)).toLocaleString('fr-FR') }} CFA</td>
                     <td class="py-2 text-right">
                       <button @click="removeDepense(index)" class="text-gray-400 hover:text-red-500"><span class="material-symbols-outlined text-lg">delete</span></button>
                     </td>
@@ -85,17 +95,23 @@
               <table class="w-full text-left text-sm text-gray-600">
                 <thead class="bg-gray-50 text-gray-700">
                   <tr>
-                    <th class="px-4 py-2 rounded-l-lg w-1/4">DATE</th>
-                    <th class="px-4 py-2 w-1/2">DÉSIGNATION</th>
-                    <th class="px-4 py-2">MONTANT</th>
-                    <th class="px-4 py-2 rounded-r-lg w-16"></th>
+                    <th class="px-3 py-2 rounded-l-lg w-10 text-xs">N°</th>
+                    <th class="px-3 py-2 w-2/5 text-xs">DÉSIGNATION</th>
+                    <th class="px-3 py-2 text-xs">QUANTITÉ</th>
+                    <th class="px-3 py-2 text-xs">PRIX UNITAIRE</th>
+                    <th class="px-3 py-2 text-xs">MONTANT TOTAL</th>
+                    <th class="px-3 py-2 rounded-r-lg w-10"></th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="(row, index) in form.recettes" :key="'rec-'+index" class="border-b last:border-0">
-                    <td class="py-2 pr-2"><input v-model="row.date" type="date" class="w-full px-3 py-1.5 border rounded-lg" /></td>
-                    <td class="py-2 pr-2"><input v-model="row.designation" type="text" class="w-full px-3 py-1.5 border rounded-lg" placeholder="Description" /></td>
-                    <td class="py-2 pr-2"><input v-model="row.montant" type="text" class="w-full px-3 py-1.5 border rounded-lg" placeholder="0 CFA" /></td>
+                    <td class="py-2 pr-2 text-xs text-gray-400 font-medium">{{ index + 1 }}</td>
+                    <td class="py-2 pr-2">
+                      <textarea v-model="row.designation" rows="2" class="w-full px-2 py-1 border border-gray-200 rounded-lg text-sm resize-none" placeholder="Désignation..." style="word-break:break-word;white-space:pre-wrap;"></textarea>
+                    </td>
+                    <td class="py-2 pr-2"><input v-model.number="row.quantite" type="number" min="0" class="w-20 px-2 py-1 border border-gray-200 rounded-lg text-sm" placeholder="1" /></td>
+                    <td class="py-2 pr-2"><input v-model.number="row.prix_unitaire" type="number" min="0" class="w-24 px-2 py-1 border border-gray-200 rounded-lg text-sm" placeholder="0 CFA" /></td>
+                    <td class="py-2 pr-2 font-semibold text-gray-900 whitespace-nowrap">{{ ((row.quantite || 0) * (row.prix_unitaire || 0)).toLocaleString('fr-FR') }} CFA</td>
                     <td class="py-2 text-right">
                       <button @click="removeRecette(index)" class="text-gray-400 hover:text-red-500"><span class="material-symbols-outlined text-lg">delete</span></button>
                     </td>
@@ -228,13 +244,19 @@ const userRoles = profile ? profile.roles : [];
 const canValidateCG = userRoles.includes('RH / Comptabilité') || userRoles.includes('Admin');
 const canValidateDirection = userRoles.includes('Direction') || userRoles.includes('Admin');
 
+const todayStr = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 const form = ref({
+  date: todayStr(),
   num: '',
   affaire: '',
   cia: '',
   payment_method: '',
-  depenses: [{ date: '', designation: '', montant: '' }],
-  recettes: [{ date: '', designation: '', montant: '' }]
+  depenses: [{ designation: '', quantite: 1, prix_unitaire: 0 }] as Array<{designation: string; quantite: number; prix_unitaire: number}>,
+  recettes: [{ designation: '', quantite: 1, prix_unitaire: 0 }] as Array<{designation: string; quantite: number; prix_unitaire: number}>
 });
 
 const history = ref<any[]>([]);
@@ -247,10 +269,10 @@ const openAttachments = (id: number) => {
   attachmentModal.open(id);
 };
 
-const addDepense = () => form.value.depenses.push({ date: '', designation: '', montant: '' });
+const addDepense = () => form.value.depenses.push({ designation: '', quantite: 1, prix_unitaire: 0 });
 const removeDepense = (index: number) => form.value.depenses.splice(index, 1);
 
-const addRecette = () => form.value.recettes.push({ date: '', designation: '', montant: '' });
+const addRecette = () => form.value.recettes.push({ designation: '', quantite: 1, prix_unitaire: 0 });
 const removeRecette = (index: number) => form.value.recettes.splice(index, 1);
 
 async function fetchHistory() {
@@ -271,17 +293,35 @@ const { debounced: debouncedSearch } = useDebounceFn(fetchHistory, 300);
 async function generateCaissePdf() {
   isSubmitting.value = true;
   try {
-    const res = await api.post('/caisse/generate', form.value);
+    // Transformer le format frontal vers le format backend
+    const payload = {
+      ...form.value,
+      depenses: form.value.depenses.map((r: any, idx: number) => ({
+        date: form.value.date,
+        designation: r.designation,
+        montant: ((r.quantite || 0) * (r.prix_unitaire || 0)).toString(),
+        num: String(idx + 1)
+      })),
+      recettes: form.value.recettes.map((r: any, idx: number) => ({
+        date: form.value.date,
+        designation: r.designation,
+        montant: ((r.quantite || 0) * (r.prix_unitaire || 0)).toString(),
+        num: String(idx + 1)
+      }))
+    };
+    const res = await api.post('/caisse/generate', payload);
     toast.success("Pièce de caisse générée et enregistrée avec succès !");
     
     await fetchHistory();
 
     form.value = {
+      date: todayStr(),
       num: '',
       affaire: '',
       cia: '',
-      depenses: [{ date: '', designation: '', montant: '' }],
-      recettes: [{ date: '', designation: '', montant: '' }]
+      payment_method: '',
+      depenses: [{ designation: '', quantite: 1, prix_unitaire: 0 }] as any,
+      recettes: [{ designation: '', quantite: 1, prix_unitaire: 0 }] as any
     };
 
     if (res.data && res.data.pdf_url) {
