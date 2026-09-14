@@ -16,7 +16,6 @@ const canManageStock = computed(() => hasPermission(permissions.value, ["stock.r
 const canCreateFuel = computed(() => hasPermission(permissions.value, ["fuel_requests.read", "requests.validate_facility", "requests.validate_finance"]));
 
 const kpis = ref([
-  { title: "Projets Actifs", value: "0", icon: "work", color: "text-red-600", bg: "bg-red-50" },
   { title: "Employés", value: "0", icon: "people", color: "text-green-600", bg: "bg-green-50" },
   { title: "Demandes en attente", value: "0", icon: "assignment_late", color: "text-amber-600", bg: "bg-amber-50" },
 ]);
@@ -48,10 +47,9 @@ const refreshDashboard = async () => {
   try {
     const kpiRes = await api.get('/dashboard/kpis');
     const data = kpiRes.data;
-    if (kpis.value[0]) kpis.value[0].value = (data.active_projects || 0).toString();
-    if (kpis.value[1]) kpis.value[1].value = (data.users || 0).toString();
-    if (kpis.value[2]) kpis.value[2].value = (data.pending_requests || 0).toString();
-    if (kpis.value[3]) kpis.value[3].value = (data.stock_alerts || 0).toString();
+    if (kpis.value[0]) kpis.value[0].value = (data.users || 0).toString();
+    if (kpis.value[1]) kpis.value[1].value = (data.pending_requests || 0).toString();
+    if (kpis.value[2]) kpis.value[2].value = (data.stock_alerts || 0).toString();
     
     const activityRes = await api.get('/dashboard/recent-activity');
     recentActivity.value = activityRes.data;
