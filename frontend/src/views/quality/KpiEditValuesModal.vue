@@ -23,14 +23,14 @@
             <input 
               v-model="formData[idx].value_raw"
               type="text" 
-              placeholder="Valeur"
+              placeholder="Texte (ex: 10/12, 15%)"
               class="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
             />
             <input 
               v-model.number="formData[idx].value_numeric"
               type="number" 
               step="any"
-              placeholder="Numérique"
+              placeholder="Nombre (ex: 15)"
               class="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
             />
           </div>
