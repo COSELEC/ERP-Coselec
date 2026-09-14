@@ -122,6 +122,7 @@ def get_file_url_from_minio(file_name: str, expires: timedelta = timedelta(days=
             BUCKET_NAME,
             clean_key,
             expires=expires,
+            response_headers={"response-content-disposition": "inline"}
         )
         return url
     except Exception as e:
