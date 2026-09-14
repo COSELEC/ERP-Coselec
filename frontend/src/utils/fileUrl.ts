@@ -13,11 +13,9 @@ export function resolveStorageUrl(path?: string | null): string {
     return path.startsWith('/') ? path : `/${path}`;
   }
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  const rawBase = api.defaults.baseURL || '';
-  // If rawBase is empty or relative "/api", use "/storage/..." or "/api/storage/..."
-  if (!rawBase || rawBase.startsWith('/')) {
-    return `/storage/${cleanPath}`;
+  let rawBase = api.defaults.baseURL || '';
+  if (rawBase.endsWith('/')) {
+    rawBase = rawBase.slice(0, -1);
   }
-  const baseWithoutApi = rawBase.replace(/\/api\/?$/, '');
-  return `${baseWithoutApi}/storage/${cleanPath}`;
+  return `${rawBase}/storage/${cleanPath}`;
 }
