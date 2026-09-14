@@ -84,6 +84,8 @@ def _notify_creation_targets(db: Session, request: GenericRequest, requester: Us
             target_roles.update({"Facility Manager", "Facility", "Logistique", "Maintenance"})
         elif request.type == RequestType.FUEL:
             target_roles.update({"Finance", "Facility Manager", "Facility", "Direction"})
+        elif request.type == RequestType.PIECE_CAISSE:
+            target_roles.update({"Finance", "RH / Comptabilité", "Direction"})
 
         recipient_user_ids: set[int] = set()
 
@@ -162,9 +164,9 @@ def _apply_row_level_filter(query, current_user: User):
             RequestType.IT_INCIDENT,
         ]))
 
-    if roles & {"Finance"}:
+    if roles & {"Finance", "RH / Comptabilité"}:
         conditions.append(GenericRequest.type.in_([
-            RequestType.FUEL, RequestType.IT_EQUIPMENT, RequestType.FACILITY_SUPPLIES,
+            RequestType.FUEL, RequestType.IT_EQUIPMENT, RequestType.FACILITY_SUPPLIES, RequestType.PIECE_CAISSE
         ]))
 
     if roles & {"Stock / Logistique", "Maintenance", "Facility Manager", "Facility"}:
@@ -303,6 +305,60 @@ def create_request(
                     bg_db.rollback()
                     
         background_tasks.add_task(_generate_initial_fuel_pdf, new_request.id)
+
+    elif new_request.type == RequestType.PIECE_CAISSE:
+        def _generate_initial_caisse_pdf(req_id: int):
+            with SessionLocal() as bg_db:
+                try:
+                    from app.services.pdf_generator import generate_caisse_pdf
+                    from app.models.caisse_voucher import CaisseVoucher, CaisseVoucherLine, CaisseVoucherLineType, VoucherStatus
+                    bg_request = bg_db.get(GenericRequest, req_id)
+                    if bg_request:
+                        payload = bg_request.payload or {}
+                        
+                        voucher = CaisseVoucher(
+                            num=payload.get("num") or f"DEM-{bg_request.id:04d}",
+                            affaire=payload.get("affaire"),
+                            cia=payload.get("cia"),
+                            payment_method=payload.get("payment_method"),
+                            project_id=bg_request.project_id,
+                            demandeur_id=bg_request.requester_id,
+                            status=VoucherStatus.DRAFT
+                        )
+                        for d in payload.get("depenses", []):
+                            amount = float(d.get("montant") or (float(d.get("quantite", 1)) * float(d.get("prix_unitaire", 0))))
+                            voucher.lines.append(CaisseVoucherLine(
+                                line_type=CaisseVoucherLineType.EXPENSE,
+                                date=d.get("date") or payload.get("date") or bg_request.created_at.strftime("%Y-%m-%d"),
+                                designation=d.get("designation") or "",
+                                amount=amount
+                            ))
+                        for r in payload.get("recettes", []):
+                            amount = float(r.get("montant") or (float(r.get("quantite", 1)) * float(r.get("prix_unitaire", 0))))
+                            voucher.lines.append(CaisseVoucherLine(
+                                line_type=CaisseVoucherLineType.RECEIPT,
+                                date=r.get("date") or payload.get("date") or bg_request.created_at.strftime("%Y-%m-%d"),
+                                designation=r.get("designation") or "",
+                                amount=amount
+                            ))
+                        bg_db.add(voucher)
+                        bg_db.flush()
+                        
+                        pdf_path = generate_caisse_pdf(voucher)
+                        if pdf_path:
+                            voucher.pdf_url = pdf_path
+                            bg_request.attachment_url = pdf_path
+                            if not bg_request.payload:
+                                bg_request.payload = {}
+                            bg_request.payload["voucher_id"] = voucher.id
+                            from sqlalchemy.orm.attributes import flag_modified
+                            flag_modified(bg_request, "payload")
+                        bg_db.commit()
+                except Exception as e:
+                    bg_db.rollback()
+                    logger.exception("Failed to generate initial caisse voucher for request %s: %s", req_id, e)
+                    
+        background_tasks.add_task(_generate_initial_caisse_pdf, new_request.id)
         
     return new_request
 
@@ -340,9 +396,9 @@ def update_request_status(
                 it_roles = {"IT", "IT ADMIN", "ADMIN IT", "RESPONSABLE IT"}
                 if not (role_names & it_roles or any("IT" in r for r in role_names)):
                     raise HTTPException(status_code=403, detail="Approbation IT requise")
-            elif request.type in {RequestType.FACILITY_MAINTENANCE, RequestType.FACILITY_SUPPLIES, RequestType.FACILITY_BADGE, RequestType.FUEL}:
-                facility_roles = {"FINANCE", "ACHAT", "FINANCE / BUDGET", "FACILITY", "FACILITY MANAGER", "LOGISTIQUE", "STOCK / LOGISTIQUE", "MAINTENANCE"}
-                if not (role_names & facility_roles or any(term in r for r in role_names for term in ["FACILITY", "FINANCE", "ACHAT"])):
+            elif request.type in {RequestType.FACILITY_MAINTENANCE, RequestType.FACILITY_SUPPLIES, RequestType.FACILITY_BADGE, RequestType.FUEL, RequestType.PIECE_CAISSE}:
+                facility_roles = {"FINANCE", "ACHAT", "FINANCE / BUDGET", "FACILITY", "FACILITY MANAGER", "LOGISTIQUE", "STOCK / LOGISTIQUE", "MAINTENANCE", "RH / COMPTABILITÉ", "COMPTABILITÉ", "DIRECTION"}
+                if not (role_names & facility_roles or any(term in r for r in role_names for term in ["FACILITY", "FINANCE", "ACHAT", "COMPTA", "DIRECTION"])):
                     raise HTTPException(status_code=403, detail="Approbation Finance/Achat/Services Généraux requise")
 
     if not validate_transition(request.status, payload.status):
@@ -449,6 +505,46 @@ def update_request_status(
                     bg_db.rollback()
 
         background_tasks.add_task(_generate_fuel_pdf, request.id)
+
+    elif request.type == RequestType.PIECE_CAISSE:
+        def _update_caisse_voucher_on_approval(req_id: int, validator_user_id: int):
+            with SessionLocal() as bg_db:
+                try:
+                    from app.services.pdf_generator import generate_caisse_pdf
+                    from app.models.caisse_voucher import CaisseVoucher, VoucherStatus
+                    bg_request = bg_db.get(GenericRequest, req_id)
+                    if bg_request:
+                        voucher_id = bg_request.payload.get("voucher_id") if bg_request.payload else None
+                        voucher = None
+                        if voucher_id:
+                            voucher = bg_db.get(CaisseVoucher, voucher_id)
+                        if not voucher:
+                            voucher = bg_db.query(CaisseVoucher).filter(CaisseVoucher.num == f"DEM-{bg_request.id:04d}").first()
+                            
+                        if voucher:
+                            val_user = bg_db.get(User, validator_user_id)
+                            val_roles = {r.name.upper() for r in (val_user.roles if val_user else [])}
+                            if "DIRECTION" in val_roles:
+                                voucher.validator_dg_id = validator_user_id
+                            else:
+                                voucher.validator_cg_id = validator_user_id
+                                
+                            if bg_request.status == RequestStatus.APPROVED:
+                                voucher.status = VoucherStatus.FINALIZED
+                                voucher.finalized_at = datetime.utcnow()
+                            elif bg_request.status == RequestStatus.REJECTED:
+                                voucher.status = VoucherStatus.VOID
+                                
+                            pdf_path = generate_caisse_pdf(voucher)
+                            if pdf_path:
+                                voucher.pdf_url = pdf_path
+                                bg_request.attachment_url = pdf_path
+                            bg_db.commit()
+                except Exception as e:
+                    bg_db.rollback()
+                    logger.exception("Failed to update caisse voucher on approval for request %s: %s", req_id, e)
+
+        background_tasks.add_task(_update_caisse_voucher_on_approval, request.id, current_user.id)
 
     if request.status == RequestStatus.APPROVED and request.type == RequestType.LEAVE:
         start_date = request.payload.get("start_date")

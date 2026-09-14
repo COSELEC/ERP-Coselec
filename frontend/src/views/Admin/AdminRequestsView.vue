@@ -214,12 +214,41 @@
                   </div>
 
                   <!-- PIÈCE DE CAISSE -->
-                  <div v-else-if="req.type === 'PIECE_CAISSE'" class="space-y-1">
-                    <div class="text-sm font-bold text-gray-900">
-                      {{ req.payload?.subject || req.description || 'Pièce de Caisse' }}
+                  <div v-else-if="req.type === 'PIECE_CAISSE'" class="space-y-1.5">
+                    <div class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                      <span>{{ req.payload?.motif || req.payload?.subject || req.description || 'Pièce de Caisse' }}</span>
+                      <span v-if="req.payload?.num" class="px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-[10px] font-bold">
+                        N° {{ req.payload.num }}
+                      </span>
+                      <span v-if="req.payload?.payment_method" class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 text-[10px] font-bold">
+                        {{ req.payload.payment_method }}
+                      </span>
                     </div>
-                    <div v-if="req.payload?.description && req.payload?.description !== req.payload?.subject" class="text-xs text-gray-500 line-clamp-1">
-                      {{ req.payload?.description }}
+
+                    <div class="flex flex-wrap items-center gap-2 text-xs text-gray-600">
+                      <span v-if="req.payload?.affaire" class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-0.5 rounded-md">
+                        <span class="material-symbols-outlined text-[12px]">folder</span>
+                        Affaire : {{ req.payload.affaire }}
+                      </span>
+                      <span v-if="req.payload?.cia" class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-0.5 rounded-md">
+                        CIA : {{ req.payload.cia }}
+                      </span>
+                      <span v-if="req.payload?.total_depenses > 0" class="font-extrabold text-red-700 bg-red-50 px-2 py-0.5 rounded-md">
+                        Dépenses : {{ Number(req.payload.total_depenses).toLocaleString('fr-FR') }} CFA
+                      </span>
+                      <span v-if="req.payload?.total_recettes > 0" class="font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                        Recettes : {{ Number(req.payload.total_recettes).toLocaleString('fr-FR') }} CFA
+                      </span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                      <button 
+                        @click="openCaisseDetailsModal(req)"
+                        class="text-xs text-red-600 hover:text-red-800 font-semibold underline flex items-center gap-0.5"
+                      >
+                        <span class="material-symbols-outlined text-[14px]">visibility</span>
+                        Voir les {{ (req.payload?.depenses?.length || 0) + (req.payload?.recettes?.length || 0) }} lignes
+                      </button>
                     </div>
                   </div>
 
@@ -260,6 +289,16 @@
                   >
                     <span class="material-symbols-outlined text-[16px]">picture_as_pdf</span>
                     <span>PDF DMCAR</span>
+                  </a>
+                  <a 
+                    v-else-if="req.type === 'PIECE_CAISSE' && req.attachment_url"
+                    :href="getPdfUrl(req)" 
+                    target="_blank" 
+                    class="inline-flex items-center gap-1.5 font-bold text-[#d10f2f] hover:text-[#97091f] bg-red-50 hover:bg-red-100 px-3 py-1 rounded-xl transition shadow-xs"
+                    title="Télécharger la pièce de caisse officielle"
+                  >
+                    <span class="material-symbols-outlined text-[16px]">receipt_long</span>
+                    <span>PDF Caisse</span>
                   </a>
                   <a
                     v-else-if="req.attachment_url"
@@ -435,6 +474,137 @@
         </div>
       </div>
 
+      <!-- Caisse Details Modal -->
+      <div v-if="caisseModalOpen && selectedCaisseReq" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+          <div class="px-6 py-4 bg-gradient-to-r from-[#d10f2f] to-[#97091f] text-white flex justify-between items-center flex-shrink-0">
+            <h2 class="text-base font-bold flex items-center gap-2">
+              <span class="material-symbols-outlined">receipt_long</span>
+              <span>Détails Pièce de Caisse {{ selectedCaisseReq.reference }}</span>
+            </h2>
+            <button @click="caisseModalOpen = false" class="hover:bg-white/20 p-1 rounded-full transition">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <div class="flex-1 overflow-y-auto p-6 space-y-5">
+            <!-- Metadata summary -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100 text-xs">
+              <div>
+                <span class="text-gray-400 block font-semibold">DATE</span>
+                <span class="font-bold text-gray-900">{{ selectedCaisseReq.payload?.date || formatDate(selectedCaisseReq.created_at) }}</span>
+              </div>
+              <div>
+                <span class="text-gray-400 block font-semibold">N° PIÈCE</span>
+                <span class="font-bold text-gray-900">{{ selectedCaisseReq.payload?.num || '—' }}</span>
+              </div>
+              <div>
+                <span class="text-gray-400 block font-semibold">AFFAIRE</span>
+                <span class="font-bold text-gray-900">{{ selectedCaisseReq.payload?.affaire || '—' }}</span>
+              </div>
+              <div>
+                <span class="text-gray-400 block font-semibold">CIA</span>
+                <span class="font-bold text-gray-900">{{ selectedCaisseReq.payload?.cia || '—' }}</span>
+              </div>
+              <div class="col-span-2 sm:col-span-4 pt-2 border-t border-gray-200">
+                <span class="text-gray-400 block font-semibold">MOYEN DE PAIEMENT</span>
+                <span class="font-bold text-gray-900">{{ selectedCaisseReq.payload?.payment_method || 'Non spécifié' }}</span>
+              </div>
+            </div>
+
+            <!-- Dépenses -->
+            <div v-if="selectedCaisseReq.payload?.depenses?.length" class="space-y-2">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-red-700">Dépenses</h3>
+              <div class="overflow-x-auto rounded-xl border border-gray-100">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-red-50/50 text-gray-600 font-bold">
+                    <tr>
+                      <th class="p-2 w-8">N°</th>
+                      <th class="p-2">Désignation</th>
+                      <th class="p-2 w-16 text-center">Qté</th>
+                      <th class="p-2 w-24 text-right">P.U (CFA)</th>
+                      <th class="p-2 w-28 text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                    <tr v-for="(d, idx) in selectedCaisseReq.payload.depenses" :key="idx">
+                      <td class="p-2 text-gray-400 font-bold">{{ idx + 1 }}</td>
+                      <td class="p-2 font-medium text-gray-800">{{ d.designation }}</td>
+                      <td class="p-2 text-center">{{ d.quantite }}</td>
+                      <td class="p-2 text-right">{{ Number(d.prix_unitaire).toLocaleString('fr-FR') }}</td>
+                      <td class="p-2 text-right font-bold text-gray-900">{{ Number(d.montant).toLocaleString('fr-FR') }} CFA</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Recettes -->
+            <div v-if="selectedCaisseReq.payload?.recettes?.length" class="space-y-2">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-700">Recettes</h3>
+              <div class="overflow-x-auto rounded-xl border border-gray-100">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-emerald-50/50 text-gray-600 font-bold">
+                    <tr>
+                      <th class="p-2 w-8">N°</th>
+                      <th class="p-2">Désignation</th>
+                      <th class="p-2 w-16 text-center">Qté</th>
+                      <th class="p-2 w-24 text-right">P.U (CFA)</th>
+                      <th class="p-2 w-28 text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                    <tr v-for="(r, idx) in selectedCaisseReq.payload.recettes" :key="idx">
+                      <td class="p-2 text-gray-400 font-bold">{{ idx + 1 }}</td>
+                      <td class="p-2 font-medium text-gray-800">{{ r.designation }}</td>
+                      <td class="p-2 text-center">{{ r.quantite }}</td>
+                      <td class="p-2 text-right">{{ Number(r.prix_unitaire).toLocaleString('fr-FR') }}</td>
+                      <td class="p-2 text-right font-bold text-gray-900">{{ Number(r.montant).toLocaleString('fr-FR') }} CFA</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Totaux -->
+            <div class="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-100 text-xs">
+              <div>
+                <span class="text-gray-500">Total Dépenses :</span>
+                <span class="font-bold text-red-700 ml-1">{{ Number(selectedCaisseReq.payload?.total_depenses || 0).toLocaleString('fr-FR') }} CFA</span>
+              </div>
+              <div>
+                <span class="text-gray-500">Total Recettes :</span>
+                <span class="font-bold text-emerald-700 ml-1">{{ Number(selectedCaisseReq.payload?.total_recettes || 0).toLocaleString('fr-FR') }} CFA</span>
+              </div>
+              <div>
+                <span class="text-gray-500">Solde Net :</span>
+                <span class="font-black ml-1">{{ Number(selectedCaisseReq.payload?.solde_net || 0).toLocaleString('fr-FR') }} CFA</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="px-6 py-3 bg-gray-50 border-t border-gray-100 flex justify-between items-center flex-shrink-0">
+            <a 
+              v-if="selectedCaisseReq.attachment_url" 
+              :href="getPdfUrl(selectedCaisseReq)" 
+              target="_blank" 
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-xs"
+            >
+              <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+              <span>Télécharger le PDF officiel</span>
+            </a>
+            <span v-else class="text-xs text-gray-400 italic">PDF en cours de génération...</span>
+
+            <button 
+              @click="caisseModalOpen = false" 
+              class="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-100 transition"
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </AppLayout>
 </template>
@@ -481,6 +651,14 @@ const currentRejectId = ref<number | null>(null);
 const compromiseModalOpen = ref(false);
 const selectedFuelReq = ref<any>(null);
 const compromiseQuantity = ref<number>(0);
+
+const caisseModalOpen = ref(false);
+const selectedCaisseReq = ref<any>(null);
+
+const openCaisseDetailsModal = (req: any) => {
+  selectedCaisseReq.value = req;
+  caisseModalOpen.value = true;
+};
 
 const categoryTabs = [
   { key: 'ALL', label: 'Toutes les demandes', icon: 'apps' },
@@ -704,9 +882,11 @@ const deleteRequest = async (id: number) => {
 };
 
 onMounted(() => {
-  // If navigated with ?category=fuel (from old fuel-requests redirect)
+  // If navigated with ?category=fuel or ?category=caisse
   if (route.query.category === 'fuel') {
     activeCategory.value = 'FUEL';
+  } else if (route.query.category === 'caisse') {
+    activeCategory.value = 'CAISSE';
   }
   fetchRequests();
 });
@@ -714,6 +894,8 @@ onMounted(() => {
 watch(() => route.query.category, (newCat) => {
   if (newCat === 'fuel') {
     activeCategory.value = 'FUEL';
+  } else if (newCat === 'caisse') {
+    activeCategory.value = 'CAISSE';
   }
 });
 </script>

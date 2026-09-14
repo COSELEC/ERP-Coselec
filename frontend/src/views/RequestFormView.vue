@@ -27,6 +27,9 @@
           <div v-else-if="props.section === 'fuel'" class="px-6 py-8 lg:px-3 sm:px-4 lg:py-3 sm:py-4">
             <FuelRequestForm />
           </div>
+          <div v-else-if="props.section === 'caisse'" class="px-6 py-8 lg:px-3 sm:px-4 lg:py-3 sm:py-4">
+            <CaisseRequestForm />
+          </div>
           <div v-else class="grid gap-8 px-6 py-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-3 sm:px-4 lg:py-3 sm:py-4">
             <form class="space-y-5" @submit.prevent="submitRequest">
               <div>
@@ -72,17 +75,6 @@
                   :placeholder="sectionMeta.descriptionPlaceholder"
                   required
                 ></textarea>
-              </div>
-
-              <div v-if="props.section === 'caisse'">
-                <label class="mb-2 block text-sm font-semibold text-gray-700">Document (Pièce de caisse remplie)</label>
-                <input
-                  type="file"
-                  @change="handleFileUpload"
-                  accept=".pdf,.doc,.docx,.jpg,.png"
-                  required
-                  class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-red-400 focus:ring-4 focus:ring-red-100"
-                />
               </div>
 
               <div class="flex flex-wrap gap-3 pt-2">
@@ -142,6 +134,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import ITRequestForm from '@/components/requests/ITRequestForm.vue';
 import FacilityRequestForm from '@/components/requests/FacilityRequestForm.vue';
 import FuelRequestForm from '@/components/requests/FuelRequestForm.vue';
+import CaisseRequestForm from '@/components/requests/CaisseRequestForm.vue';
 import { employeeService } from '@/services/employees';
 import { useToast } from '@/composables/useToast';
 
