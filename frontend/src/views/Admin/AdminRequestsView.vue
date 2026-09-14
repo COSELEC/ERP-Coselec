@@ -213,6 +213,16 @@
                     </div>
                   </div>
 
+                  <!-- PIÈCE DE CAISSE -->
+                  <div v-else-if="req.type === 'PIECE_CAISSE'" class="space-y-1">
+                    <div class="text-sm font-bold text-gray-900">
+                      {{ req.payload?.subject || req.description || 'Pièce de Caisse' }}
+                    </div>
+                    <div v-if="req.payload?.description && req.payload?.description !== req.payload?.subject" class="text-xs text-gray-500 line-clamp-1">
+                      {{ req.payload?.description }}
+                    </div>
+                  </div>
+
                   <!-- FACILITIES -->
                   <div v-else class="space-y-1">
                     <div class="text-sm font-bold text-gray-900">

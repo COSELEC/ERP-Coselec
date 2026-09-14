@@ -232,6 +232,20 @@ const sectionMeta = computed(() => {
         'Indiquez le relevé kilométrique actuel.',
         'Rattachez la demande à un numéro d’affaire ou projet si applicable.'
       ]
+    },
+    caisse: {
+      eyebrow: 'Trésorerie & Finance',
+      title: 'Demande de Pièce de Caisse',
+      icon: 'receipt_long',
+      description: 'Soumets une demande de pièce de caisse pour dépenses ou recettes avec le document justificatif associé.',
+      subjectPlaceholder: 'Ex: Remboursement frais de transport / Dépense imprévue chantier',
+      descriptionPlaceholder: 'Précise le motif de la pièce de caisse, le montant estimé et le contexte.',
+      helpText: 'Toute demande de pièce de caisse doit comporter le document dûment rempli ou les pièces justificatives.',
+      hints: [
+        'Renseigne un sujet clair et le montant concerné.',
+        'Détaille la nature des dépenses ou recettes dans la description.',
+        'Joins obligatoirement le document de la pièce de caisse remplie ou les reçus.'
+      ]
     }
   } as const;
 

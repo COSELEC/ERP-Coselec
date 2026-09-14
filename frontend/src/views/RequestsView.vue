@@ -103,6 +103,9 @@
 
                 <div class="mt-6 pt-4 border-t border-gray-100">
                   <div class="flex items-center justify-center gap-2">
+                    <span class="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">
+                      {{ caisseRequestsCount }} demande{{ caisseRequestsCount > 1 ? 's' : '' }}
+                    </span>
                     <span class="rounded-full border border-red-100 bg-white px-3 py-1 text-xs font-semibold text-red-700">
                       Créer
                     </span>
@@ -203,7 +206,7 @@ const requestSections = ref<RequestSection[]>([
 ]);
 
 // ── Pièce de caisse ────────────────────────────────────────────────────────────
-// Accessible via le formulaire de demande standard now.
+const caisseRequestsCount = ref(0);
 
 // ── Requests count ─────────────────────────────────────────────────────────────
 onMounted(async () => {
@@ -227,7 +230,7 @@ onMounted(async () => {
     requestSections.value[3]!.requests = facilitiesSite;
     requestSections.value[4]!.requests = fuel;
 
-    // Récupérer le nombre de pièces de caisse existantes (if needed for something else, but we don't display it anymore on the card)
+    caisseRequestsCount.value = allRequests.filter((r: any) => r.type === 'PIECE_CAISSE').length;
   } catch (error) {
     console.error("Error fetching requests:", error);
   }
