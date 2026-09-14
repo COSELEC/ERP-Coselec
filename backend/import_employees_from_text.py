@@ -151,12 +151,17 @@ def main():
             print("=== IMPORT DES EMPLOYÉS ===")
             inserted_count = 0
             
-            # Récupérer les emails existants pour éviter les doublons
-            existing_emails = {r[0] for r in conn.execute(text("SELECT email FROM users")).fetchall()}
+            # Récupérer les emails et matricules existants pour éviter les doublons
+            existing_emails = {r[0] for r in conn.execute(text("SELECT email FROM users WHERE email IS NOT NULL")).fetchall()}
+            existing_matricules = {str(r[0]).strip() for r in conn.execute(text("SELECT matricule FROM users WHERE matricule IS NOT NULL")).fetchall()}
             
             for emp in employees_to_insert:
                 if emp["email"] in existing_emails:
                     print(f"[SKIP] Employé déjà existant avec l'email: {emp['email']}")
+                    continue
+                    
+                if emp["matricule"] and emp["matricule"] in existing_matricules:
+                    print(f"[SKIP] Employé déjà existant avec le matricule: {emp['matricule']}")
                     continue
                     
                 # Pour montrer qu'ils peuvent "devenir utilisateurs", on leur met:
