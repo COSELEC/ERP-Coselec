@@ -17,7 +17,7 @@ def generate_temp_password(length=10) -> str:
     return ''.join(secrets.choice(characters) for _ in range(length))
 
 def get_users(db: Session, skip: int = 0, limit: int = 10, search: Optional[str] = None, include_inactive: bool = False) -> Tuple[int, List[User]]:
-    query = db.query(User)
+    query = db.query(User).filter(User.hashed_password != None)
     
     if not include_inactive:
         query = query.filter(User.is_active == True)
