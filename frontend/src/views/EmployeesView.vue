@@ -352,9 +352,9 @@
               </label>
             </h3>
             <div v-if="selectedEmployee.job_description" class="mt-4">
-              <iframe :src="selectedEmployee.job_description" class="w-full h-[500px] border rounded-lg shadow-inner"></iframe>
+              <iframe :src="resolveStorageUrl(selectedEmployee.job_description)" class="w-full h-[500px] border rounded-lg shadow-inner"></iframe>
               <div class="mt-2 text-right">
-                <a :href="selectedEmployee.job_description" target="_blank" class="text-sm text-blue-600 hover:underline inline-flex items-center gap-1">
+                <a :href="resolveStorageUrl(selectedEmployee.job_description)" target="_blank" class="text-sm text-blue-600 hover:underline inline-flex items-center gap-1">
                   <span class="material-symbols-outlined text-[16px]">open_in_new</span>
                   Ouvrir dans un nouvel onglet
                 </a>
@@ -410,6 +410,7 @@ import { employeeService } from "@/services/employees";
 import { api } from "@/services/api";
 import { getStoredProfile, hasPermission } from '@/services/session';
 import { useToast, useStatusBadges, useTableSort } from '@/composables';
+import { resolveStorageUrl } from '@/utils/fileUrl';
 
 const toast = useToast();
 const profile = getStoredProfile();
