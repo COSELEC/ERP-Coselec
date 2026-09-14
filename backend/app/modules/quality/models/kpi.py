@@ -1,7 +1,19 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Enum, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Enum, UniqueConstraint, Table
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 import enum
 from app.core.database.session import Base
+
+class KPIPeriodicity(str, enum.Enum):
+    MONTHLY = "MONTHLY"
+    QUARTERLY = "QUARTERLY"
+    SEMESTERLY = "SEMESTERLY"
+
+kpi_processus_editors = Table(
+    'kpi_processus_editors', Base.metadata,
+    Column('processus_id', Integer, ForeignKey('quality_kpi_processus.id'), primary_key=True),
+    Column('user_id', Integer, ForeignKey('users.id'), primary_key=True)
+)
 
 class KPIOperator(str, enum.Enum):
     GTE = "GTE"        
@@ -14,7 +26,10 @@ class KPIProcessus(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), unique=True, index=True, nullable=False)
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
+    editor_role_names = Column(JSONB, nullable=False, server_default='[]')
+    
     indicators = relationship("KPIIndicator", back_populates="processus", cascade="all, delete-orphan")
+    editors = relationship("User", secondary=kpi_processus_editors)
 
 class KPIIndicator(Base):
     __tablename__ = "quality_kpi_indicators"
@@ -22,6 +37,7 @@ class KPIIndicator(Base):
     id = Column(Integer, primary_key=True, index=True)
     processus_id = Column(Integer, ForeignKey("quality_kpi_processus.id"), nullable=False)
     name = Column(String(255), nullable=False)
+    periodicity = Column(Enum(KPIPeriodicity), nullable=False, server_default='MONTHLY')
 
     processus = relationship("KPIProcessus", back_populates="indicators")
     yearly_targets = relationship("KPIYearlyTarget", back_populates="indicator", cascade="all, delete-orphan")

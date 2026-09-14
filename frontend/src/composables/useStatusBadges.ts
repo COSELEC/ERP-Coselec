@@ -9,7 +9,7 @@ export function useStatusBadges() {
     }
 
     // Pending / Review / CDD / In Progress / Site
-    if (['PENDING', 'EN ATTENTE', 'REVIEW', 'IN_REVIEW', 'REVUE', 'CDD', 'SITE', 'IN_PROGRESS', 'ISSUED'].includes(s)) {
+    if (['PENDING', 'EN ATTENTE', 'REVIEW', 'IN_REVIEW', 'REVUE', 'CDD', 'SITE', 'IN_PROGRESS', 'ISSUED', 'PENDING_MANAGER_APPROVAL', 'PENDING_FINANCE_APPROVAL', 'PENDING_DGA_APPROVAL', 'PENDING_DG_APPROVAL', 'COMPROMISE_PENDING'].includes(s)) {
       return 'bg-amber-50 text-amber-700 border border-amber-200';
     }
 
@@ -36,6 +36,8 @@ export function useStatusBadges() {
       PENDING: 'En attente',
       PENDING_MANAGER_APPROVAL: 'Attente Manager',
       PENDING_FINANCE_APPROVAL: 'Attente Finance',
+      PENDING_DGA_APPROVAL: 'Attente DGA',
+      PENDING_DG_APPROVAL: 'Attente DG',
       COMPROMISE_PENDING: 'Compromis en attente',
       IN_PROGRESS: 'En cours',
       COMPLETED: 'Terminé',

@@ -162,6 +162,25 @@ def delete_my_photo(
     db.commit()
     return {"message": "Photo supprimée avec succès"}
 
+@router.post("/me/fiche-poste")
+async def upload_my_fiche_poste(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    from app.services.storage import upload_file_to_minio
+    import uuid
+    
+    ext = file.filename.split('.')[-1] if '.' in file.filename else 'pdf'
+    filename = f"job_descriptions/{current_user.id}_{uuid.uuid4().hex}.{ext}"
+    
+    file_url = upload_file_to_minio(file, filename)
+    
+    current_user.job_description = file_url
+    db.commit()
+    
+    return {"job_description_url": file_url}
+
 @router.post("/logout")
 def logout():
     response = JSONResponse(content={"message": "Logout successful"})

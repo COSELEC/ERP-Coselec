@@ -6,7 +6,7 @@ from app.core.database.session import get_db
 from app.core.security.auth import get_current_user
 from app.modules.users.models.user import User
 
-from app.modules.quality.schemas.kpi import KPIImportPreviewResponse, KPIImportResponse, KPIProcessusResponse, KPIProcessusCreate, KPIIndicatorCreate, KPIIndicatorResponse, KPIValueCreate, KPIValueResponse
+from app.modules.quality.schemas.kpi import KPIImportPreviewResponse, KPIImportResponse, KPIProcessusResponse, KPIProcessusCreate, KPIIndicatorCreate, KPIIndicatorResponse, KPIValueCreate, KPIValueResponse, KPIProcessusEditorsUpdate
 from app.modules.quality.services.kpi import get_excel_preview, parse_and_import_kpi, get_kpi_dashboard_data
 from app.modules.quality.models.kpi import KPIProcessus, KPIIndicator, KPIValue
 
@@ -69,6 +69,30 @@ def create_processus(
     db.refresh(proc)
     return proc
 
+@router.put("/processus/{id}/editors", response_model=KPIProcessusResponse)
+def update_processus_editors(
+    id: int,
+    data: KPIProcessusEditorsUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if not any(r.name in ["Admin", "Qualité", "Qualite"] for r in current_user.roles):
+        raise HTTPException(status_code=403, detail="Permission refusée.")
+        
+    proc = db.query(KPIProcessus).filter(KPIProcessus.id == id).first()
+    if not proc:
+        raise HTTPException(status_code=404, detail="Processus introuvable")
+        
+    proc.editor_role_names = data.editor_role_names
+    
+    # Update users
+    users = db.query(User).filter(User.id.in_(data.editor_user_ids)).all()
+    proc.editors = users
+    
+    db.commit()
+    db.refresh(proc)
+    return proc
+
 @router.post("/indicators", response_model=KPIIndicatorResponse)
 def create_indicator(
     data: KPIIndicatorCreate,
@@ -90,18 +114,33 @@ def update_kpi_value(
     db: Session = Depends(get_db)
 ):
     is_qualite = any(r.name in ["Admin", "Qualité", "Qualite"] for r in current_user.roles)
-    is_pilote = any(r.name in ["Pilote", "Copilote"] for r in current_user.roles)
     
-    if not is_qualite and not is_pilote:
-        raise HTTPException(status_code=403, detail="Permission refusée.")
-        
     indicator = db.query(KPIIndicator).filter(KPIIndicator.id == data.indicator_id).first()
     if not indicator:
         raise HTTPException(status_code=404, detail="Indicateur non trouvé.")
         
-    if is_pilote and not is_qualite:
-        if indicator.processus.department_id != current_user.department_id:
-            raise HTTPException(status_code=403, detail="Vous ne pouvez renseigner que les KPIs de votre direction.")
+    if not is_qualite:
+        processus = indicator.processus
+        allowed = False
+        user_roles = [r.name for r in current_user.roles]
+        
+        # Check explicit role access
+        if processus.editor_role_names:
+            if any(r in processus.editor_role_names for r in user_roles):
+                allowed = True
+                
+        # Check explicit user access
+        if not allowed and current_user.id in [u.id for u in getattr(processus, 'editors', [])]:
+            allowed = True
+            
+        # Legacy Pilote fallback if no specific editors configured
+        if not allowed and not processus.editor_role_names and not getattr(processus, 'editors', []):
+            if any(r in ["Pilote", "Copilote"] for r in user_roles):
+                if processus.department_id == current_user.department_id:
+                    allowed = True
+                    
+        if not allowed:
+            raise HTTPException(status_code=403, detail="Permission refusée pour modifier ce processus.")
             
     val = db.query(KPIValue).filter(
         KPIValue.indicator_id == data.indicator_id,

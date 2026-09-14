@@ -23,6 +23,8 @@ class RequestStatus(str, enum.Enum):
     DRAFT = "DRAFT"
     PENDING = "PENDING"
     PENDING_MANAGER_APPROVAL = "PENDING_MANAGER_APPROVAL"
+    PENDING_DGA_APPROVAL = "PENDING_DGA_APPROVAL"
+    PENDING_DG_APPROVAL = "PENDING_DG_APPROVAL"
     COMPROMISE_PENDING = "COMPROMISE_PENDING"
     PENDING_FINANCE_APPROVAL = "PENDING_FINANCE_APPROVAL"
     APPROVED = "APPROVED"
@@ -74,6 +76,10 @@ class GenericRequest(Base):
 
     manager_validator_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     manager_validated_at = Column(DateTime, nullable=True)
+    dga_validator_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    dga_validated_at = Column(DateTime, nullable=True)
+    dg_validator_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    dg_validated_at = Column(DateTime, nullable=True)
     finance_validator_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     finance_validated_at = Column(DateTime, nullable=True)
 
@@ -86,6 +92,8 @@ class GenericRequest(Base):
     requester = relationship("User", foreign_keys=[requester_id])
     validator = relationship("User", foreign_keys=[validator_id])
     manager_validator = relationship("User", foreign_keys=[manager_validator_id])
+    dga_validator = relationship("User", foreign_keys=[dga_validator_id])
+    dg_validator = relationship("User", foreign_keys=[dg_validator_id])
     finance_validator = relationship("User", foreign_keys=[finance_validator_id])
     project = relationship("Project", foreign_keys=[project_id])
     department = relationship("Department", foreign_keys=[department_id])

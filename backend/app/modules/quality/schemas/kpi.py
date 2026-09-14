@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
 from enum import Enum
-from app.modules.quality.models.kpi import KPIOperator
+from app.modules.quality.models.kpi import KPIOperator, KPIPeriodicity
 
 class KPIValueBase(BaseModel):
     year: int
@@ -40,6 +40,7 @@ class KPIYearlyTargetResponse(KPIYearlyTargetBase):
 
 class KPIIndicatorBase(BaseModel):
     name: str
+    periodicity: KPIPeriodicity = KPIPeriodicity.MONTHLY
 
 class KPIIndicatorCreate(KPIIndicatorBase):
     processus_id: int
@@ -56,6 +57,7 @@ class KPIIndicatorResponse(KPIIndicatorBase):
 class KPIProcessusBase(BaseModel):
     name: str
     department_id: Optional[int] = None
+    editor_role_names: List[str] = []
 
 class KPIProcessusCreate(KPIProcessusBase):
     pass
@@ -64,12 +66,17 @@ class KPIProcessusResponse(KPIProcessusBase):
     id: int
     department_id: Optional[int] = None
     indicators: List[KPIIndicatorResponse] = []
+    editor_user_ids: List[int] = []
 
     class Config:
         from_attributes = True
 
 class KPIImportPreviewResponse(BaseModel):
     sheet_names: List[str]
+
+class KPIProcessusEditorsUpdate(BaseModel):
+    editor_role_names: List[str] = []
+    editor_user_ids: List[int] = []
 
 class KPIImportRequest(BaseModel):
     sheet_name: str

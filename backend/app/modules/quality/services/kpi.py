@@ -211,6 +211,9 @@ def get_kpi_dashboard_data(db: Session, year: int):
         p_data = {
             "id": p.id,
             "name": p.name,
+            "department_id": p.department_id,
+            "editor_role_names": p.editor_role_names or [],
+            "editor_user_ids": [u.id for u in getattr(p, "editors", [])],
             "indicators": []
         }
         for ind in p.indicators:
@@ -221,6 +224,7 @@ def get_kpi_dashboard_data(db: Session, year: int):
                 "id": ind.id,
                 "processus_id": ind.processus_id,
                 "name": ind.name,
+                "periodicity": getattr(ind, "periodicity", "MONTHLY"),
                 "yearly_targets": targets,
                 "values": values
             })

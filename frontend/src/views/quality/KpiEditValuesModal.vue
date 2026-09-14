@@ -18,8 +18,8 @@
 
       <form @submit.prevent="handleSubmit" class="p-6 flex-1 overflow-y-auto">
         <div class="space-y-4">
-          <div v-for="(month, idx) in months" :key="idx" class="flex items-center gap-4">
-            <span class="w-20 text-sm font-medium text-gray-700">{{ month.name }}</span>
+          <div v-for="(period, idx) in periods" :key="period.index" class="flex items-center gap-4">
+            <span class="w-28 text-sm font-medium text-gray-700">{{ period.name }}</span>
             <input 
               v-model="formData[idx].value_raw"
               type="text" 
@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { kpiService, type KPIIndicator } from '@/services/kpi';
 import { useToast } from '@/composables/useToast';
 
@@ -76,30 +76,48 @@ const emit = defineEmits<{
 const toast = useToast();
 const loading = ref(false);
 
-const months = [
-  { index: 1, name: 'Janvier' },
-  { index: 2, name: 'Février' },
-  { index: 3, name: 'Mars' },
-  { index: 4, name: 'Avril' },
-  { index: 5, name: 'Mai' },
-  { index: 6, name: 'Juin' },
-  { index: 7, name: 'Juillet' },
-  { index: 8, name: 'Août' },
-  { index: 9, name: 'Septembre' },
-  { index: 10, name: 'Octobre' },
-  { index: 11, name: 'Novembre' },
-  { index: 12, name: 'Décembre' }
-];
+const periods = computed(() => {
+  if (props.indicator.periodicity === 'QUARTERLY') {
+    return [
+      { index: 1, name: 'T1 (Jan-Mar)' },
+      { index: 2, name: 'T2 (Avr-Juin)' },
+      { index: 3, name: 'T3 (Juil-Sep)' },
+      { index: 4, name: 'T4 (Oct-Déc)' }
+    ];
+  } else if (props.indicator.periodicity === 'SEMESTERLY') {
+    return [
+      { index: 1, name: 'S1 (Jan-Juin)' },
+      { index: 2, name: 'S2 (Juil-Déc)' }
+    ];
+  }
+  return [
+    { index: 1, name: 'Janvier' },
+    { index: 2, name: 'Février' },
+    { index: 3, name: 'Mars' },
+    { index: 4, name: 'Avril' },
+    { index: 5, name: 'Mai' },
+    { index: 6, name: 'Juin' },
+    { index: 7, name: 'Juillet' },
+    { index: 8, name: 'Août' },
+    { index: 9, name: 'Septembre' },
+    { index: 10, name: 'Octobre' },
+    { index: 11, name: 'Novembre' },
+    { index: 12, name: 'Décembre' }
+  ];
+});
 
-const formData = ref(Array.from({ length: 12 }, () => ({
-  value_raw: '',
-  value_numeric: null as number | null
-})));
+const formData = ref<{value_raw: string, value_numeric: number | null}[]>([]);
 
 onMounted(() => {
+  // Initialize form data array based on periods
+  formData.value = Array.from({ length: periods.value.length }, () => ({
+    value_raw: '',
+    value_numeric: null
+  }));
+
   // Pre-fill existing values
   props.indicator.values.forEach(v => {
-    if (v.year === props.year && v.month >= 1 && v.month <= 12) {
+    if (v.year === props.year && v.month >= 1 && v.month <= periods.value.length) {
       formData.value[v.month - 1].value_raw = v.value_raw || '';
       formData.value[v.month - 1].value_numeric = v.value_numeric;
     }
@@ -110,7 +128,7 @@ const handleSubmit = async () => {
   loading.value = true;
   try {
     const promises = [];
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < periods.value.length; i++) {
       const fd = formData.value[i];
       if (fd && (fd.value_raw !== '' || fd.value_numeric !== null)) {
         promises.push(kpiService.updateKpiValue(

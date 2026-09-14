@@ -22,7 +22,14 @@ const emit = defineEmits<{
   (e: 'edit-values', indicator: KPIIndicator): void;
 }>();
 
-const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+const periodNames = computed(() => {
+  if (props.indicator.periodicity === 'QUARTERLY') {
+    return ['T1', 'T2', 'T3', 'T4'];
+  } else if (props.indicator.periodicity === 'SEMESTERLY') {
+    return ['S1', 'S2'];
+  }
+  return ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+});
 
 const targetConfig = computed(() => {
   return props.indicator.yearly_targets.find(t => t.year === props.year);
@@ -34,10 +41,11 @@ const isPercentageKpi = computed(() => {
 });
 
 const chartSeries = computed(() => {
-  const data = new Array(12).fill(null);
+  const numPeriods = periodNames.value.length;
+  const data = new Array(numPeriods).fill(null);
   
   props.indicator.values.forEach(v => {
-    if (v.year === props.year && v.month >= 1 && v.month <= 12) {
+    if (v.year === props.year && v.month >= 1 && v.month <= numPeriods) {
       data[v.month - 1] = v.value_numeric;
     }
   });
@@ -129,7 +137,7 @@ const chartOptions = computed(() => {
       }
     },
     xaxis: {
-      categories: monthNames,
+      categories: periodNames.value,
       labels: {
         style: { colors: '#6b7280', fontSize: '11px' }
       }

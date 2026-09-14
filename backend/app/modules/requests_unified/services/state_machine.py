@@ -13,7 +13,9 @@ from app.modules.requests_unified.models.request import RequestStatus, RequestTy
 VALID_TRANSITIONS: dict[RequestStatus, set[RequestStatus]] = {
     RequestStatus.DRAFT:            {RequestStatus.PENDING},
     RequestStatus.PENDING:          {RequestStatus.APPROVED, RequestStatus.REJECTED},
-    RequestStatus.PENDING_MANAGER_APPROVAL: {RequestStatus.PENDING_FINANCE_APPROVAL, RequestStatus.REJECTED, RequestStatus.COMPROMISE_PENDING},
+    RequestStatus.PENDING_MANAGER_APPROVAL: {RequestStatus.PENDING_FINANCE_APPROVAL, RequestStatus.PENDING_DGA_APPROVAL, RequestStatus.REJECTED, RequestStatus.COMPROMISE_PENDING},
+    RequestStatus.PENDING_DGA_APPROVAL: {RequestStatus.PENDING_DG_APPROVAL, RequestStatus.REJECTED},
+    RequestStatus.PENDING_DG_APPROVAL: {RequestStatus.APPROVED, RequestStatus.REJECTED},
     RequestStatus.COMPROMISE_PENDING: {RequestStatus.PENDING_FINANCE_APPROVAL, RequestStatus.APPROVED, RequestStatus.REJECTED},
     RequestStatus.PENDING_FINANCE_APPROVAL: {RequestStatus.APPROVED, RequestStatus.REJECTED},
     RequestStatus.APPROVED:         {RequestStatus.IN_PROGRESS, RequestStatus.COMPLETED},
@@ -41,12 +43,20 @@ REQUIRES_FINANCE_APPROVAL: set[RequestType] = {
     RequestType.FACILITY_SUPPLIES,
 }
 
+REQUIRES_DGA_APPROVAL: set[RequestType] = {
+    RequestType.PIECE_CAISSE,
+}
+
+REQUIRES_DG_APPROVAL: set[RequestType] = {
+    RequestType.PIECE_CAISSE,
+}
+
 
 def initial_status_for(request_type: RequestType) -> RequestStatus:
     """
     Determine the initial status a newly created request should land on.
     """
-    if request_type == RequestType.FUEL:
+    if request_type in {RequestType.FUEL, RequestType.PIECE_CAISSE}:
         return RequestStatus.PENDING_MANAGER_APPROVAL
     return RequestStatus.PENDING
 

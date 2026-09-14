@@ -96,8 +96,10 @@
             >
               <option value="ALL">Tous statuts</option>
               <option value="PENDING">En attente (PENDING)</option>
-              <option value="PENDING_MANAGER_APPROVAL">Attente N+1 (Carburant)</option>
+              <option value="PENDING_MANAGER_APPROVAL">Attente N+1 (Carburant & Caisse)</option>
               <option value="PENDING_FINANCE_APPROVAL">Attente Finance (Carburant)</option>
+              <option value="PENDING_DGA_APPROVAL">Attente DGA (Caisse)</option>
+              <option value="PENDING_DG_APPROVAL">Attente DG (Caisse)</option>
               <option value="COMPROMISE_PENDING">Compromis proposé</option>
               <option value="APPROVED">Approuvé</option>
               <option value="REJECTED">Refusé</option>
@@ -372,6 +374,64 @@
                     </template>
 
                     <button 
+                      @click="deleteRequest(req.id)"
+                      class="text-gray-400 hover:text-red-600 p-1 rounded-lg transition"
+                      title="Supprimer la demande"
+                    >
+                      <span class="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                  </div>
+
+                  <!-- ACTIONS SPECIFIQUES CAISSE -->
+                  <div v-else-if="req.type === 'PIECE_CAISSE'" class="inline-flex items-center gap-1.5">
+                    <template v-if="req.status === 'PENDING_MANAGER_APPROVAL'">
+                      <button 
+                        @click="updateStatus(req.id, 'PENDING_DGA_APPROVAL')"
+                        class="text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg text-xs font-bold transition"
+                        title="Valider en tant que responsable"
+                      >
+                        Valider Responsable
+                      </button>
+                      <button 
+                        @click="openRejectModal(req.id)"
+                        class="text-red-700 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg text-xs font-bold transition"
+                      >
+                        Rejeter
+                      </button>
+                    </template>
+                    <template v-else-if="req.status === 'PENDING_DGA_APPROVAL'">
+                      <button 
+                        @click="updateStatus(req.id, 'PENDING_DG_APPROVAL')"
+                        class="text-purple-700 bg-purple-50 hover:bg-purple-100 px-2.5 py-1 rounded-lg text-xs font-bold transition"
+                        title="Valider en tant que DGA"
+                      >
+                        Valider DGA
+                      </button>
+                      <button 
+                        @click="openRejectModal(req.id)"
+                        class="text-red-700 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg text-xs font-bold transition"
+                      >
+                        Rejeter
+                      </button>
+                    </template>
+                    <template v-else-if="req.status === 'PENDING_DG_APPROVAL'">
+                      <button 
+                        @click="updateStatus(req.id, 'APPROVED')"
+                        class="text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg text-xs font-bold transition"
+                        title="Valider en tant que DG"
+                      >
+                        Valider DG
+                      </button>
+                      <button 
+                        @click="openRejectModal(req.id)"
+                        class="text-red-700 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg text-xs font-bold transition"
+                      >
+                        Rejeter
+                      </button>
+                    </template>
+
+                    <button 
+                      v-if="req.requester_id === currentUser?.id || isUserAdmin"
                       @click="deleteRequest(req.id)"
                       class="text-gray-400 hover:text-red-600 p-1 rounded-lg transition"
                       title="Supprimer la demande"
@@ -705,7 +765,7 @@ const myRequestsCount = computed(() => {
 });
 
 const concerningCount = computed(() => {
-  return requests.value.filter(req => req.requester_id !== currentUser?.id && ['PENDING', 'PENDING_MANAGER_APPROVAL', 'PENDING_FINANCE_APPROVAL'].includes(req.status)).length;
+  return requests.value.filter(req => req.requester_id !== currentUser?.id && ['PENDING', 'PENDING_MANAGER_APPROVAL', 'PENDING_FINANCE_APPROVAL', 'PENDING_DGA_APPROVAL', 'PENDING_DG_APPROVAL'].includes(req.status)).length;
 });
 
 const getCategoryBadgeClass = (req: any): string => {
@@ -764,7 +824,7 @@ const filteredRequests = computed(() => {
     // 0. Si non-admin/validateur : ne voir que ses demandes + celles à traiter
     if (!isAdminOrValidator.value) {
       const isMine = req.requester_id === currentUser?.id;
-      const isConcerning = req.requester_id !== currentUser?.id && ['PENDING', 'PENDING_MANAGER_APPROVAL', 'PENDING_FINANCE_APPROVAL'].includes(req.status);
+      const isConcerning = req.requester_id !== currentUser?.id && ['PENDING', 'PENDING_MANAGER_APPROVAL', 'PENDING_FINANCE_APPROVAL', 'PENDING_DGA_APPROVAL', 'PENDING_DG_APPROVAL'].includes(req.status);
       if (!isMine && !isConcerning) return false;
     }
 

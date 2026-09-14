@@ -177,7 +177,7 @@ def _apply_row_level_filter(query, current_user: User):
             RequestType.FUEL,
         ]))
 
-    if roles & {"Direction"}:
+    if roles & {"Direction", "DGA", "DG"}:
         return query
 
     # Managers see their own requests + their subordinates' requests
@@ -380,13 +380,21 @@ def update_request_status(
     is_admin = "ADMIN" in role_names
     
     if not is_admin:
-        if payload.status == RequestStatus.PENDING_FINANCE_APPROVAL or (payload.status == RequestStatus.REJECTED and request.status == RequestStatus.PENDING_MANAGER_APPROVAL) or (request.status == RequestStatus.COMPROMISE_PENDING and payload.status in {RequestStatus.APPROVED, RequestStatus.REJECTED}):
-            if "DIRECTION" not in role_names:
+        if payload.status == RequestStatus.PENDING_FINANCE_APPROVAL or payload.status == RequestStatus.PENDING_DGA_APPROVAL or (payload.status == RequestStatus.REJECTED and request.status == RequestStatus.PENDING_MANAGER_APPROVAL) or (request.status == RequestStatus.COMPROMISE_PENDING and payload.status in {RequestStatus.APPROVED, RequestStatus.REJECTED}):
+            if not (role_names & {"DIRECTION", "DGA", "DG"}):
                 requester = db.get(User, request.requester_id)
                 
                 is_direct_manager = requester and requester.manager_id == current_user.id
                 if not is_direct_manager:
-                    raise HTTPException(status_code=403, detail="Approbation du responsable ou de la direction requise")
+                    raise HTTPException(status_code=403, detail="Approbation du responsable requise")
+                    
+        elif payload.status == RequestStatus.PENDING_DG_APPROVAL or (payload.status == RequestStatus.REJECTED and request.status == RequestStatus.PENDING_DGA_APPROVAL):
+            if not (role_names & {"DGA", "DIRECTION", "DG"}):
+                raise HTTPException(status_code=403, detail="Approbation du DGA requise")
+                
+        elif payload.status in {RequestStatus.APPROVED, RequestStatus.REJECTED} and request.status == RequestStatus.PENDING_DG_APPROVAL:
+            if not (role_names & {"DG", "DIRECTION"}):
+                raise HTTPException(status_code=403, detail="Approbation du DG requise")
                     
         elif payload.status in {RequestStatus.APPROVED, RequestStatus.REJECTED} and request.status != RequestStatus.COMPROMISE_PENDING:
             if request.type in {RequestType.LEAVE, RequestType.DOCUMENT}:
@@ -396,7 +404,7 @@ def update_request_status(
                 it_roles = {"IT", "IT ADMIN", "ADMIN IT", "RESPONSABLE IT"}
                 if not (role_names & it_roles or any("IT" in r for r in role_names)):
                     raise HTTPException(status_code=403, detail="Approbation IT requise")
-            elif request.type in {RequestType.FACILITY_MAINTENANCE, RequestType.FACILITY_SUPPLIES, RequestType.FACILITY_BADGE, RequestType.FUEL, RequestType.PIECE_CAISSE}:
+            elif request.type in {RequestType.FACILITY_MAINTENANCE, RequestType.FACILITY_SUPPLIES, RequestType.FACILITY_BADGE, RequestType.FUEL}:
                 facility_roles = {"FINANCE", "ACHAT", "FINANCE / BUDGET", "FACILITY", "FACILITY MANAGER", "LOGISTIQUE", "STOCK / LOGISTIQUE", "MAINTENANCE", "RH / COMPTABILITÉ", "COMPTABILITÉ", "DIRECTION"}
                 if not (role_names & facility_roles or any(term in r for r in role_names for term in ["FACILITY", "FINANCE", "ACHAT", "COMPTA", "DIRECTION"])):
                     raise HTTPException(status_code=403, detail="Approbation Finance/Achat/Services Généraux requise")
@@ -433,9 +441,15 @@ def update_request_status(
     request.status = payload.status
     request.validator_id = current_user.id
     
-    if payload.status == RequestStatus.PENDING_FINANCE_APPROVAL:
+    if payload.status in {RequestStatus.PENDING_FINANCE_APPROVAL, RequestStatus.PENDING_DGA_APPROVAL}:
         request.manager_validator_id = current_user.id
         request.manager_validated_at = datetime.utcnow()
+    elif payload.status == RequestStatus.PENDING_DG_APPROVAL:
+        request.dga_validator_id = current_user.id
+        request.dga_validated_at = datetime.utcnow()
+    elif payload.status == RequestStatus.APPROVED and old_status == RequestStatus.PENDING_DG_APPROVAL:
+        request.dg_validator_id = current_user.id
+        request.dg_validated_at = datetime.utcnow()
     elif (payload.status == RequestStatus.APPROVED or is_finance_compromise) and old_status == RequestStatus.PENDING_FINANCE_APPROVAL:
         request.finance_validator_id = current_user.id
         request.finance_validated_at = datetime.utcnow()
@@ -524,12 +538,9 @@ def update_request_status(
                         if voucher:
                             val_user = bg_db.get(User, validator_user_id)
                             val_roles = {r.name.upper() for r in (val_user.roles if val_user else [])}
-                            if "DIRECTION" in val_roles:
-                                voucher.validator_dg_id = validator_user_id
-                            else:
-                                voucher.validator_cg_id = validator_user_id
-                                
+                            
                             if bg_request.status == RequestStatus.APPROVED:
+                                voucher.validator_dg_id = validator_user_id
                                 voucher.status = VoucherStatus.FINALIZED
                                 voucher.finalized_at = datetime.utcnow()
                             elif bg_request.status == RequestStatus.REJECTED:

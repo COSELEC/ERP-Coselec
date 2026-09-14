@@ -7,6 +7,7 @@ import KpiUploadModal from './KpiUploadModal.vue';
 import KpiChartWidget from './KpiChartWidget.vue';
 import KpiCreateModal from './KpiCreateModal.vue';
 import KpiEditValuesModal from './KpiEditValuesModal.vue';
+import KpiProcessusEditorsModal from './KpiProcessusEditorsModal.vue';
 import { getStoredProfile, hasPermission } from '@/services/session';
 import type { KPIIndicator } from '@/services/kpi';
 
@@ -23,7 +24,9 @@ const currentYear = ref(new Date().getFullYear());
 const isUploadModalOpen = ref(false);
 const isCreateModalOpen = ref(false);
 const isEditValuesModalOpen = ref(false);
+const isProcessusEditorsModalOpen = ref(false);
 const selectedIndicatorForEdit = ref<KPIIndicator | null>(null);
+const selectedProcessusForEditors = ref<KPIProcessus | null>(null);
 
 const selectedProcessus = ref<number | 'ALL'>('ALL');
 
@@ -70,6 +73,17 @@ const openEditValuesModal = (indicator: KPIIndicator) => {
 const handleValuesSaved = () => {
   isEditValuesModalOpen.value = false;
   selectedIndicatorForEdit.value = null;
+  loadData();
+};
+
+const openProcessusEditorsModal = (processus: KPIProcessus) => {
+  selectedProcessusForEditors.value = processus;
+  isProcessusEditorsModalOpen.value = true;
+};
+
+const handleProcessusEditorsSaved = () => {
+  isProcessusEditorsModalOpen.value = false;
+  selectedProcessusForEditors.value = null;
   loadData();
 };
 </script>
@@ -172,6 +186,14 @@ const handleValuesSaved = () => {
               <span class="bg-gray-100 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full">
                 {{ processus.indicators.length }} indicateur(s)
               </span>
+              <button 
+                v-if="isQualite"
+                @click="openProcessusEditorsModal(processus)"
+                class="ml-auto text-gray-400 hover:text-gray-700 transition p-1 hover:bg-gray-100 rounded-full flex items-center"
+                title="Gérer les accès"
+              >
+                <span class="material-symbols-outlined text-sm">manage_accounts</span>
+              </button>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -207,6 +229,13 @@ const handleValuesSaved = () => {
       :year="currentYear"
       @close="isEditValuesModalOpen = false"
       @saved="handleValuesSaved"
+    />
+
+    <KpiProcessusEditorsModal 
+      v-if="isProcessusEditorsModalOpen && selectedProcessusForEditors"
+      :processus="selectedProcessusForEditors"
+      @close="isProcessusEditorsModalOpen = false"
+      @saved="handleProcessusEditorsSaved"
     />
   </AppLayout>
 </template>

@@ -24,6 +24,7 @@ export interface KPIIndicator {
   id: number;
   processus_id: number;
   name: string;
+  periodicity: 'MONTHLY' | 'QUARTERLY' | 'SEMESTERLY';
   yearly_targets: KPIYearlyTarget[];
   values: KPIValue[];
 }
@@ -32,6 +33,8 @@ export interface KPIProcessus {
   id: number;
   name: string;
   department_id: number | null;
+  editor_role_names: string[];
+  editor_user_ids: number[];
   indicators: KPIIndicator[];
 }
 
@@ -76,8 +79,16 @@ export const kpiService = {
     return response.data;
   },
 
-  async createIndicator(name: string, processus_id: number): Promise<KPIIndicator> {
-    const response = await api.post("/kpi/indicators", { name, processus_id });
+  async createIndicator(name: string, processus_id: number, periodicity: string = 'MONTHLY'): Promise<KPIIndicator> {
+    const response = await api.post("/kpi/indicators", { name, processus_id, periodicity });
+    return response.data;
+  },
+
+  async configureEditors(processus_id: number, editor_role_names: string[], editor_user_ids: number[]): Promise<KPIProcessus> {
+    const response = await api.put(`/kpi/processus/${processus_id}/editors`, {
+      editor_role_names,
+      editor_user_ids
+    });
     return response.data;
   },
 

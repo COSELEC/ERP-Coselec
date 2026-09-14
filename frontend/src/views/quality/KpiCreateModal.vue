@@ -47,6 +47,17 @@
         </div>
 
         <div v-if="mode === 'indicator'">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Périodicité</label>
+          <select 
+            v-model="periodicity"
+            required
+            class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition mb-4"
+          >
+            <option value="MONTHLY">Mensuelle (12 mois)</option>
+            <option value="QUARTERLY">Trimestrielle (4 trimestres)</option>
+            <option value="SEMESTERLY">Semestrielle (2 semestres)</option>
+          </select>
+
           <label class="block text-sm font-medium text-gray-700 mb-1">Processus Parent</label>
           <select 
             v-model="processus_id"
@@ -100,6 +111,7 @@ const mode = ref<'processus' | 'indicator'>('processus');
 const name = ref('');
 const department_id = ref<number | ''>('');
 const processus_id = ref<number | ''>('');
+const periodicity = ref('MONTHLY');
 const loading = ref(false);
 
 const departments = ref<any[]>([]);
@@ -120,7 +132,7 @@ const handleSubmit = async () => {
       await kpiService.createProcessus(name.value, department_id.value === '' ? null : Number(department_id.value));
       toast.success("Processus créé avec succès");
     } else {
-      await kpiService.createIndicator(name.value, Number(processus_id.value));
+      await kpiService.createIndicator(name.value, Number(processus_id.value), periodicity.value);
       toast.success("Indicateur créé avec succès");
     }
     emit('created');

@@ -10,8 +10,10 @@ const fileInput = ref<HTMLInputElement | null>(null);
 const photoInput = ref<HTMLInputElement | null>(null);
 const signatureUrl = ref<string | null>(null);
 const photoUrl = ref<string | null>(null);
+const jobDescriptionUrl = ref<string | null>(null);
 const isUploading = ref(false);
 const isUploadingPhoto = ref(false);
+const isUploadingFiche = ref(false);
 
 onMounted(async () => {
     if (profile.value) {
@@ -19,6 +21,7 @@ onMounted(async () => {
             const res = await api.get(`/employees/${profile.value.id}`);
             signatureUrl.value = res.data.signature_url;
             photoUrl.value = res.data.photo_url;
+            jobDescriptionUrl.value = res.data.job_description;
         } catch (error) {
             console.error("Failed to load user profile", error);
         }
@@ -99,6 +102,38 @@ const handleFileUpload = async (event: Event) => {
         alert("Erreur lors de l'upload de la signature.");
     } finally {
         isUploading.value = false;
+        target.value = ''; 
+    }
+};
+
+const fichePosteInput = ref<HTMLInputElement | null>(null);
+
+const triggerFichePosteInput = () => {
+    fichePosteInput.value?.click();
+};
+
+const handleFichePosteUpload = async (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    if (!target.files || target.files.length === 0) return;
+    
+    const file = target.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    isUploadingFiche.value = true;
+    try {
+        const res = await api.post(`/me/fiche-poste`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        jobDescriptionUrl.value = res.data.job_description_url;
+        alert("Fiche de poste mise à jour avec succès !");
+    } catch (error) {
+        console.error("Erreur lors de l'upload de la fiche de poste", error);
+        alert("Erreur lors de l'upload de la fiche de poste.");
+    } finally {
+        isUploadingFiche.value = false;
         target.value = ''; 
     }
 };
@@ -231,6 +266,52 @@ const handleChangePassword = async () => {
                     </button>
                     <p class="text-xs text-gray-500 max-w-xs">
                         Formats acceptés : PNG, JPG, JPEG. Poids max : 2Mo.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fiche de poste Section -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="p-4">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Fiche de Poste</h2>
+            <p class="text-sm text-gray-500 mb-6">
+                Consultez ou mettez à jour votre fiche de poste.
+            </p>
+            
+            <div class="flex items-start space-x-8">
+                <!-- Aperçu / Lien -->
+                <div class="flex-shrink-0 w-64 h-32 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center bg-gray-50 overflow-hidden p-4 text-center">
+                    <template v-if="jobDescriptionUrl">
+                        <span class="material-symbols-outlined text-4xl text-red-500 mb-2">picture_as_pdf</span>
+                        <a 
+                            :href="'/api/storage/' + jobDescriptionUrl" 
+                            target="_blank" 
+                            class="text-sm text-red-600 hover:underline font-medium break-all"
+                        >
+                            Voir la fiche de poste
+                        </a>
+                    </template>
+                    <template v-else>
+                        <span class="material-symbols-outlined text-4xl text-gray-300 mb-2">description</span>
+                        <span class="text-gray-400 text-sm">Aucune fiche de poste</span>
+                    </template>
+                </div>
+                
+                <!-- Actions -->
+                <div class="flex flex-col space-y-4">
+                    <input type="file" ref="fichePosteInput" class="hidden" accept=".pdf" @change="handleFichePosteUpload" />
+                    <button 
+                        @click="triggerFichePosteInput"
+                        :disabled="isUploadingFiche"
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center shadow-sm"
+                    >
+                        <span class="material-symbols-outlined mr-2 text-sm">{{ isUploadingFiche ? 'sync' : 'upload_file' }}</span>
+                        {{ isUploadingFiche ? 'Téléchargement...' : 'Télécharger un PDF' }}
+                    </button>
+                    <p class="text-xs text-gray-500 max-w-xs">
+                        Formats acceptés : PDF uniquement. Poids max : 5Mo.
                     </p>
                 </div>
             </div>
