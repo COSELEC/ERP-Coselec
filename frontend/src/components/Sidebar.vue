@@ -205,6 +205,89 @@ onMounted(async () => {
       </div>
 
 
+      <!-- Projets (Commenté pour Cherif) -->
+      <!--
+      <div v-if="canViewProjects">
+        <h2 v-if="!collapsed" class="text-xs uppercase text-red-200 mb-2">
+          Projets
+        </h2>
+        <SidebarItem
+          to="/project-dashboard"
+          icon="dashboard_customize"
+          label="Tableau de bord Projets"
+          :collapsed="collapsed"
+        />
+        <SidebarItem
+          to="/projects"
+          icon="architecture"
+          label="Liste des Projets"
+          :collapsed="collapsed"
+        />
+        <SidebarItem
+          to="/project-budget"
+          icon="request_quote"
+          label="Budgets"
+          :collapsed="collapsed"
+        />
+        <SidebarItem
+          to="/stock-reservations"
+          icon="bookmark_added"
+          label="Réservations Stock"
+          :collapsed="collapsed"
+        />
+      </div>
+      -->
+
+      <!-- Stock & Logistique (Commenté pour Cherif) -->
+      <!--
+      <div v-if="canViewStock">
+        <h2 v-if="!collapsed" class="text-xs uppercase text-red-200 mb-2">
+          Stock & Logistique
+        </h2>
+        <SidebarItem
+          to="/stock"
+          icon="inventory_2"
+          label="Vue d'ensemble"
+          :collapsed="collapsed"
+        />
+        <SidebarItem
+          to="/stock/movement"
+          icon="sync_alt"
+          label="Mouvements"
+          :collapsed="collapsed"
+        />
+        <SidebarItem
+          to="/stock/reception"
+          icon="call_received"
+          label="Bons de réception"
+          :collapsed="collapsed"
+        />
+        <SidebarItem
+          to="/stock/delivery-notes"
+          icon="local_shipping"
+          label="Bons de livraison"
+          :collapsed="collapsed"
+        />
+        <SidebarItem
+          to="/procurement"
+          icon="shopping_cart"
+          label="Achats / Approvisionnement"
+          :collapsed="collapsed"
+        />
+        <SidebarItem
+          to="/stock/canvas"
+          icon="draw"
+          label="Canvas"
+          :collapsed="collapsed"
+        />
+        <SidebarItem
+          to="/stock/matrix"
+          icon="grid_on"
+          label="Matrice"
+          :collapsed="collapsed"
+        />
+      </div>
+      -->
 
       <!-- Admin -->
       <div v-if="canViewAdmin">
