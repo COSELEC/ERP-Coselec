@@ -15,7 +15,7 @@ const toast = useToast();
 const profile = getStoredProfile();
 
 const isQualite = computed(() => {
-  return profile?.roles?.some(r => r.name === 'Qualité' || r.name === 'Admin' || r.name === 'Qualite') || false;
+  return profile?.roles?.some(r => r === 'Qualité' || r === 'Admin' || r === 'Qualite') || false;
 });
 
 const loading = ref(true);
