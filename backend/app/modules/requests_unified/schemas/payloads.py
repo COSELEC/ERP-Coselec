@@ -93,6 +93,30 @@ class GenericPayload(BaseModel):
     details: Optional[str] = None
 
 
+class PieceCaisseLine(BaseModel):
+    date: str
+    designation: str
+    quantite: float
+    prix_unitaire: float
+    montant: str
+    num: str
+
+class PieceCaissePayload(BaseModel):
+    type: Literal["PIECE_CAISSE"] = "PIECE_CAISSE"
+    date: str
+    num: Optional[str] = None
+    affaire: Optional[str] = None
+    cia: Optional[str] = None
+    payment_method: Optional[str] = None
+    subject: Optional[str] = None
+    description: Optional[str] = None
+    depenses: List[PieceCaisseLine] = Field(default_factory=list)
+    recettes: List[PieceCaisseLine] = Field(default_factory=list)
+    total_depenses: float = 0.0
+    total_recettes: float = 0.0
+    solde_net: float = 0.0
+
+
 RequestPayload = Annotated[
     Union[
         LeavePayload,
@@ -104,6 +128,7 @@ RequestPayload = Annotated[
         FacilitySuppliesPayload,
         FuelPayload,
         DocumentPayload,
+        PieceCaissePayload,
         GenericPayload,
     ],
     Field(discriminator="type"),
